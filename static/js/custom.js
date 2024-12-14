@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
     
-    // USERS REGISTER 
+    // USERS AND REGISTER FUNCTIONS
     // Function to handle signup or login  errors
     function handleError(errors)  {
       // Construct the error message list

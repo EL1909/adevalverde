@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
   {% load static %}
+  {% load i18n %}
   {% csrf_token %}
   <head>
     {% block meta %}
@@ -29,6 +30,7 @@
     <title>Adela Valverde {% block extra_title %}{% endblock %}</title>
   </head>
   <body>
+    <div class="overlay"></div>
     <!-- Header -->
     <header>
       <!-- Top Bar -->
@@ -52,7 +54,7 @@
               <li id="tab-logout">
                 <a href="{% url 'direct_logout' %}" class="logout"><i class="fa-solid fa-power-off"></i></a>
               </li>
-              <li><i class="fa-solid fa-store"></i></li>
+              <li><a href="{% url 'invmgm' %}"><i class="fa-solid fa-store"></i></a></li>
               {% else %}
               <li>
                 <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="fas fa-user fa-lg"></i></a>
@@ -65,23 +67,32 @@
           </ul>
         </div>
       </div>
+      <!-- Main Menu (iPhone bar)-->
+      <div class="row">
+        <nav class="navbar navbar-expand-sm" id="main-nav-container">
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-nav" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon float-right"><i class="fa-solid fa-bars"></i></span>
+          </button>
+          {% include 'main-nav.html' %}
+        </nav>
+      </div>
     </header>
     <!-- Alerts from messages -->
-    <div class="container-fluid alert-fixed text-end">
+    <div class="alert-fixed text-end">
       <div class="row">
         <div class="col-md-8 offset-2 col-sm-12">
           {%  for message in messages %}
           <div class="alert {{ message.tags }} alert-dismissible fade show" id="msg" role="alert">
             {{message | safe }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close">
               <span aria-hidden="true">&times;</span>
-            </button>
+            </button> -->
           </div>
           {% endfor %}
         </div>
       </div>
     </div>
-    <div class="content mundo">
+    <div class="content">
     {% block content %}
     {% endblock %}
     </div>

@@ -87,15 +87,26 @@ Step 5. Configure Templates path within settings.py
         },
     ]
 
-Step 5. Configure .env file
+Step 6. Configure .env file
     - Install Decouple
-        $ pip install decouple
+        $ pip install python-decouple
     - Add it to settings.py/installed apps
     - Import and setup key using links to .env file 
         settings.py:
         SECRET_KEY = config('SECRET_KEY')
         .env:
         SECRET_KEY=whatevervaluewithoutspacesorquotes
+
+Step 7. Install Users App
+    - using user auth model from django, created bsig register and login/out views
+
+Step 8. Install Store app
+    - As the main goal of the website owner is to go live with products  presentation, we will install the Store app, having models such as Products, Inventory, Provider, Order and orderItem
+    - Create Models
+    - Create Templates
+
+
+
 
 ### [User Stories](#user-stories)
 
@@ -112,6 +123,8 @@ Step 5. Configure .env file
 
 
 ## [Database Design](#database-design)
+
+
 ### [Models](#models)
 For the first version of thi project, I will be using four different database models for this project:
 
@@ -119,9 +132,12 @@ User, Store, KeyMoments and Categories.
 
 1. The User class is the default User class from Django.
     - User class will reside within user App, in order to manage templates and view for different user types.
+
     - Superuser is created in default DataBase under:
-    user: Admin
+    user: admin
     pass: 12345
+
+    Create templates and views to manage accounts
 
 
 
@@ -167,7 +183,63 @@ class Category(models.Model):
 
 ### [Database Relationships](#database-relationships)
 
-to be determined
+## Store APP:
+Database Model Relationships
+Category:
+A Category can have many Products.
+Relationship: Product has a ForeignKey to Category.
+
+Provider:
+A Provider can supply many Products, and a Product can be associated with multiple Providers.
+Relationship: Product has a ManyToManyField to Provider.
+
+Product:
+A Product can belong to one Category.
+Relationship: Category to Product via ForeignKey.
+A Product can be associated with multiple Providers.
+Relationship: ManyToManyField with Provider.
+A Product can be in multiple OrderItems but does not directly reference Order.
+Relationship: Product to OrderItem via ForeignKey.
+
+Order:
+An Order belongs to one User.
+Relationship: ForeignKey from Order to User.
+An Order contains multiple OrderItems.
+Relationship: OrderItem has a ForeignKey to Order.
+
+OrderItem:
+An OrderItem is part of one Order and references one Product.
+Relationship: ForeignKey to Order and Product.
+
+Visual Representation:
+User (get_user_model())
+  |
+  |-- Order
+  |    |
+  |    |-- OrderItem
+  |         |
+  |         |-- Product
+  |              |
+  |              |-- Category (one-to-many)
+  |              |
+  |              |-- Provider (many-to-many)
+  |
+  |-- Product (via created_by)
+
+Category
+  |
+  |-- Product (one-to-many)
+
+Provider
+  |
+  |-- Product (many-to-many)
+
+Notes:
+Order calculates its totalAmount based on OrderItems using get_total_price() and updates this on save.
+Product's image path is dynamically generated to avoid filename conflicts.
+OrderItem's price is stored at the time of order creation to keep historical pricing data, even if the product's price changes later.
+
+This diagram shows how each model relates to others, highlighting the foreign key and many-to-many relationships. Remember to adjust the naming according to your project's conventions if different from what's shown here.
 
 ## [Users Types](#users-types)
 

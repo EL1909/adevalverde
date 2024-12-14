@@ -13,7 +13,6 @@ body {
     background-color: #f2f1f1;
 }
 
-
 .content  {
     min-height: calc(100vh - 100px);
     display: flex;
@@ -100,8 +99,75 @@ body {
     color: var(--highlight-color);
 }
 
+/* Main Navigation (iPhone bar) */
 
-/* Footer */
+#main-nav-container {
+    position: absolute;
+    bottom: auto;
+    left: 50%;
+    display: flex;
+    justify-content: center;
+    width: fit-content;
+    height: 6px;
+    z-index: 2;
+    background-color: #f2f1f1;
+    padding: 0;
+    margin: 0;
+    opacity: 1;
+    border-radius: 15px 15px 0 0;
+    transform: translateX(-50%) translateY(-85%); /* Center the container relative to its own width */
+    transform-origin: bottom;
+    transition: height 0.5s ease;
+}
+
+#main-nav {
+    position: relative;
+    max-width: fit-content;
+    color: rgb(81, 95, 110);
+    display: flex;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    white-space: nowrap;
+}
+
+#main-nav-container:hover #main-nav {
+    opacity: 1; /* Show the menu items when hovering the container */
+    pointer-events: auto;
+}
+
+#main-nav .navbar-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: right;
+    color: rgb(81, 95, 110);
+    position: relative; /* Add this to enable absolute positioning of #main-nav */
+}
+
+#main-nav .nav-item {
+    display: inline-block;
+    align-items: center;
+    color: rgb(81, 95, 110);
+}
+
+#main-nav .nav-link {
+    display: inline;
+    font-size: 1rem;
+    color: rgb(81, 95, 110);
+    padding: 0 1rem;
+}
+
+#main-nav a:hover {
+    color: #fafafa;
+    background-color: rgb(81, 95, 110);
+    border-radius: 15px;
+}
+
+#main-nav-container:hover {
+    height: 30px; /* Change the height on hover to show the full menu */
+}
+
+
+/* Footer ---------------------------------------*/
 footer {
     height: 50px;
     border-top: 5px solid #6666664a;
@@ -120,7 +186,7 @@ footer .list-inline {
     padding: 5px 10px;
 }
 
-/* Form's styles */
+/* Form's styles ---------------------------------------*/
 .form-group {
     padding: 5px;
     max-height: 250px;

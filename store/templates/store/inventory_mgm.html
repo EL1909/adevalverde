@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row p-4">
+    <div class="col-8">
+        <ul class="nav nav-tabs" id="inventoryTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="warehouse-tab" data-bs-toggle="tab" data-bs-target="#warehouse" type="button" role="tab" aria-controls="warehouse" aria-selected="false">Deposito</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="addProduct-tab" data-bs-toggle="tab" data-bs-target="#addProduct" type="button" role="tab" aria-controls="addProduct" aria-selected="false">Agregar Producto</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab" aria-controls="categories" aria-selected="false">Categorias</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="inventoryTabsContent">
+            <div class="tab-pane fade show active p-4" id="warehouse" role="tabpanel" aria-labelledby="warehouse-tab">
+                <div class="">
+                    <h4>Administracion de Inventario</h4>
+                    <!-- Add Product Button -->
+                    <a href="#" class="btn btn-primary mb-3" onclick="event.preventDefault(); document.getElementById('addProduct-tab').click();"> Agregar producto</a>    
+                </div>
+                <div class="">
+                <!-- Product List -->
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Categoria</th>
+                            <th>Precio</th>
+                            <th>Creado por</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.category.name }}</td>
+                            <td>{{ product.price }}</td>
+                            <td>{{ product.created_by.username }}</td>
+                            <td>
+                                <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-info">Editar</a>
+                                <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirme para eliminar')">Eliminar</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">No hay productos.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="addProduct" role="tabpanel" aria-labelledby="addProduct-tab">
+                <div class="ticket border p-3">
+                    {% include 'store/add_product.html' with form=form %}
+                </div>      
+            </div>
+            <div class="tab-pane fade" id="categories" role="tabpanel" aria-labelledby="categories-tab">
+                <div class="ticket border p-3">
+                    <!-- Categories -->
+                    <h3>Categories</h3>
+                    <ul>
+                        {% for category in categories %}
+                        <li>{{ category.name }}</li>
+                        {% empty %}
+                        <li>No categories defined.</li>
+                        {% endfor %}
+                    </ul>
+                </div>      
+            </div>
+        </div>
+    </div>
+    <div class="col-4 p-4">
+        <div class="ticket border p-3 loto">
+            <p>Speakers</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

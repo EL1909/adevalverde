@@ -1,0 +1,20 @@
+<div class="">
+    <h4 class="text-muted title">Agregar Producto</h4>
+    <div class="col-12 ticket border">
+        <form method="POST" class="p-4" action="{% url 'add_product' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    {{ field.label_tag }} :  {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <div>
+                <a class="btn btn-primary mb-3" href="{% url 'products' %}">Cancelar</a>
+                <button class="btn btn-primary mb-3" type="submit">Agregar Producto</button>
+            </div>
+        </form>
+    </div>            
+</div>

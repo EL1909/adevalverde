@@ -24,6 +24,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # URL for serving base.html directly if you don't have a specific view for it
     path('', TemplateView.as_view(template_name='base.html'), name='home'),
-    # Include the users app URLs
     path('users/', include('users.urls')),
+    path('store/', include('store.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="">
+    <h6 class="text-muted title">Editar producto</h6>
+    <hr>
+    <div class="col-6 ticket border">
+        <form method="POST" action="{% url 'edit_product' product.id %}" class="p-4 mb-4" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+                {% if field.name != 'image' %}
+                    {{ field.label_tag }} :  {{ field }}
+                    <br>
+                {% else %}
+                    {{ field }}
+                {% endif %}
+            {% endfor %}
+            <div class="text-right">
+                <a class="btn btn-outline-black rounded-0" href="{% url 'products' %}">Cancel</a>
+                <button class="btn btn-black rounded-0" type="submit">Update Product</button>
+            </div>
+        </form>
+    </div> 
+</div>
+{% endblock %}
