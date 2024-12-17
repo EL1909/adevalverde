@@ -1,0 +1,39 @@
+/* Running Text Behavior */
+
+.running-text {
+  width: auto;
+  height: 250px;
+  padding: 5px;
+  border: 1px solid #8282824a;
+  border-radius: 15px;
+  cursor: pointer;
+  overflow-y: auto; /* Allows vertical scrolling */
+  position: relative;
+}
+  
+.running-text p {
+  display: none;
+  padding: 3px;
+}
+
+.running-text :hover {
+  opacity: 0.5; /* Show when hovered */
+  pointer-events: auto; /* Re-enable interaction when shown */
+}
+
+.running-text p.active {
+  display: block;
+  font-size: 1em;
+  transform: translateY(0);
+  z-index: 2;
+  opacity: 1;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.running-text p.inactive {
+  display: block;
+  font-size: 0.7em;
+  transform: translateY(-5px);  /* Move up slightly */
+  opacity: 0.3;
+  transition: opacity 0.8s ease-in-out;
+}

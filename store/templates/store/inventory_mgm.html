@@ -15,42 +15,42 @@
         </ul>
         <div class="tab-content" id="inventoryTabsContent">
             <div class="tab-pane fade show active p-4" id="warehouse" role="tabpanel" aria-labelledby="warehouse-tab">
-                <div class="">
+                <div class="d-flex">
                     <h4>Administracion de Inventario</h4>
                     <!-- Add Product Button -->
-                    <a href="#" class="btn btn-primary mb-3" onclick="event.preventDefault(); document.getElementById('addProduct-tab').click();"> Agregar producto</a>    
+                    <a href="#" class="btn btn-primary mb-3 offset-1" onclick="event.preventDefault(); document.getElementById('addProduct-tab').click();"> Agregar producto</a>    
                 </div>
                 <div class="">
-                <!-- Product List -->
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Categoria</th>
-                            <th>Precio</th>
-                            <th>Creado por</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in products %}
-                        <tr>
-                            <td>{{ product.name }}</td>
-                            <td>{{ product.category.name }}</td>
-                            <td>{{ product.price }}</td>
-                            <td>{{ product.created_by.username }}</td>
-                            <td>
-                                <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-info">Editar</a>
-                                <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirme para eliminar')">Eliminar</a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5">No hay productos.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                    <!-- Product List -->
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Categoria</th>
+                                <th>Precio</th>
+                                <th>Creado por</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.category.name }}</td>
+                                <td>{{ product.price }}</td>
+                                <td>{{ product.created_by.username }}</td>
+                                <td>
+                                    <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-info"><i class="fa-regular fa-pen-to-square"></i></a>
+                                    <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirme para eliminar')"><i class="fa-regular fa-trash-can"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">No hay productos.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="tab-pane fade" id="addProduct" role="tabpanel" aria-labelledby="addProduct-tab">

@@ -1,21 +1,21 @@
 <div class="collapse navbar-collapse" id="main-nav">
     <nav id="mobile-menu">  
       <ul class="navbar-nav">
-      <li class="nav-item">
+      <!-- <li class="nav-item">
         <a class="nav-link" href="#">Quien Soy</a>
-      </li>
+      </li> -->
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="mi-obra" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           Mi Obra
         </a>
         <div class="dropdown-menu border-0" aria-labelledby="mi-obra">
           <a href="{% url 'products' %}?category=Libros" class="dropdown-item">Libros</a>
-          <a href="{% url 'products' %}?category=Seminarios" class="dropdown-item">Seminarios</a>
+          <!-- <a href="{% url 'products' %}?category=Seminarios" class="dropdown-item">Seminarios</a>
           <a href="#" class="dropdown-item">Podcast</a>
-          <a href="{% url 'products' %}?category=Sesiones" class="dropdown-item">Sesiones Privadas</a>
+          <a href="{% url 'products' %}?category=Sesiones" class="dropdown-item">Sesiones Privadas</a> -->
         </div>
       </li>
-      <li class="nav-item dropdown">
+      <!-- <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="apoya-mi-labor" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           Apoya mi labor
         </a>
@@ -24,8 +24,8 @@
           <a href="#" class="dropdown-item">Ropa</a>
           <a href="{% url 'products' %}?sort=price&direction=desc" class="dropdown-item">Donaciones</a>
         </div>
-      </li>
-      <li class="nav-item dropdown">
+      </li> -->
+      <!-- <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="mi-equipo" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           Mi Equipo
         </a>
@@ -34,8 +34,8 @@
           <a href="#" class="dropdown-item">{{ member }}</a>
           {% endfor %}
         </div>
-      </li>
-      <li class="nav-item d-sm-none">
+      </li> -->
+      <!-- <li class="nav-item d-sm-none">
         <a class="nav-link" href="#" id="user-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           <div>
             <div><i class="fas fa-user fa-lg"></i></div>
@@ -53,7 +53,7 @@
             <a href="{% url 'account_login' %}" class="dropdown-item">Iniciar Sesion</a>
           {% endif %}
         </div>
-      </li>
+      </li> -->
       </ul>
     </nav>  
 </div>

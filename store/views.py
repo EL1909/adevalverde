@@ -1,18 +1,21 @@
-from django.shortcuts import render, redirect, get_object_or_404
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.urls import reverse, reverse_lazy
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.db.models.functions import Lower
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse, reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.views import View
 from .models import Product, Category, Order, OrderItem
 from .forms import ProductForm
-from django.http import JsonResponse
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ObjectDoesNotExist
 import json
+
 
 ## Product views
 
@@ -88,6 +91,7 @@ def all_products(request):
         'search_term': query,
         'current_categories': categories,
         'current_sorting': current_sorting,
+        'MEDIA_URL': settings.MEDIA_URL,
     }
 
     return render(request, 'store/products.html', context)

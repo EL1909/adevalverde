@@ -1,6 +1,12 @@
 ![Avalverde](include image path)
 <center><a href="include domain" target="_blank">Click here to visit the site</a> - <a href="https://github.com/EL1909/adevalverde" target="_blank">Click here to visit repository</a></center>
 
+Currently:
+    - Users can Register and Login 
+    - Admin is able to update items in the store
+    - Products are linked to Amaon Store for inmediate purchase
+
+
 
 ## Table of Contents - v1
 
@@ -123,7 +129,6 @@ Step 8. Install Store app
 
 
 ## [Database Design](#database-design)
-
 
 ### [Models](#models)
 For the first version of thi project, I will be using four different database models for this project:

@@ -31,6 +31,16 @@ body {
     overflow: hidden;
 }
 
+.loto {
+    background-image: url(/media/site/fondo-loto.png);
+    background-color: #33333322;
+    background-blend-mode: multiply;
+    background-repeat: no-repeat;
+    background-size: 45%;
+    background-position-y: 150%;
+    background-position-x: 110%;
+}
+
 
 /* Header ---------------------------------------*/
 #topbar {
@@ -99,7 +109,7 @@ body {
     color: var(--highlight-color);
 }
 
-/* Main Navigation (iPhone bar) */
+/* Main Navigation (iPhone bar) -----------------*/
 
 #main-nav-container {
     position: absolute;
@@ -166,7 +176,34 @@ body {
     height: 30px; /* Change the height on hover to show the full menu */
 }
 
+/* Canva Content -----------------------------------*/
+.svg-container  {
+    height: calc(100vh - 100px);
+    padding: 15px;
+    display: flex;
+    justify-content: right;
+    align-items: center;
+    overflow-y: scroll;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity 0.5s ease-in;
+  }
+  
+  .svg-container.show {
+    opacity: 1;
+  }
+  
+  .svg  {
+    margin: 5px;
+    width: 40vw;
+    height: 100%;
+    border: 5px solid #6666664a;
+    border-radius: 15px;
+    overflow: hidden;
+    object-fit: cover;
+  }
 
+  
 /* Footer ---------------------------------------*/
 footer {
     height: 50px;
@@ -243,4 +280,6 @@ input   {
     border: solid 2px #80808099;
     color: #333;
 }
+
+
 

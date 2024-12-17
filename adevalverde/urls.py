@@ -19,11 +19,13 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
+from users import views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     # URL for serving base.html directly if you don't have a specific view for it
-    path('', TemplateView.as_view(template_name='base.html'), name='home'),
+    path('', include('users.urls')),
     path('users/', include('users.urls')),
     path('store/', include('store.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

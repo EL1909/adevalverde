@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mundo">
+    <div class="svg-container col-12">
+        <div class="svg" id="svg-content">
+            {% for svg in svgPaths %}
+            <div class="svg-item" id="svg-{{ loop.index }}">
+                {% include svg %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,3 @@
-
-
 document.addEventListener("DOMContentLoaded", function() {
 
     // Set timeout for message display
@@ -101,5 +99,33 @@ document.addEventListener("DOMContentLoaded", function() {
           }
       });
     });
+
+
+    // SVG BEHAVIOR
+    const svgContainer = document.querySelector(".svg-container");
+    
+    // JavaScript to cycle through the SVGs
+    let currentIndex = 0;
+    const svgItems = document.querySelectorAll('.svg-item');
+
+    // Function to change the displayed SVG
+    function changeSVG() {
+        svgItems.forEach((item, index) => {
+            item.style.display = index === currentIndex ? 'block' : 'none';
+        });
+
+        currentIndex = (currentIndex + 1) % svgItems.length;
+    }
+
+    // Change the SVG every 3 seconds
+    setInterval(changeSVG, 8000);
+
+    // Initial display setup
+    changeSVG();
+
+    // Show content with a fade-in effect
+    setTimeout(function() {
+        svgContainer.classList.add("show");
+    }, 500); // Adjust delay as needed
 
 });

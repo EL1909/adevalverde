@@ -7,6 +7,23 @@ from django.views import View
 from .forms import SignupForm
 
 
+# Create your views here.
+
+
+def HomeIndex(request):
+    """ A View to return the index page"""
+    svgPaths = [
+        'CanvaContent/1.svg',
+        'CanvaContent/5.svg',
+    ]
+
+    context = {
+        'svgPaths': svgPaths,
+    }
+
+    return render(request, 'home-content.html', context)
+
+
 class LoginView(LoginView):
     template_name = 'users/login.html'
     form_class = AuthenticationForm
