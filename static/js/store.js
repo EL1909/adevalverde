@@ -16,16 +16,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     });
     
-    var hash = window.location.hash;
-    if (hash) {
-        var tabLink = document.querySelector('a[href="' + hash + '"]');
-        if (tabLink) {
-            var tab = new bootstrap.Tab(tabLink);
-            tab.show();
-        }
-    }
-    
-    
     
     // CART
 

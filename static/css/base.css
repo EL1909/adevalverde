@@ -283,5 +283,125 @@ input   {
     color: #333;
 }
 
+/* Retos De Oro ---------------------------------*/
+#rdo1   {
+    height: 450px;
+    color: var(--main-text-color);
+    background-image: url(/media/site/rdo.jpeg);
+    background-size: 100%;
+    object-fit: cover;
+    overflow: hidden;
+}
+
+#rdo1 .cta-button   {
+    position: absolute;       /* Position relative to the nearest positioned ancestor */
+    bottom: 100px;             /* Distance from the bottom */
+    left: 50%;                /* Center horizontally */
+    transform: translateX(-50%); /* Adjust for exact centering */
+}
 
 
+#rdo2   {
+    color: var(--main-bg-color);
+    height: 250px;
+    background-color: rgba(255, 255, 255, 0.418);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+
+#rdo3   {
+    background-image: url(/media/site/rdo.jpeg);
+    background-repeat: no-repeat;
+    height: 500px;
+    background-size: 100%;
+    object-fit: cover;
+    overflow: hidden;
+}
+
+#rdo4   {
+    height: 500px;
+    padding: 100px 0;
+    text-align: center;
+    background-image: url(/media/site/rdo4.jpeg);
+}
+
+#rdo4  h2 {
+    color: var(--main-text-color);
+}
+
+#rdo5 img {
+    overflow: hidden;
+    height: 100%;
+    width: auto;
+}
+
+
+.section {
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.section h2 {
+    color: var(--main-bg-color);
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.section p {
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.features {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    color: var(--main-text-color);
+}
+
+.feature {
+    background-color: rgba(81, 95, 110, 0.655);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+}
+
+.feature h3 {
+    color: var(--main-text-color);
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.feature p {
+    color: var(--main-text-color);
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+
+.cta-button {
+    background-color: #ff4500;
+    color: white;
+    padding: 15px 30px;
+    font-size: 18px;
+    border: none;
+    cursor: pointer;
+    bottom: 50px;
+    text-decoration: none;
+    display: inline-block;
+    border: var(--main-text-color) 2px solid;
+    border-radius: 15px;
+    
+}
+
+.cta-button:hover {
+    color: var(--main-text-color);
+    font-weight: bold;
+    background-color: #021989ce;
+    border: #ff4500 2px solid;
+}

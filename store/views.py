@@ -92,9 +92,6 @@ class CategoryView(View):
         return render(request, 'store/inventory_mgm.html', context)
 
 
-
-
-
 ## Product views
 
 class InventoryManagementView(View):

@@ -1,5 +1,5 @@
 ![Avalverde](include image path)
-<center><a href="include domain" target="_blank">Click here to visit the site</a> - <a href="https://github.com/EL1909/adevalverde" target="_blank">Click here to visit repository</a></center>
+<center><a href="www.adelavalverde.info" target="_blank">Click here to visit the site</a> - <a href="https://github.com/EL1909/adevalverde" target="_blank">Click here to visit repository</a></center>
 
 Currently:
     - Users can Register and Login 
@@ -101,17 +101,15 @@ Step 6. Configure .env file
         settings.py:
         SECRET_KEY = config('SECRET_KEY')
         .env:
-        SECRET_KEY=whatevervaluewithoutspacesorquotes
+        SECRET_KEY=whatevervaluewithoutspacesnorquotes
 
 Step 7. Install Users App
-    - using user auth model from django, created bsig register and login/out views
+    - Using user auth model from django, created register and login/out views
 
 Step 8. Install Store app
     - As the main goal of the website owner is to go live with products  presentation, we will install the Store app, having models such as Products, Inventory, Provider, Order and orderItem
     - Create Models
     - Create Templates
-
-
 
 
 ### [User Stories](#user-stories)
@@ -386,4 +384,254 @@ www.adelavalverde.info
             $ sudo certbot renew --dry-run
 
             This ensures that Certbot will renew your certificates without issues when the time comes.
+
+Madre bendición
+
+ya puedes entrar en la pagina e ir viendo, 
+
+Para empezar con la venta del libro, dime que es lo que voy a ir haciendo con:
+
+1. Que va a salir en en home
+2. Que poner/quitar en general
+
+Por el tipo de pagina (pagina de persona/influencer) todavia tengo ue vover a instalar:
+
+1. Generador de biografia
+2. 
+
+
+
+
+
+
+
+
+
+
+{% extends "base.html" %}
+{% block content %}
+<div class="mundo">
+    <div class="svg-container col-12">
+        <div class="svg" id="svg-content">
+            {% for svg in svgPaths %}
+            <div class="svg-item" id="svg-{{ loop.index }}">
+                {% include svg %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+X-X   client requests   X-X
+
+
+
+
+
+
+
+
+
+
+
+
+
+Indicaciones para tu programador:
+	1.	Estructura General:
+	•	El HTML está organizado en secciones claras: encabezado, descripción general, características, contenido, beneficios y pie de página.
+	•	Se utilizaron elementos de sección y div para estructurar las partes del contenido.
+	2.	Estilo:
+	•	La página utiliza un estilo simple y limpio, con un fondo claro y textos en tonos oscuros para asegurar que la información sea fácil de leer.
+	•	El color principal es el amarillo dorado (#f5c400), simbolizando el “oro” y el propósito positivo del libro. Puedes cambiar el color si lo deseas.
+	•	Los botones de llamada a la acción (cta-button) son de un color destacado para atraer la atención y motivar al usuario a hacer clic.
+	3.	Responsividad:
+	•	El diseño es completamente responsive, lo que significa que se ajustará bien a dispositivos móviles y de escritorio.
+	4.	Secciones Clave:
+	•	Encabezado (Header): Incluye el título principal y un botón de llamada a la acción que lleva al usuario a la sección de compra.
+	•	¿Por qué elegir este libro? (Features): Tres características clave del libro con iconos descriptivos.
+	•	Contenido del Libro: Expone lo que el lector puede esperar encontrar en el libro.
+	•	Beneficios: Resalta los beneficios principales del libro para la vida personal del lector.
+	•	Botones CTA: Asegúrate de que los botones tengan enlaces que dirijan a la página de compra.
+	5.	Acción Requerida:
+	•	El programador puede agregar el enlace de compra en los botones que están definidos con #order, para que el usuario sea dirigido a la página de compra del libro.
+
+
+
+
+
+
+
+
+
+    Para hacer la landing page aún más inspiradora e irresistible, podemos agregar algunos elementos que refuercen el impacto emocional, la confianza del cliente y la urgencia para tomar acción. Aquí te dejo algunas ideas adicionales:
+
+1. Testimonios de Lectores o Usuarios:
+
+Incluir testimonios o reseñas de personas que hayan tenido experiencias positivas con el libro (si ya has recibido alguna retroalimentación) es clave para generar confianza. Los testimonios deben ser breves pero poderosos, mencionando cómo el libro les ha ayudado a transformar su vida.
+
+Ejemplo de Testimonio:
+
+<section class="section" style="background-color: #f1f1f1;">
+    <h2>🌟 Lo que dicen nuestros lectores</h2>
+    <div class="testimonials">
+        <blockquote>
+            <p>"Retos de Oro 2025 me ayudó a comenzar el nuevo año con una mentalidad de gratitud y propósito. Cada página me ha inspirado a crecer y seguir mis sueños. ¡Definitivamente lo recomiendo!"</p>
+            <cite>- María Gómez, Lectora Entusiasta</cite>
+        </blockquote>
+        <blockquote>
+            <p>"Este libro ha sido una herramienta transformadora. Las actividades y reflexiones me permitieron enfocarme en lo que realmente importa en mi vida. ¡Gracias por este regalo!"</p>
+            <cite>- Juan Pérez, Usuario Satisfecho</cite>
+        </blockquote>
+    </div>
+</section>
+
+2. Oferta Limitada o Descuento Especial:
+
+Agregar una oferta limitada o descuento exclusivo puede crear urgencia en los visitantes para que tomen acción rápidamente.
+
+Ejemplo de Oferta Limitada:
+
+<section class="section" style="background-color: #ff6600; color: white;">
+    <h2>🎁 ¡Oferta Exclusiva! 🎁</h2>
+    <p>¡Compra ahora *Retos de Oro 2025* y obtén un **descuento especial del 15%**! Solo por tiempo limitado.</p>
+    <a href="#order" class="cta-button">¡Aprovecha la oferta ahora!</a>
+</section>
+
+3. Contador de Tiempo (Urgencia):
+
+Un contador regresivo que indique el tiempo restante para aprovechar una oferta o descuento puede aumentar la urgencia para tomar acción.
+
+Ejemplo de Contador de Tiempo:
+
+<section class="section">
+    <h2>⏰ ¡El tiempo está corriendo! ⏰</h2>
+    <p>¡No pierdas esta oportunidad! Solo tienes hasta <strong>12 de enero de 2025</strong> para obtener tu copia con descuento.</p>
+    <div id="countdown"></div>
+    <a href="#order" class="cta-button">¡Haz tu pedido ahora!</a>
+</section>
+
+<script>
+    var countdownDate = new Date("Jan 12, 2025 00:00:00").getTime();
+    var countdownFunction = setInterval(function() {
+        var now = new Date().getTime();
+        var distance = countdownDate - now;
+        var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        document.getElementById("countdown").innerHTML = days + "d " + hours + "h " + minutes + "m " + seconds + "s";
+        if (distance < 0) {
+            clearInterval(countdownFunction);
+            document.getElementById("countdown").innerHTML = "¡La oferta ha terminado!";
+        }
+    }, 1000);
+</script>
+
+4. Imágenes Inspiradoras:
+
+Las imágenes tienen un gran poder emocional. Asegúrate de incluir imágenes de alta calidad que transmitan paz, gratitud, bienestar y propósito. Imágenes de personas disfrutando de la lectura, reflexionando, o haciendo las actividades del libro pueden inspirar a los visitantes a imaginarse a sí mismos participando.
+
+Puedes incluir una galería de imágenes:
+
+<section class="section">
+    <h2>🌟 Imágenes de Inspiración 🌟</h2>
+    <div class="gallery">
+        <img src="imagen1.jpg" alt="Imagen inspiradora 1">
+        <img src="imagen2.jpg" alt="Imagen inspiradora 2">
+        <img src="imagen3.jpg" alt="Imagen inspiradora 3">
+    </div>
+</section>
+
+5. Botón Flotante para Compra Rápida:
+
+Un botón de compra flotante que siempre esté visible al desplazarse por la página puede facilitar la compra en cualquier momento.
+
+Ejemplo de botón flotante:
+
+<a href="#order" class="cta-button" style="position: fixed; bottom: 20px; right: 20px;">¡Compra ahora!</a>
+
+6. Beneficios de Bienestar Personal y Crecimiento:
+
+Profundiza un poco más en los beneficios específicos que las personas experimentarán al realizar las actividades del libro. Enfócate en cómo el libro les ayudará a mejorar su salud mental, emocional y espiritual.
+
+Ejemplo:
+
+<section class="section" style="background-color: #f1f1f1;">
+    <h2>🌱 Beneficios para tu bienestar personal</h2>
+    <ul>
+        <li><strong>Reducción del estrés:</strong> Las actividades interactivas y reflexiones te ayudarán a desconectar y a encontrar momentos de paz interior.</li>
+        <li><strong>Mayor enfoque:</strong> Establecerás metas claras y aprenderás a priorizar lo que realmente importa en tu vida.</li>
+        <li><strong>Crecimiento espiritual:</strong> Las afirmaciones y los temas profundos fomentan una conexión más cercana con tu propósito divino y tu bienestar interior.</li>
+    </ul>
+</section>
+
+7. Garantía de Satisfacción:
+
+Ofrecer una garantía de devolución de dinero puede darles a los compradores potenciales la confianza de que pueden probar el libro sin riesgo.
+
+Ejemplo de Garantía:
+
+<section class="section" style="background-color: #e0f7fa;">
+    <h2>✔️ ¡Garantía de Satisfacción 100%!</h2>
+    <p>Si no estás completamente satisfecho con tu compra, ofrecemos una garantía de devolución de dinero en 30 días. ¡Compra sin preocupaciones!</p>
+</section>
+
+8. Enlace de Compra Directa (Sin Necesidad de Desplazarse):
+
+Además de tener el botón de llamada a la acción en diferentes puntos de la página, puedes agregar un enlace directo al inicio y al final de la página para que el usuario pueda comprar sin desplazarse por toda la página.
+
+Resumen de Ajustes Clave:
+	1.	Testimonios que validen la efectividad del libro.
+	2.	Oferta limitada o descuento exclusivo.
+	3.	Contador regresivo para crear urgencia.
+	4.	Imágenes inspiradoras para emocionalizar la experiencia.
+	5.	Botón flotante para compra rápida.
+	6.	Enlace directo de compra sin desplazarse.
+	7.	Garantía de satisfacción para aumentar la confianza.
+	8.	Detalles de bienestar personal como beneficios clave.
+
+Con estos elementos adicionales, la página de ventas no solo atraerá a más clientes, sino que también creará un deseo irresistible de adquirir el libro y empezar a transformar sus vidas.
+
+
+
+
+
+
+
+necesitarás realizar algunos ajustes y tener en cuenta algunos puntos antes de pasárselo a tu programador:
+
+Pasos a seguir para trabajar con tu programador:
+	1.	Diseño Visual y Estilo:
+	•	El HTML que te proporcioné no incluye el estilo visual (CSS). Tu programador deberá crear los estilos adecuados para que el contenido luzca bien en la web. Los colores, fuentes, espaciado, botones y el diseño en general deberán alinearse con la identidad visual de tu marca y la experiencia de usuario que deseas ofrecer.
+	2.	Optimización para Móviles (Responsividad):
+	•	Asegúrate de que la landing page sea responsive (adaptable a dispositivos móviles). Esto es crucial porque muchas personas navegarán desde sus teléfonos o tabletas. Tu programador deberá implementar media queries en el CSS para asegurar que la página se vea bien en todos los tamaños de pantalla.
+	3.	Funciones Interactivas:
+	•	El contador de tiempo y otros elementos interactivos, como los botones flotantes, necesitarán JavaScript para funcionar correctamente. Asegúrate de que tu programador implemente esos scripts correctamente para que la funcionalidad de la página sea óptima.
+	4.	Integración con tu sistema de ventas:
+	•	El botón de compra y el formulario de adquisición (o un enlace de pago directo) necesitarán ser integrados con tu sistema de ventas o pasarela de pago (por ejemplo, PayPal, Stripe, o el sistema que estés utilizando). Esto puede implicar la creación de un formulario de compra o un enlace que lleve al usuario a un proceso de pago seguro.
+	5.	SEO y Optimización:
+	•	Asegúrate de que la página esté optimizada para SEO. Esto incluye el uso de metadatos adecuados, como etiquetas <title>, <meta description>, y palabras clave en los textos. Esto ayudará a que la página sea encontrada por los motores de búsqueda.
+	6.	Pruebas y Ajustes:
+	•	Una vez que tu programador haya implementado la landing page, es crucial probar todos los elementos (enlaces, botones, formularios, etc.) y asegurarse de que todo funcione correctamente, especialmente en diferentes navegadores y dispositivos.
+
+Qué puedes hacer ahora:
+	1.	Enviar al programador el contenido HTML básico que te proporcioné como base. Explícale que eso es solo un esqueleto de la landing page y que necesita personalización para que se vea bien y funcione correctamente.
+	2.	Trabajar con él en la parte visual, asegurándote de que se ajuste a la imagen de tu marca.
+	3.	Definir las funcionalidades adicionales como el contador de tiempo, los formularios de pago y la integración con el sistema de ventas.
+
+Lo que podrías enviar a tu programador:
+	•	El HTML básico de la landing page.
+	•	El contenido visual que deseas usar (imágenes, logotipo, colores, etc.).
+	•	La funcionalidad deseada (por ejemplo, integración con el pago, contador de tiempo, botones flotantes).
+	•	Especificaciones sobre optimización móvil y responsividad.
+	•	Detalles de los testimonios y demás contenido adicional (si ya los tienes).
+
+De esta manera, tu programador podrá desarrollar la landing page de manera profesional, asegurando que todo funcione como esperas y con el diseño adecuado.
+
+
+Imagen de fondo o ilustraciones secundarias:
+	•	Tamaño recomendado: 1920px de ancho x 1080px de alto.
+
 
