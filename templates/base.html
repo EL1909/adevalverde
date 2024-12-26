@@ -54,7 +54,7 @@
               <li id="tab-logout">
                 <a href="{% url 'direct_logout' %}" class="logout"><i class="fa-solid fa-power-off"></i></a>
               </li>
-              <li><a href="{% url 'invmgm' %}"><i class="fa-solid fa-store"></i></a></li>
+              <li><a href="{% url 'store:invmgm' %}"><i class="fa-solid fa-store"></i></a></li>
               {% else %}
               <li>
                 <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="fas fa-user fa-lg"></i></a>
@@ -113,6 +113,7 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <!-- Local JS -->    
     <script src="{% static 'js/custom.js' %}"></script>
+    <script src="{% static 'js/store.js' %}"></script>
     <!-- RunningText -->
     <link rel="stylesheet" href="{% static 'css/running_text.css' %}" type="text/css">
     <script src="{% static 'js/running_text.js' %}"></script>

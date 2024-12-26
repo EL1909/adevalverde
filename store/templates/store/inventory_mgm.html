@@ -12,15 +12,18 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab" aria-controls="categories" aria-selected="false">Categorias</button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="providers-tab" data-bs-toggle="tab" data-bs-target="#providers" type="button" role="tab" aria-controls="providers" aria-selected="false">Provedores</button>
+            </li>
         </ul>
         <div class="tab-content" id="inventoryTabsContent">
             <div class="tab-pane fade show active p-4" id="warehouse" role="tabpanel" aria-labelledby="warehouse-tab">
-                <div class="d-flex">
-                    <h4>Administracion de Inventario</h4>
+                <div class="d-flex justify-content-between">
+                    <h4>Inventario</h4>
                     <!-- Add Product Button -->
                     <a href="#" class="btn btn-primary mb-3 offset-1" onclick="event.preventDefault(); document.getElementById('addProduct-tab').click();"> Agregar producto</a>    
                 </div>
-                <div class="">
+                <div>
                     <!-- Product List -->
                     <table class="table table-striped">
                         <thead>
@@ -28,7 +31,6 @@
                                 <th>Nombre</th>
                                 <th>Categoria</th>
                                 <th>Precio</th>
-                                <th>Creado por</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -38,10 +40,9 @@
                                 <td>{{ product.name }}</td>
                                 <td>{{ product.category.name }}</td>
                                 <td>{{ product.price }}</td>
-                                <td>{{ product.created_by.username }}</td>
                                 <td>
-                                    <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-info"><i class="fa-regular fa-pen-to-square"></i></a>
-                                    <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirme para eliminar')"><i class="fa-regular fa-trash-can"></i></a>
+                                    <a href="{% url 'store:edit_product' product.id %}" class="btn btn-sm btn-info"><i class="fa-regular fa-pen-to-square"></i></a>
+                                    <a href="{% url 'store:delete_product' product.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirme para eliminar')"><i class="fa-regular fa-trash-can"></i></a>
                                 </td>
                             </tr>
                             {% empty %}
@@ -53,20 +54,66 @@
                     </table>
                 </div>
             </div>
-            <div class="tab-pane fade" id="addProduct" role="tabpanel" aria-labelledby="addProduct-tab">
-                <div class="ticket border p-3">
+            <div class="tab-pane fade p-4" id="addProduct" role="tabpanel" aria-labelledby="addProduct-tab">
+                <div>
                     {% include 'store/add_product.html' with form=form %}
                 </div>      
             </div>
-            <div class="tab-pane fade" id="categories" role="tabpanel" aria-labelledby="categories-tab">
+            <div class="tab-pane fade p-4" id="categories" role="tabpanel" aria-labelledby="categories-tab">
+                <!-- Categories -->
+                <div>
+                    <div class="d-flex justify-content-between">
+                        <h3>Categorias</h3>
+                        <button id="show-add-category" class="btn btn-primary mb-3 offset-1">Crear categoria</button>
+                        <div id="add-category" style="display: none;">
+                            <form class="d-flex justify-content-between" method="POST" action="{% if category %}{% url 'store:edit_category' category.id %}{% else %}{% url 'store:add_category' %}{% endif %}">
+                                {% csrf_token %}
+                                {{ catform.as_p }}
+                                <button type="submit" class="btn btn-primary mb-3 offset-1">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Category List -->
+                    <div>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Categoria</th>
+                                    <th>Productos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td>{{ category.name }}</td>
+                                    <td>{{ category.products.count }}</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm"><i class="fa-regular fa-pen-to-square"></i></a>
+                                        <a href="{% url 'store:delete_category' category.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirme para eliminar {{ category.name }}')"><i class="fa-regular fa-trash-can"></i></a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No hay categorias.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>  
+            </div>
+            <div class="tab-pane fade" id="providers" role="tabpanel" aria-labelledby="providers-tab">
                 <div class="ticket border p-3">
-                    <!-- Categories -->
-                    <h3>Categories</h3>
+                    <!-- Providers -->
+                    <h3>Proveedores</h3>
                     <ul>
-                        {% for category in categories %}
-                        <li>{{ category.name }}</li>
+                        {% for provider in providers %}
+                        <li>{{ provider.name }}</li>
                         {% empty %}
-                        <li>No categories defined.</li>
+                        <li>No tienes ningun proveedor.</li>
                         {% endfor %}
                     </ul>
                 </div>      

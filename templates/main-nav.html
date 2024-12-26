@@ -9,10 +9,10 @@
           Mi Obra
         </a>
         <div class="dropdown-menu border-0" aria-labelledby="mi-obra">
-          <a href="{% url 'products' %}?category=Libros" class="dropdown-item">Libros</a>
-          <!-- <a href="{% url 'products' %}?category=Seminarios" class="dropdown-item">Seminarios</a>
+          <a href="{% url 'store:products' %}?category=Libros" class="dropdown-item">Libros</a>
+          <!-- <a href="{% url 'store:products' %}?category=Seminarios" class="dropdown-item">Seminarios</a>
           <a href="#" class="dropdown-item">Podcast</a>
-          <a href="{% url 'products' %}?category=Sesiones" class="dropdown-item">Sesiones Privadas</a> -->
+          <a href="{% url 'store:products' %}?category=Sesiones" class="dropdown-item">Sesiones Privadas</a> -->
         </div>
       </li>
       <!-- <li class="nav-item dropdown">
@@ -20,9 +20,9 @@
           Apoya mi labor
         </a>
         <div class="dropdown-menu border-0" aria-labelledby="apoya-mi-labor">
-          <a href="{% url 'products' %}?category=meditar" class="dropdown-item">Articulos para meditar</a>
+          <a href="{% url 'store:products' %}?category=meditar" class="dropdown-item">Articulos para meditar</a>
           <a href="#" class="dropdown-item">Ropa</a>
-          <a href="{% url 'products' %}?sort=price&direction=desc" class="dropdown-item">Donaciones</a>
+          <a href="{% url 'store:products' %}?sort=price&direction=desc" class="dropdown-item">Donaciones</a>
         </div>
       </li> -->
       <!-- <li class="nav-item dropdown">
@@ -44,7 +44,7 @@
         <div class="dropdown-menu" aria-labelledby="user-options">
           {% if request.user.is_authenticated %}
             {% if request.user.is_superuser %}
-              <a href="{% url 'add_product' %}" class="dropdown-item">Deposito</a>
+              <a href="{% url 'store:add_product' %}" class="dropdown-item">Deposito</a>
             {% endif %}
             <a href="#" class="dropdown-item">Mi Perfil</a>
             <a href="{% url 'direct_logout' %}" class="dropdown-item">Salir</a>

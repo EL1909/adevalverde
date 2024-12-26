@@ -1,10 +1,9 @@
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.db.models.functions import Lower
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -12,9 +11,88 @@ from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View
-from .models import Product, Category, Order, OrderItem
-from .forms import ProductForm
+from .models import Product, Category, Provider, Order, OrderItem
+from .forms import ProductForm, CategoryForm
 import json
+
+
+
+## Categories Views
+
+class CategoryView(View):
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        # User Permission
+        if not request.user.is_superuser:
+            messages.error(request, "Only store owners can manage categories.")
+            return redirect('home')
+
+        # Check action parameter
+        action = kwargs.get('action', None)
+        if action == 'remove_cat':
+            return self.remove_category(request, *args, **kwargs)
+        elif action == 'edit_cat':
+            return self.edit_category(request, *args, **kwargs)
+        
+        # If no valid action, call the default method (get)
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get(self, request):
+        # Fetch categories with their product count
+        categories = Category.objects.annotate(product_count=Count('product'))
+        return render(request, 'store/inventory_mgm.html', {'categories': categories})
+
+    def post(self, request, category_id=None):
+        if category_id:
+            category = get_object_or_404(Category, pk=category_id)
+            form = CategoryForm(request.POST, instance=category)
+        else:
+            form = CategoryForm(request.POST)
+            
+            # Check if the category already exists before creating a new one
+            category_name = request.POST.get('category_name')
+            if Category.objects.filter(Q(name__iexact=category_name)).exists():
+                messages.error(request, f"'La categoria {category_name}' ya existe.")
+                return redirect('store:invmgm')
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Categoria Actualizada." if category_id else "Categoria Creada.")
+            return redirect('store:invmgm')
+        else:
+            context = {'form': form, 'category_id': category_id}
+            return render(request, 'store/inventory_mgm.html', context)
+        
+    # Remove category
+    def remove_category(self, request, *args, **kwargs):
+        category_id = kwargs.get('category_id')
+        category = get_object_or_404(Category, pk=category_id)
+        category.delete()
+        messages.success(request, "Categoria eliminada.")
+        return redirect('store:invmgm')
+
+    # Edit category
+    def edit_category(self, request, *args, **kwargs):
+        category_id = kwargs.get('category_id')
+        category = get_object_or_404(Category.objects.annotate(product_count=Count('product')), pk=category_id)
+        if request.method == 'POST':
+            form = CategoryForm(request.POST, instance=category)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Categoria Actualizada.")
+                return redirect('store:invmgm')
+        else:
+            form = CategoryForm(instance=category)
+        
+        context = {
+            'categories': Category.objects.annotate(product_count=Count('product')),
+            'category': category,
+            'form': form
+        }
+        return render(request, 'store/inventory_mgm.html', context)
+
+
+
 
 
 ## Product views
@@ -34,13 +112,17 @@ class InventoryManagementView(View):
         # Fetch all products and categories
         products = Product.objects.all().order_by('-id')  # Order by most recent first
         categories = Category.objects.all()
+        providers = Provider.objects.all()
         form = ProductForm()
+        catform =CategoryForm
 
         # Prepare context for the template
         context = {
             'products': products,
             'categories': categories,
+            'providers': providers,
             'form': form,
+            'catform':catform
         }
 
         # Render the inventory management template
@@ -140,7 +222,7 @@ def edit_product(request, product_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Successfully updated product!')
-            return redirect(reverse('product_detail', args=[product.id]))
+            return redirect(reverse('store/product_detail', args=[product.id]))
         else:
             messages.error(request,
                            ('Failed to update product. '
@@ -343,3 +425,5 @@ class UpdateOrder(View):
             return JsonResponse({'status': 'error', 'message': 'Order not found or invalid data.'}, status=404)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+

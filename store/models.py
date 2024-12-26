@@ -38,8 +38,8 @@ class Product(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=6, decimal_places=2)
     created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True)
-    category = models.ForeignKey('Category', null=True, blank=True, on_delete=models.SET_NULL)
-    providers = models.ManyToManyField('Provider', related_name='products', blank=True)
+    category = models.ForeignKey('Category', null=True, blank=True, on_delete=models.SET_NULL, related_name='products')
+    providers = models.ManyToManyField('Provider', related_name='articles', blank=True)
     other_site_link = models.URLField(blank=True, null=True)
     image = models.ImageField(upload_to=get_image_path, null=True, blank=True)
     

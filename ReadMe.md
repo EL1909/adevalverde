@@ -266,16 +266,12 @@ There's three type of expected users.
 - Will be able to manage key moments.
 
 
-
-
-
-
-
-
 # Deployment
 
 Desired domain:
 www.adelavalverde.com -NOT AVAILABLE-
+
+www.adelavalverde.info
 
 ## LIVE FROM ESFUERZO VM
 
@@ -287,10 +283,8 @@ www.adelavalverde.com -NOT AVAILABLE-
     
         $ esfuerzo-host1/projects mkdir adelavalverde
 
-
     3. Fecth project from github using token (esfuerzo)
         $ git clone git@github.com:el1909/adevalverde.git
-
     
     4. Create .env file within VM
 
@@ -299,7 +293,6 @@ www.adelavalverde.com -NOT AVAILABLE-
             copy variables saved in .env project file
             control + X
 
-    
     5. Create Gunicorn configuration for each project
         5.1 - Install gunicorn
 
@@ -323,23 +316,27 @@ www.adelavalverde.com -NOT AVAILABLE-
 
         5.5 - Bind project's wsgi file to a port
                 
-                $ gunicorn --bind 0.0.0.0:8080 adevalverde.wsgi:application
+                $ gunicorn --bind 127.0.0.1:8080 adevalverde.wsgi:application
 
     6. Create NginX config file
         6.1 Navigate to nginx site-availables folder
         
             $ ./etc/nginx/sites-available
         
-        6.2 Create new file for this project
+        6.2 Create new nginx config file for this project, within:
+         
+            6.2.1 - Go to folder:
+                $ ../etc/nginx/sites-avaiable
 
+            6.2.2 - Create File:
             $ sudo nano adevalverde
 
             server {
-                listen 80;
-                server_name 35.184.6.115;  # Replace with your domain or server IP
+                listen 80; # All sites must listen to 80, nginx redirects them internally
+                server_name adelavalverde.info www.adelavalverde.info;  # Replace with registered domain
 
                 location / {
-                    proxy_pass http://0.0.0.0:8080;  # Port where Gunicorn is running
+                    proxy_pass http://127.0.0.1:8082;  # Port where Gunicorn is running, must point to 127.0.0.1:(desired port) for security reasons
                     proxy_set_header Host $host;
                     proxy_set_header X-Real-IP $remote_addr;
                     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -347,46 +344,46 @@ www.adelavalverde.com -NOT AVAILABLE-
                 }
 
                 location /static/ {
-                    alias /home/efrain19091/projects/esfuerzo/esfuerzo/static/;  # Path to your static files
+                    alias /home/efrain19091/projects/adelavalverde adevalverde/static/;  # Path to your static files
                 }
 
                 location /media/ {
-                    alias /home/efrain19091/projects/esfuerzo/esfuerzo/media/;  # Path to your media files
+                    alias /home/efrain19091/projects/adelavalverde adevalverde/media/;  # Path to your media files
                 }
             }
 
-
-
-
-              
-
-
-
-
-
-
-
-    4. Remove parked DNS
-        4.1 - Ensure DNS leads to VM IP, and remove parked domain setting
+            ATTENTION: 
+            - listen 80; # All sites must listen to 80, nginx redirects them internally
+            - Port where Gunicorn is running, must point to 127.0.0.1:(desired port) for security reasons
+            - Setup static and media paths
     
+        6.3 - Create link to file within site-enabled folder
 
-    5. Install and configure Nginx to VM in order to manage multiple hosting
-        5.1 - Include domain in nginx file within sites available
+            $ sudo ln -s /etc/nginx/sites-available/adevalverde /etc/nginx/sites-enabled/
 
-                $ sudo nano /etc/nginx/sites-available/hundegger
+    7. Create a SSL certificate using Certbot.
+
+        7.1 -  Upgrade all Packages 
+
+            $ sudo apt upgrade
+
+        7.2 - Ensure domain resolves properly
+
+            $ dig adelavalverde.info
+
+        7.3 - Run Certbot to Obtain and Install the SSL Certificate
+
+            $ sudo certbot --nginx -d adelavalverde.info -d www.adelavalverde.info
+
+            Certbot will add ssl_certificate to nginx config file automatically
         
-        5.2 - Create file with location for gunicorn process, static, media and .well-known paths
+        7.4 - Test the SSL Configuration and setup auto-renewal
 
-    6. Install SSL Certificate
-        6.1 - Install certbot
-            
-            $ sudo install certbot
-        
-        6.2 - Create LetsEncrypt folder path
+            After Certbot finishes, you can test your SSL setup by visiting your site via https://adelavalverde.info or https://www.adelavalverde.info.
 
-            $ sudo mkdir /var/www/letsencrypt/.well-known/acme-challenge/
-        
-        6.3 - Create SLL certificate using Certbot
+            Certbot automatically sets up a cron job to renew all certificates every 60 days. Test the renewal process by running:
 
-            $ sudo certbot --nginx -d geruestbau-hundegger.de -d www.geruestbau-hundegger.de
+            $ sudo certbot renew --dry-run
+
+            This ensures that Certbot will renew your certificates without issues when the time comes.
 
