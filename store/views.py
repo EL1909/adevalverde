@@ -294,7 +294,7 @@ class Cart(View):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             cart_count = sum(item['quantity'] for item in cart.values())
             return JsonResponse({'cart_count': cart_count, 'message': "Product added to cart!"})
-        return redirect('cart_view')
+        return redirect('store:cart_view')
 
     # Remove an item from the cart
     def remove_item(self, request, product_id):
@@ -309,12 +309,11 @@ class Cart(View):
             total_price = sum(float(item['price']) * item['quantity'] for item in cart.values())
             return JsonResponse({'success': True, 'total_price': total_price, 'cart_count': len(cart)})
 
-        return redirect('cart_view')
+        return redirect('store:products')
 
     # Update an item’s quantity in the cart
     def update_item(self, request, product_id):
         cart = request.session.get('cart', {})
-
         try:
             quantity = int(request.POST.get('quantity', 1))
             if quantity > 0:
@@ -324,18 +323,16 @@ class Cart(View):
             request.session['cart'] = cart
         except (KeyError, ValueError):
             messages.error(request, "Invalid quantity provided.")
-
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             total_price = sum(float(item['price']) * item['quantity'] for item in cart.values())
             return JsonResponse({'success': True, 'total_price': total_price, 'cart_count': len(cart)})
-
-        return redirect('cart_view')
+        return redirect('store:cart_view')
 
     # Clear the cart
     def clear(self, request):
         request.session['cart'] = {}
         messages.info(request, "Cart cleared.")
-        return redirect('cart_view')
+        return redirect('store:cart_view')
 
 
 class CreateOrder(View):

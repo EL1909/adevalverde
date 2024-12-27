@@ -138,6 +138,7 @@ body {
     color: rgb(81, 95, 110);
     display: flex;
     opacity: 0;
+    bottom: 0;
     transition: opacity 0.5s ease;
     white-space: nowrap;
 }
@@ -225,6 +226,8 @@ footer .list-inline {
     padding: 5px 10px;
 }
 
+
+
 /* Form's styles ---------------------------------------*/
 .form-group {
     padding: 5px;
@@ -283,6 +286,8 @@ input   {
     color: #333;
 }
 
+
+
 /* Retos De Oro ---------------------------------*/
 #rdo1   {
     height: 450px;
@@ -300,7 +305,6 @@ input   {
     transform: translateX(-50%); /* Adjust for exact centering */
 }
 
-
 #rdo2   {
     color: var(--main-bg-color);
     height: 250px;
@@ -309,8 +313,6 @@ input   {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
-
 
 #rdo3   {
     background-image: url(/media/site/rdo.jpeg);
@@ -338,6 +340,23 @@ input   {
     width: auto;
 }
 
+#rdo6   {
+    background-image: url(/media/site/rdo2.jpeg);
+    background-size: 110%;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: var(--main-text-color);
+}
+
+#rdo6  h2 {
+    color: var(--main-text-color);
+}
+
+
+
+
+
+/* Utils --------------------------------------*/
 
 .section {
     padding: 40px 20px;
@@ -359,6 +378,7 @@ input   {
 .features {
     display: flex;
     gap: 30px;
+    justify-content: center;
     flex-wrap: wrap;
     color: var(--main-text-color);
 }

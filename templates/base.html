@@ -62,7 +62,7 @@
               {% endif %}
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#"><i class="fas fa-shopping-bag fa-lg"></i></a>
+              <a class="nav-link" href="{% url 'store:cart_view' %}"><i class="fas fa-shopping-bag fa-lg"></i></a>
             </li>
           </ul>
         </div>
@@ -111,9 +111,9 @@
     {% block core_js%}
     <!-- Include jQuery and jQuery UI Autocomplete -->
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <!-- Local JS -->    
-    <script src="{% static 'js/custom.js' %}"></script>
+    <!-- Local JS -->
     <script src="{% static 'js/store.js' %}"></script>
+    <script src="{% static 'js/custom.js' %}"></script>
     <!-- RunningText -->
     <link rel="stylesheet" href="{% static 'css/running_text.css' %}" type="text/css">
     <script src="{% static 'js/running_text.js' %}"></script>

@@ -428,32 +428,33 @@ X-X   client requests   X-X
 
 
 
+home page: Presenta el ultimo producto desarrolaldo por Adela
 
+Retos de Oro
 
-
-
-
-
-
-
-
-
-Indicaciones para tu programador:
 	1.	Estructura General:
 	•	El HTML está organizado en secciones claras: encabezado, descripción general, características, contenido, beneficios y pie de página.
+
 	•	Se utilizaron elementos de sección y div para estructurar las partes del contenido.
+
 	2.	Estilo:
-	•	La página utiliza un estilo simple y limpio, con un fondo claro y textos en tonos oscuros para asegurar que la información sea fácil de leer.
+	•	La página utiliza un estilo simple y limpio, haciendo contraste entre tonos claros y tonos oscuros para asegurar que la información sea fácil de leer.
+
 	•	El color principal es el amarillo dorado (#f5c400), simbolizando el “oro” y el propósito positivo del libro. Puedes cambiar el color si lo deseas.
+
 	•	Los botones de llamada a la acción (cta-button) son de un color destacado para atraer la atención y motivar al usuario a hacer clic.
+
 	3.	Responsividad:
 	•	El diseño es completamente responsive, lo que significa que se ajustará bien a dispositivos móviles y de escritorio.
+
 	4.	Secciones Clave:
 	•	Encabezado (Header): Incluye el título principal y un botón de llamada a la acción que lleva al usuario a la sección de compra.
+
 	•	¿Por qué elegir este libro? (Features): Tres características clave del libro con iconos descriptivos.
 	•	Contenido del Libro: Expone lo que el lector puede esperar encontrar en el libro.
 	•	Beneficios: Resalta los beneficios principales del libro para la vida personal del lector.
 	•	Botones CTA: Asegúrate de que los botones tengan enlaces que dirijan a la página de compra.
+
 	5.	Acción Requerida:
 	•	El programador puede agregar el enlace de compra en los botones que están definidos con #order, para que el usuario sea dirigido a la página de compra del libro.
 

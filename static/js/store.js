@@ -1,42 +1,7 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     let csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 
-    // CATEGORIES
-
-    // Manage Add category button
-    document.getElementById('show-add-category').addEventListener('click', function() {
-        var addCategory = document.getElementById('add-category');
-        if (addCategory.style.display === 'none' || !addCategory.style.display) {
-            addCategory.style.display = 'block';
-            this.style.display = 'none';
-
-        } else {
-            addCategory.style.display = 'none';
-            this.style.display = 'block';
-        }
-    });
-    
-    
     // CART
-
-    //  Add product to cart
-    document.querySelector('#addProduct form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        let formData = new FormData(this);
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': csrfToken
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Handle the response, maybe clear the form or show a success message
-            console.log(data);
-        });
-    });
-
     // Add item to cart behavior
     document.querySelectorAll('.add-to-cart-form').forEach(function(form) {
         form.addEventListener('submit', function(e) {
@@ -68,7 +33,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
 
 
-    // Delete item behavior
+    // Delete item from cart behavior
     document.querySelectorAll('.remove-item').forEach(button => {
         button.addEventListener('click', function (e) {
             e.preventDefault();
@@ -101,28 +66,27 @@ document.addEventListener('DOMContentLoaded', (event) => {
     // Product info within shoppingCart
     document.querySelectorAll('#cart-items .ticket-item').forEach((item) => {
         item.addEventListener('click', function () {
-        // Retrieve data from the clicked item's attributes
-        const productName = this.getAttribute('data-name');
-        const productPrice = this.getAttribute('data-price');
-        const productUnits = this.getAttribute('data-quantity');
-        const productImage = this.getAttribute('data-image');
-        const productDescription = this.getAttribute('data-description');
-        const productId = this.getAttribute('data-id');
-    
-        // Show #selected-item and hide #home-detail
-        document.getElementById('selected-item').classList.remove('d-none');
-        document.getElementById('home-detail').classList.add('d-none');
-    
-        // Update relevant elements in #selected-item
-        document.getElementById('selected-product-name').textContent = productName;
-        document.getElementById('selected-product-price').textContent = `$${productPrice}`;
-        document.getElementById('selected-product-quantity').value = productUnits;
-        document.getElementById('update-quantity-form').action = `/products/cart/update/${productId}/`;
-        document.getElementById('remove-product-link').href = `/products/cart/remove/${productId}/`;
-        document.getElementById('selected-product-link').href = `/product/detail/${productId}/`;
-        document.getElementById('selected-product-image').src = productImage;
-        document.getElementById('selected-product-image').alt = productName;
-        document.getElementById('selected-product-description').textContent = productDescription;
+            console.log('Item clicked:', this);
+            // Retrieve data from the clicked item's attributes
+            const productName = this.getAttribute('data-name');
+            const productPrice = this.getAttribute('data-price');
+            const productUnits = this.getAttribute('data-quantity');
+            const productImage = this.getAttribute('data-image');
+            const productId = this.getAttribute('data-id');
+        
+            // Show #selected-item and hide #home-detail
+            document.getElementById('selected-item').classList.remove('d-none');
+            document.getElementById('home-detail').classList.add('d-none');
+        
+            // Update relevant elements in #selected-item
+            document.getElementById('selected-product-name').textContent = productName;
+            document.getElementById('selected-product-price').textContent = `$${productPrice}`;
+            document.getElementById('selected-product-quantity').value = productUnits;
+            document.getElementById('update-quantity-form').action = '/store/cart/update/' + productId + '/';
+            document.getElementById('remove-product-link').href = '/store/cart/clear/';
+            document.getElementById('selected-product-link').href = '/store/product/' + productId + '/' ;
+            document.getElementById('selected-product-image').src = productImage;
+            document.getElementById('selected-product-image').alt = productName;
         });
     });
 
@@ -335,6 +299,46 @@ document.addEventListener('DOMContentLoaded', (event) => {
             });
         }
     });
+
+
+
+
+    // CATEGORIES
+    // Manage Add category button
+    document.getElementById('show-add-category').addEventListener('click', function() {
+        var addCategory = document.getElementById('add-category');
+        if (addCategory.style.display === 'none' || !addCategory.style.display) {
+            addCategory.style.display = 'block';
+            this.style.display = 'none';
+
+        } else {
+            addCategory.style.display = 'none';
+            this.style.display = 'block';
+        }
+    });
+
+    
+    // INVENTORY
+    //  Add new product to Inventory
+    document.querySelector('#addProduct form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        let formData = new FormData(this);
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Handle the response, maybe clear the form or show a success message
+            console.log(data);
+        });
+    });
+
+    
+    
     
     
 

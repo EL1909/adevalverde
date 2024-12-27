@@ -16,29 +16,24 @@
             <div id="product-detail">
               <p id="home-detail" class="text-muted">Seleccione un producto para ver los detalles.</p>
               <div id="selected-item" class="d-none">
-                <div class="d-flex gap-3" id="selected-item-top">
-                  <h4 id="selected-product-name" class="toggle-button"></h4>
-                  <div class="col-4">
-                    <h4 id="selected-product-price"></h4>
-                    <div class="d-flex gap-3">
-                      <form id="update-quantity-form" method="post" action="/products/cart/update/${productId}/">
-                        {% csrf_token %}
-                        <input id="selected-product-quantity" class="form-control" type="number" name="quantity" value="1" min="1">
-                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check"></i></button>
-                      </form>
-                      <a id="remove-product-link" href="/products/cart/remove/<product_id>/" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></a>  
-                    </div>
-                  </div>
-                </div>
-                <hr>
-                <div class="row toggle-content" id="selected-item-bottom">
-                  <div class="col-6">
-                    <a id="selected-product-link" href="/product/detail/${productId}/">
+                <div class="row toggle-content" >
+                  <div class="col-6 card" id="selected-item-bottom">
+                    <input type="hidden" id="selected-item-{{ product_id }}">
+                    <a id="selected-product-link" href="#">
                       <img id="selected-product-image" class="card-img-top img-fluid" src="#" alt="">
                     </a>
                   </div>
-                  <div id="selected-product-description" class="col-6 running-text">
-                    <p class="mt-3 ">{{ product.description }}</p>
+                  <div class="col-6" id="selected-item-top">
+                    <h6 id="selected-product-name" class="toggle-button"></h6>
+                      <div class="d-flex justify-content-between">
+                        <form id="update-quantity-form" method="post" action="#">
+                          {% csrf_token %}
+                          <small><input id="selected-product-quantity" class="form-control" style="max-width: 40%;" type="number" name="quantity" value="1" min="1"></small>
+                          <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check"></i></button>
+                          <a id="remove-product-link" href="#" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></a>
+                        </form>
+                        <h4 id="selected-product-price"></h4>
+                      </div>
                   </div>
                 </div>
               </div>
@@ -86,7 +81,7 @@
           <h5 class="mb-0">Resumen del Carrito</h5>
           <i class="fa-solid fa-trash toggle-icon"></i>
         </div>
-        <a href="{% url 'cart_clear' %}" class="btn btn-danger btn-sm w-100 mt-2 toggle-link d-none">Vaciar Carrito</a>
+        <a href="{% url 'store:cart_clear' %}" class="btn btn-danger btn-sm w-100 mt-2 toggle-link d-none">Vaciar Carrito</a>
         <hr>
         <ul id="cart-items" class="list-unstyled">
           {% for product_id, item in cart.items %}
@@ -94,7 +89,6 @@
           data-name="{{ item.name }}"
           data-price="{{ item.price }}"
           data-quantity="{{ item.quantity }}"
-          data-description="{{ item.description }}"
           data-image="{{ item.image }}"
           data-id="{{ product_id }}"
           >
@@ -102,6 +96,8 @@
             <span class="product-units">x{{ item.quantity }}</span>
             <span class="product-price">${{ item.price }}</span>
           </li>
+          {% empty %}
+          <li>El carrito esta vacio.</li>
           {% endfor %}
         </ul>
         <hr>

@@ -16,24 +16,26 @@
         </div>
         <div class="col-12 col-md-6 col-lg-4">
             <div class="product-details-container mb-5 mt-md-5">
-                <p class="mb-0">{{ product.name }}</p>
-                <p class="lead mb-0 text-left font-weight-bold">${{ product.price }}</p>
-                <!-- Add to Cart Button -->
-                <form action="{% url 'cart_add' product_id=product.id %}" class="add-to-cart-form" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary" data-product-id="{{ product.id }}"><i class="fa-solid fa-cart-shopping"></i></button>
-                    <button type="button" class="btn btn-primary"><a href="{{ product.other_site_link }}" target="_blank"><i class="fa-brands fa-amazon"></i></a></button>
-                </form>
+                <h5 class="mb-4">{{ product.name }}</h5>
+                <div class="d-flex justify-content-between">
+                    <!-- Add to Cart Button -->
+                    <form action="{% url 'store:cart_add' product_id=product.id %}" class="add-to-cart-form" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary" data-product-id="{{ product.id }}"><i class="fa-solid fa-cart-shopping"></i></button>
+                        <button type="button" class="btn btn-primary" onclick="window.open('{{ product.other_site_link }}', '_blank')"><i class="fa-brands fa-amazon"></i></button>
+                    </form>
+                    <h2 class="mb-0 text-left">${{ product.price }}</h2>
+                </div>
                 <div class="">
                     {% if request.user.is_superuser %}
                     <small class="ml-3">
-                        <a href="{% url 'edit_product' product.id %}"><i class="fa-regular fa-pen-to-square"></i></a> | 
-                        <a class="text-danger" href="{% url 'delete_product' product.id %}" id="delete-product-link"><i class="fa-regular fa-trash-can"></i></a>
+                        <a href="{% url 'store:edit_product' product.id %}"><i class="fa-regular fa-pen-to-square"></i></a> | 
+                        <a class="text-danger" href="{% url 'store:delete_product' product.id %}" id="delete-product-link"><i class="fa-regular fa-trash-can"></i></a>
                     </small>
                     {% endif %}
                     {% if product.category %}
                     <p class="small mt-1 mb-0">
-                        <a class="text-muted" href="{% url 'products' %}?category={{ product.category.name }}">
+                        <a class="text-muted" href="{% url 'store:products' %}?category={{ product.category.name }}">
                             <i class="fas fa-tag mr-1"></i>{{ product.category.friendly_name }}
                         </a>
                     </p>
@@ -50,5 +52,13 @@
             </div>
         </div>
     </div>
+    <section class="section" style="background-color: #f1f1f1;">
+        <h2>🌱 Beneficios para tu bienestar personal</h2>
+        <ul>
+            <li><strong>Reducción del estrés:</strong> Las actividades interactivas y reflexiones te ayudarán a desconectar y a encontrar momentos de paz interior.</li>
+            <li><strong>Mayor enfoque:</strong> Establecerás metas claras y aprenderás a priorizar lo que realmente importa en tu vida.</li>
+            <li><strong>Crecimiento espiritual:</strong> Las afirmaciones y los temas profundos fomentan una conexión más cercana con tu propósito divino y tu bienestar interior.</li>
+        </ul>
+    </section>
 </div>
 {% endblock %}
