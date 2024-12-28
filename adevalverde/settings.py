@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'decouple',
     'users',
     'store',
+    'keymoments'
 ]
 
 MIDDLEWARE = [

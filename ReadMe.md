@@ -83,6 +83,14 @@ Step 3. Install Django & Python
 
 Step 4. Define Apps and models
 
+    4.1 - Create App
+        $ python3 manage.py startapp [app-name]
+    4.2 - Add it to the apps lisst in settings.py
+    4.3 - Include in main urls.py
+    4.4 - Configure Models, templates and views
+
+
+
 Step 5. Configure Templates path within settings.py 
         TEMPLATES = [
         {
@@ -126,9 +134,9 @@ Step 8. Install Store app
 
 
 
-## [Database Design](#database-design)
+# [Database Design](#database-design)
 
-### [Models](#models)
+## [Models](#models)
 For the first version of thi project, I will be using four different database models for this project:
 
 User, Store, KeyMoments and Categories.
@@ -184,9 +192,7 @@ class Category(models.Model):
     friendly_name = models.CharField()
 
 
-### [Database Relationships](#database-relationships)
-
-## Store APP:
+## [Database Relationships](#database-relationships)
 Database Model Relationships
 Category:
 A Category can have many Products.
@@ -244,21 +250,114 @@ OrderItem's price is stored at the time of order creation to keep historical pri
 
 This diagram shows how each model relates to others, highlighting the foreign key and many-to-many relationships. Remember to adjust the naming according to your project's conventions if different from what's shown here.
 
-## [Users Types](#users-types)
+
+
+
+
+
+# Apps
+
+## Users App:
+The User class is the default User class from Django.
+
+
+
+## Store App:
+
+## KeyMoments App:
+
+The Key Moments model is a key custom class in this project as the main function of the site is for users to travel thru Adela Valverde life's timeline.
+
+Models:
+    - class KeyMoment:
+
+Views:
+    - key_moments_list
+    - create_key_moment
+    - edit_key_moment
+    - delete_key_moment
+
+Forms:
+    - KeyMomentsForm
+
+Include js and css at the bottom of base.html
+    <!-- KeyMoments -->
+    <link rel="stylesheet" href="{% static 'css/key_moments.css' %}" type="text/css">
+    <script src="{% static 'js/key_moments.js' %}"></script>
+
+
+
+## Canal App.
+
+
+Canal App.
+models.py
+Program class manage different content to be hosted within site. "The Channel".
+
+class Program(models.Model): title = models.CharField(max_length=100) description = models.TextField() cover_image = models.ImageField(upload_to='media/canal/program_covers/', null=True, blank=True) created_at = models.DateTimeField(auto_now_add=True) updated_at = models.DateTimeField(auto_now=True) host = models.ManyToManyField(CustomUser, related_name='my_programs', blank=True) followers = models.ManyToManyField(CustomUser, related_name='followed_programs', blank=True) youtube_playlist_id = models.CharField(max_length=50, null=True, blank=True)
+
+Episode class manage different content to be hosted within Program.
+
+class Episode(models.Model): title = models.CharField(max_length=100) description = models.TextField() cover_image = models.ImageField(upload_to='media/canal/episode_covers/', null=True, blank=True) video_link = models.URLField(blank=True) publish_date = models.DateTimeField(null=True, blank=True) program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name='episodios') views = models.IntegerField(default=0)
+
+RequestedTopic class manage content requests.
+
+class RequestedTopic(models.Model): user = models.ForeignKey(CustomUser, on_delete=models.CASCADE) topic = models.CharField(max_length=100) description = models.TextField() episode = models.ForeignKey(Episode, on_delete=models.CASCADE, related_name='requested_topics') requested_at = models.DateTimeField(auto_now_add=True)
+
+Reactions class handles user interaction with a particular content; THIS MODEL CAN BE IMPORTED TO OTHER APPS
+
+class Reactions(models.Model): user = models.ForeignKey(CustomUser, on_delete=models.CASCADE) liked = models.BooleanField(default=False) disliked = models.BooleanField(default=False) reacts = models.CharField(max_length=255, null=True, blank=True) comment = models.TextField(null=True, blank=True) content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE) object_id = models.PositiveIntegerField() content_object = GenericForeignKey('content_type', 'object_id')
+
+
+Canal App:
+
+Within this app i'll be looking foreward to post a set of recurrent videos of different approved_users.
+On canal main page user can see a list of programs.
+Within a program, user can see:
+brief description of this program
+release dates for new episodes
+Each program must have an expected release period
+User can propose topics to be talked in next episodes
+User can like/dislike, react (add icon) to episodes
+
+
+Canal App:
+
+Create Database Models():
+
+Create Views, templates and Forms:
+
+Canal App Views: AddProgram(View): AddEpisode(View):
+Canal App Templates:
+add_episode.html canal.html new_program.html
+Remesas App Forms: ProgramForm. EpisodeForm.
+04.04.24
+I will pause the CANAL app to go back to remesas, currently the canal tab can add a program, and display list of programs and episodes add episode functonallity is not working properly, it creates episodes as new programs.
+
+- Integrate with YouTube API: Use the YouTube Data API to interact with your YouTube channel.
+- Authenticate your Django app with the API using OAuth.
+- Fetch information about your videos, playlists, etc., and display them on your website.
+- Implement Search Functionality: If needed, add search functionality to allow users to find specific programs or episodes easily.
+- Ensure Security: Secure your Django project by following best practices such as using HTTPS, validating user inputs, and protecting against common vulnerabilities like SQL injection and cross-site scripting (XSS).
+- Permitir notas de voz en comentarios
+- Desbloquear videos con likes acumulados, ej. 100likes = 10 creditos, 1 credito = 1 view.
+
+
+# [Users Types](#users-types)
 
 There's three type of expected users.
 
-### Visitors:
+## Visitors:
 
 - Will be able to watch all publications and online store.
 - Will be able to register as a member using a valid email.
 
-### Members
+## Members
 
 - Will be able to register payment information to access store items or services.
 - Will be able to comment on key moments posts.
 
-### Superusers
+## Superusers
 
 - Will be able to manage products and services.
 - Will be able to manage key moments.
@@ -384,6 +483,9 @@ www.adelavalverde.info
             $ sudo certbot renew --dry-run
 
             This ensures that Certbot will renew your certificates without issues when the time comes.
+
+
+#
 
 Madre bendición
 

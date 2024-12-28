@@ -294,6 +294,7 @@ input   {
     color: var(--main-text-color);
     background-image: url(/media/site/rdo.jpeg);
     background-size: 100%;
+    background-repeat: no-repeat;
     object-fit: cover;
     overflow: hidden;
 }

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4 col-lg-4 col-12 order-1 camino">
+            <div class="row quiensoy columna-derecha">
+                <div class="col-12 history-heading">
+                    <h3>Mi Camino</h3>
+                    <p>Selecciona un momento</p>
+                    <div class="row history-items">
+                        {% for key_moment in key_moments_list %}
+                        <div class="col-10 timeline-item" data-dates="{{ key_moment.start_date }}">
+                            <a href="#">
+                                <h4>{{ key_moment.title }}</h4>
+                                <p class="moment-excerpt">{{ key_moment.excerpt }}</p>
+                                <p class="moment-description" style="display: none;">{{ key_moment.description }}</p>
+                                {% if key_moment.image %}
+                                <img src="{{ key_moment.image.url }}" alt="{{ key_moment.title }}" style="display: none;">
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="col-2 edicion">
+                            {% if request.user.is_authenticated %}
+                            <a href="#" class="edit-moment" data-moment-id="{{ key_moment.id }}"><i class="fa-solid fa-pencil fa-sm"></i></a>
+                            <a href="#" class="delete-moment" data-moment-id="{{ key_moment.id }}"><i class="fa-solid fa-trash-can"></i></a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <span>
+                        {% if request.user.is_authenticated %}
+                        <button id="create-new-moment"><i class="fa-solid fa-plus"></i></button>
+                        {% include 'keymoments/modal.html' %}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-4 col-12 order-2">
+            <div class="row">
+                <div class="col-12 history-heading">
+                    <h3 id="key-moment-title">Descripcion</h3>
+                    <p id="key-moment-excerpt">Bienvenido</p>
+                </div>
+                <div class="col-12">
+                    <p class="description-box" id="key-moment-description">
+                        Gracias por tu interés en mi historia.
+                        Selecciona algún punto en mi camino para expandir.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-4 d-none d-md-block order-3 p-3" id="key-moment-image">
+        </div>
+    </div>
+    <hr>
+</div>
+
+{% endblock %}

@@ -302,7 +302,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
 
-
     // CATEGORIES
     // Manage Add category button
     document.getElementById('show-add-category').addEventListener('click', function() {
@@ -317,6 +316,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     });
 
+    
     
     // INVENTORY
     //  Add new product to Inventory

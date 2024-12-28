@@ -1,0 +1,80 @@
+<input type="hidden" id="editing-mode" name="editing_mode" value="0">
+<div class="modal fade" id="create-moment-modal" tabindex="-1" aria-labelledby="createMomentModalLabel" aria-hidden="true" data-moment-id="{{ key_moment.id }}">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createMomentModalLabel">Nuevo Momento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="new-moment-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group mb-3">
+                        <label for="title">Titulo</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="excerpt">Sub-titulo</label>
+                        <input type="text" class="form-control" id="excerpt" name="excerpt" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="description">Descripción</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="start_date">Fecha de Inicio</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" placeholder="dd/mm/yyyy"  value="{{ form.start_date.value|date:'d/m/Y' }}" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="end_date">Fecha de Fin</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" placeholder="dd/mm/yyyy" value="{{ form.end_date.value|date:'d/m/Y' }}">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="moment_type">Tipo de Momento</label>
+                        <select class="form-control" id="moment_type" name="moment_type">
+                            <option value="UNKNOWN">Desconocido</option>
+                            <optgroup label="Social">
+                                <option value="birth">Nacimiento</option>
+                                <option value="death">Fin</option>
+                                <option value="love">Amor</option>
+                                <option value="moving">Mudanza</option>
+                            </optgroup>
+                            <optgroup label="Académico">
+                                <option value="school">Escuela</option>
+                                <option value="college">Universidad</option>
+                                <option value="institute">Instituto</option>
+                                <option value="self">Autodidacta</option>
+                            </optgroup>
+                            <optgroup label="Trabajo">
+                                <option value="hired">Contratado</option>
+                                <option value="fired">Despedido</option>
+                                <option value="own">Negocio Propio</option>
+                                <option value="self">Independiente</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="location">Ubicación</label>
+                        <input type="text" class="form-control" id="location" name="location" maxlength="256">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="moment_image">Imagen</label>
+                        <input type="file" class="form-control" id="moment_image" name="image" accept="image/*">
+                        <!-- Add a container for the Cropper -->
+                        <div class="mt-2">
+                            <img id="cropper-image" class="img-fluid" src="#" alt="Preview" style="max-width: 100%; display: none;">
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="status" name="status" value="1" checked>
+                        <label class="form-check-label" for="status">Publicar Momento</label>
+                    </div>
+                    {% if editing %}
+                    <input type="hidden" id="moment_id" name="moment_id" value="{{ key_moment.id }}">
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">Aceptar</button>
+                </form>
+            </div>
+        </div>    
+    </div>
+</div>

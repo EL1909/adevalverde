@@ -1,0 +1,87 @@
+/* Key Moments -----------------------------------*/
+
+.quiensoy {
+    text-align: left;
+}
+
+.camino {
+    padding: 5px;
+}
+
+.edicion  {
+    padding: 100px 0 20px 0;
+    font-size: 1rem;
+}
+
+.history-heading  {
+    height: 50px;
+    color: #666666;
+    margin: 20px;
+}
+
+.history-items  {
+    font-family: "PT Sans", sans-serif;
+    font-weight: 300;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    height: 300px;
+    overflow-y: scroll;
+}
+
+.timeline-item {
+    margin: 0;
+    padding: 4em 1em 0em 2em;
+    position: relative;
+    color: #666666;
+    border-left: 1px solid #6666664a;
+}
+
+.timeline-item p {
+    padding: 0;
+    margin: 0;
+}
+
+.timeline-item:before {
+    content: attr(data-dates);
+    position: absolute;
+    left: 2.5em;
+    top: 2em;
+    display: block;
+    font-family: "Exo", sans-serif;
+    font-weight: 500;
+    font-size: 0.8em;
+    padding: 0;
+    margin: 0;
+}
+
+.timeline-item:after {
+    width: 12px;
+    height: 12px;
+    display: block;
+    top: 2em;
+    position: absolute;
+    left: -6px;
+    border-radius: 12px;
+    content: '';
+    background: #fafafa;
+}
+
+.description-box  {
+    overflow-y: scroll;
+    height:370px;
+    font-size: 1rem;
+    text-align: left;
+    border-left: 1px solid #6666664a;
+    padding: 1em 2em 0em 2em;
+}
+
+#key-moment-image {
+    background-image: url(/media/site/quiensoy.jpg);
+    background-size: cover;
+    background-repeat:no-repeat;
+    overflow: scroll;
+    height: 450px;
+    max-width: auto;
+    border: solid 2px #ffffff;
+    z-index: 1;
+}
