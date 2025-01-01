@@ -1,6 +1,6 @@
-{% extends "base.html" %}
-{% block content %}
-<section id="rdo1" class="section">
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/base.css' %}" type="text/css">
+<section id="rdo1">
     <!-- <h1>✨ Retos de Oro 2025: Gratitud, Propósito y Vida Plena ✨</h1> -->
     <a href="https://a.co/d/4X0z2BM" target="_blank" class="cta-button">¡Comienza tu viaje ahora!</a>
 </section>
@@ -28,10 +28,10 @@
     </div>
 </section>
 <!-- Beneficios -->
-<section id="rdo5" class="section border">
-    <div class="row">
-        <div class="col-8">
-            <div class="p-4">
+<section >
+    <div id="rdo5" class="row">
+        <div id="rdo5-1" class="col-6">
+            <div>
                 <h2>🎁 ¿Qué encontrarás dentro?</h2>
                 <p>✅ 36 sopas de letras temáticas que refuerzan conceptos clave mientras estimulan tu mente y espíritu.</p>
                 <p>✅ Afirmaciones y citas poderosas para mantenerte inspirado.</p>
@@ -39,8 +39,8 @@
                 <p>✅ Temas cuidadosamente seleccionados: Gratitud, Propósito, Abundancia Espiritual, Prosperidad Financiera y Relaciones Positivas.</p>
             </div>
         </div>
-        <div class="col-4 border">
-            <div class="card">
+        <div class="col-6">
+            <div>
                 <img src="../media/site/rdo3.jpeg" alt="">
             </div>    
         </div>
@@ -56,4 +56,3 @@
         <a href="https://a.co/d/4X0z2BM" target="_blank" class="cta-button">¡Haz de Retos de Oro 2025 tu compañero esencial para este nuevo año!</a>
     </div>
 </section>
-{% endblock %}

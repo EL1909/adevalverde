@@ -82,13 +82,11 @@ Step 3. Install Django & Python
     3.3 Create the Django project in VSCode's integrated terminal:$ django-admin startproject myprojectnameReplace myprojectname with your project name.
 
 Step 4. Define Apps and models
-
     4.1 - Create App
         $ python3 manage.py startapp [app-name]
-    4.2 - Add it to the apps lisst in settings.py
+    4.2 - Add it to the apps list in settings.py
     4.3 - Include in main urls.py
     4.4 - Configure Models, templates and views
-
 
 
 Step 5. Configure Templates path within settings.py 
@@ -268,18 +266,23 @@ The User class is the default User class from Django.
 
 The Key Moments model is a key custom class in this project as the main function of the site is for users to travel thru Adela Valverde life's timeline.
 
-Models:
+### Models:
     - class KeyMoment:
 
-Views:
+### Views:
     - key_moments_list
     - create_key_moment
     - edit_key_moment
     - delete_key_moment
 
-Forms:
+### Forms:
     - KeyMomentsForm
 
+### Templates:
+    - keymoments.html
+    - modal.html
+
+### CSS & JS
 Include js and css at the bottom of base.html
     <!-- KeyMoments -->
     <link rel="stylesheet" href="{% static 'css/key_moments.css' %}" type="text/css">
@@ -289,43 +292,34 @@ Include js and css at the bottom of base.html
 
 ## Canal App.
 
+Within this app i'll be looking foreward to post a set of recurrent videos of different approved_users.
 
-Canal App.
-models.py
-Program class manage different content to be hosted within site. "The Channel".
+On canal main page user can see a list of programs.
 
-class Program(models.Model): title = models.CharField(max_length=100) description = models.TextField() cover_image = models.ImageField(upload_to='media/canal/program_covers/', null=True, blank=True) created_at = models.DateTimeField(auto_now_add=True) updated_at = models.DateTimeField(auto_now=True) host = models.ManyToManyField(CustomUser, related_name='my_programs', blank=True) followers = models.ManyToManyField(CustomUser, related_name='followed_programs', blank=True) youtube_playlist_id = models.CharField(max_length=50, null=True, blank=True)
+Within a program, user can see:
+    - brief description of this program
+    - release dates for new episodes
+    - Each program must have an expected release period
+    - User can propose topics to be talked in next episodes
+    - User can like/dislike, react (add icon) to episodes
 
-Episode class manage different content to be hosted within Program.
 
-class Episode(models.Model): title = models.CharField(max_length=100) description = models.TextField() cover_image = models.ImageField(upload_to='media/canal/episode_covers/', null=True, blank=True) video_link = models.URLField(blank=True) publish_date = models.DateTimeField(null=True, blank=True) program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name='episodios') views = models.IntegerField(default=0)
+### Models:
+Program class manage different content to be hosted within "The Channel".
+    - class Program(models.Model):
+
+Episode class manage different content to be hosted within Program.    
+    - class Episode(models.Model):
 
 RequestedTopic class manage content requests.
+    -class RequestedTopic(models.Model):
 
-class RequestedTopic(models.Model): user = models.ForeignKey(CustomUser, on_delete=models.CASCADE) topic = models.CharField(max_length=100) description = models.TextField() episode = models.ForeignKey(Episode, on_delete=models.CASCADE, related_name='requested_topics') requested_at = models.DateTimeField(auto_now_add=True)
-
-Reactions class handles user interaction with a particular content; THIS MODEL CAN BE IMPORTED TO OTHER APPS
-
-class Reactions(models.Model): user = models.ForeignKey(CustomUser, on_delete=models.CASCADE) liked = models.BooleanField(default=False) disliked = models.BooleanField(default=False) reacts = models.CharField(max_length=255, null=True, blank=True) comment = models.TextField(null=True, blank=True) content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE) object_id = models.PositiveIntegerField() content_object = GenericForeignKey('content_type', 'object_id')
+Reactions class handles user interaction with a particular content; THIS MODEL CAN BE IMPORTED TO OTHER 
+    - class Reactions(models.Model):
 
 
-Canal App:
+### Views
 
-Within this app i'll be looking foreward to post a set of recurrent videos of different approved_users.
-On canal main page user can see a list of programs.
-Within a program, user can see:
-brief description of this program
-release dates for new episodes
-Each program must have an expected release period
-User can propose topics to be talked in next episodes
-User can like/dislike, react (add icon) to episodes
-
-
-Canal App:
-
-Create Database Models():
-
-Create Views, templates and Forms:
 
 Canal App Views: AddProgram(View): AddEpisode(View):
 Canal App Templates:
@@ -738,3 +732,162 @@ Imagen de fondo o ilustraciones secundarias:
 	•	Tamaño recomendado: 1920px de ancho x 1080px de alto.
 
 
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retos de Oro 2025</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .cta-button {
+            background-color: #ff6600;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            background-color: #ff4500;
+        }
+
+        .section {
+            padding: 50px 20px;
+            text-align: center;
+        }
+
+        .section h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .section p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .feature {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .feature h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .feature p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        footer {
+            background-color: #222;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <h1>✨ Bienvenido a Retos de Oro 2025: Gratitud, Propósito y Vida Plena ✨</h1>
+        <a href="#order" class="cta-button">¡Comienza tu viaje ahora!</a>
+    </header>
+
+    <!-- Descripción General -->
+    <section class="section">
+        <h2>Retos de Oro 2025: Tu herramienta para transformar tu vida</h2>
+        <p>Retos de Oro 2025 no es solo un libro: es una herramienta poderosa para transformar tu vida. Diseñado especialmente para cerrar el 2024 con gratitud y comenzar el 2025 con propósito, este libro combina actividades interactivas, reflexiones inspiradoras y un enfoque lúdico para ayudarte a crear una vida plena y consciente.</p>
+    </section>
+
+    <!-- ¿Por qué elegir Retos de Oro 2025? -->
+    <section class="section">
+        <h2>🎉 ¿Por qué elegir Retos de Oro 2025?</h2>
+        <div class="features">
+            <div class="feature">
+                <h3>🧩 Actividades significativas</h3>
+                <p>Con 36 sopas de letras y reflexiones basadas en temas esenciales como gratitud, propósito, abundancia espiritual, prosperidad financiera y relaciones positivas, este libro es un compañero perfecto para fortalecer tu crecimiento personal.</p>
+            </div>
+            <div class="feature">
+                <h3>💡 Reflexiones transformadoras</h3>
+                <p>Cada actividad incluye afirmaciones y mensajes que te guiarán en tu camino hacia la autoexploración y el logro de tus metas.</p>
+            </div>
+            <div class="feature">
+                <h3>📖 Diseño cómodo y accesible</h3>
+                <p>Con un formato de 8.5” x 11” y letra grande de 18 puntos, es ideal para una experiencia relajante, cómoda y apta para todos.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contenido del Libro -->
+    <section class="section">
+        <h2>🎁 ¿Qué encontrarás dentro?</h2>
+        <p>✅ 36 sopas de letras temáticas que refuerzan conceptos clave mientras estimulan tu mente y espíritu.</p>
+        <p>✅ Afirmaciones y citas poderosas para mantenerte inspirado.</p>
+        <p>✅ Espacios para reflexionar sobre tus logros, sueños y gratitudes.</p>
+        <p>✅ Temas cuidadosamente seleccionados: Gratitud, Propósito, Abundancia Espiritual, Prosperidad Financiera y Relaciones Positivas.</p>
+    </section>
+
+    <!-- Beneficios -->
+    <section class="section">
+        <h2>🌟 Beneficios para tu vida</h2>
+        <p>✔️ Reduce el estrés y mejora tu bienestar emocional.</p>
+        <p>✔️ Fortalece tu enfoque en metas significativas.</p>
+        <p>✔️ Convierte tus momentos de ocio en un ritual transformador.</p>
+        <a href="#order" class="cta-button">¡Haz de Retos de Oro 2025 tu compañero esencial para este nuevo año!</a>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Retos de Oro. Todos los derechos reservados.</p>
+    </footer>
+
+</body>
+</html>
