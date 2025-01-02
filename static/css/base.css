@@ -25,9 +25,7 @@ body {
     width: 100%; /* Ensure it scales down for smaller screen sizes */
 }
 
-  
-
-/* Utils --------------------------------------*/
+/* Utils ----------------------------------------*/
 
 .d-none {
     display: none;
@@ -265,13 +263,11 @@ footer {
     align-items: center;
     margin: 0;
     padding: 10px;
-    box-sizing: border-box;
 }
 
 footer .logo {
     padding: 0;
 }
-
 
 footer .list-inline {
     float: right;
@@ -386,6 +382,7 @@ input   {
 #rdo4   {
     padding: 50px 20px;
     text-align: center;
+    align-items: center;
     background-image: url(/media/site/rdo4.jpeg);
     background-repeat: no-repeat;
     width: auto;
@@ -406,7 +403,6 @@ input   {
     justify-content: center;
     color: var(--main-bg-color);
     padding: 50px 50px 50px 50px;
-    margin-bottom: 50px;
 }
 
 #rdo5-1  {
@@ -479,7 +475,6 @@ input   {
     overflow: hidden;
     object-fit: cover;
 }
-
 
 
 /* Media Queries -----------------------------------*/
