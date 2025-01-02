@@ -12,13 +12,19 @@ body {
     font-family: "PT Sans", sans-serif; 
     background-color: #f2f1f1;
     margin: 0;
+    width: 100%; /* Ensure it scales down for smaller screen sizes */
+    background-color: #ffffff; /* Optional: Set a background for the content */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow for better visibility */
 }
 
 .content  {
-    min-height: calc(100vh - 100px);
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    min-height: calc(100vh - 100px);
+    width: 100%; /* Ensure it scales down for smaller screen sizes */
 }
+
   
 
 /* Utils --------------------------------------*/
@@ -251,11 +257,21 @@ body {
   
 /* Footer ---------------------------------------*/
 footer {
+    display: flex;
+    flex-direction: row;
     height: 50px;
     border-top: 5px solid #6666664a;
     background-color: rgb(81, 95, 110);
-    box-sizing: content-box;
+    align-items: center;
+    margin: 0;
+    padding: 10px;
+    box-sizing: border-box;
 }
+
+footer .logo {
+    padding: 0;
+}
+
 
 footer .list-inline {
     float: right;
@@ -331,11 +347,11 @@ input   {
 /* Retos De Oro ---------------------------------*/
 
 #rdo1 {
-    width: auto;
+    width: 100%;
     height: 80vh;
     color: var(--main-text-color);
     background-image: url(/media/site/rdo1.jpeg);
-    background-size: contain;
+    background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
     overflow: hidden;
@@ -343,7 +359,7 @@ input   {
 
 #rdo1 .cta-button   {
     position: absolute;       /* Position relative to the nearest positioned ancestor */
-    bottom: 30vh;             /* Distance from the bottom */
+    bottom: 20vh;             /* Distance from the bottom */
     left: 50%;                /* Center horizontally */
     transform: translateX(-50%); /* Adjust for exact centering */
 }
@@ -386,11 +402,11 @@ input   {
 #rdo5   {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     justify-content: center;
     color: var(--main-bg-color);
-    height: 450px;
-    background-color: rgba(255, 255, 255, 0.418);
     padding: 50px 50px 50px 50px;
+    margin-bottom: 50px;
 }
 
 #rdo5-1  {
@@ -405,18 +421,32 @@ input   {
     margin-bottom: 20px;
 }
 
+#rdo5-2  {
+    text-align: center;
+    justify-content: center;
+}
+
 #rdo5 img {
+    justify-content: center;
     overflow: hidden;
-    height: 100%;
+    width: fit-content;
+    height: 450px;
     object-fit: contain;
+    border-radius: 15px;
 }
 
 #rdo6   {
+    position: relative;
+    clear:both;
+    margin-top: 15px;
     background-image: url(/media/site/rdo2.jpeg);
-    background-size: 110%;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     color: var(--main-text-color);
+    padding: 20px; /* Add padding for spacing inside */
+    margin-top: 20px; /* Add spacing above */
+    text-align: center; /* Center align content */
 }
 
 #rdo6  h2 {
@@ -448,5 +478,63 @@ input   {
     border-radius: 15px;
     overflow: hidden;
     object-fit: cover;
+}
+
+
+
+/* Media Queries -----------------------------------*/
+@media (min-width: 1200px) {
+    #body {
+        max-width: 1200px;
+        margin: 0 auto; /* Centers the content horizontally */
+        width: 100%; /* Ensures the width doesn't exceed the screen */
+    }
+
+}
+
+@media (max-width: 600px) {
+    .section {
+        padding: 20px 10px;
+        text-align: center;
+    }
+
+    #rdo1 {
+        background-image: url(/media/site/rdo3.jpeg);
+    }
+
+    #rdo1 .cta-button   {
+        bottom: 25vh;
+        width: 80%;
+        text-align: center;
+    }
+
+    #rdo2   {
+        height: auto;
+        padding: 15px;
+    }
+
+    #rdo4   {
+        padding: 20px 10px;
+        overflow: hidden;
+        overflow-y: scroll;
+    }
+    
+    #rdo5   {
+        padding: 25px;
+        margin-bottom: 10px;
+    }
+
+    #rdo5-1  {
+        padding: 5px;
+        overflow: hidden;
+        overflow-y: scroll;
+    }
+    
+    #rdo5-1  h2 {
+        color: var(--main-bg-color);
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+    
 }
 

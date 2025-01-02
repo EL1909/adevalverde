@@ -30,9 +30,16 @@
     <title>Adela Valverde {% block extra_title %}{% endblock %}</title>
   </head>
   <body>
+    {% if request.path == '/' %}
+    <style>
+        #main-header {
+            display: none;
+        }
+    </style>
+    {% endif %}
     <div class="overlay"></div>
     <!-- Header -->
-    <header>
+    <header id="main-header">
       <!-- Top Bar -->
       <div class="row" id="topbar">
         <!-- Logo -->
@@ -97,16 +104,17 @@
     {% endblock %}
     </div>
     <footer class="footer">
-      <div class="row">
-        <div class="col">
-          <ul class="list-inline justify-content-end">
-            <li class="list-inline-item social-links"><a href="https://www.youtube.com/channel/UCvxBjb0KE26mADhgkECn8rQ" target="_blank"><i class="fa-brands fa-youtube"></i></a></li>
-            <li class="list-inline-item social-links"><a href="https://www.facebook.com/elsilencioestuguru" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
-            <li class="list-inline-item social-links"><a href="https://twitter.com/adelavalverde" target="_blank"><i class="fa-brands fa-x-twitter"></i></a></li>
-            <li class="list-inline-item social-links"><a href="https://www.instagram.com/adelavalverde/" target="_blank"><i class="fab fa-instagram"></i></a></li>
-            <li class="list-inline-item social-links"><a href="https://ar.linkedin.com/in/adelavalverde" target="_blank"><i class="fa-brands fa-linkedin"></i></a></li>
-          </ul>
-        </div>
+      <div class="col">
+        <h3 class="logo" ><a class="navbar-brand logo" href="{% url 'store:products' %}">Adela Valverde </a></h3>
+      </div>
+      <div class="col">
+        <ul class="list-inline justify-content-end">
+          <li class="list-inline-item social-links"><a href="https://www.youtube.com/channel/UCvxBjb0KE26mADhgkECn8rQ" target="_blank"><i class="fa-brands fa-youtube"></i></a></li>
+          <li class="list-inline-item social-links"><a href="https://www.facebook.com/elsilencioestuguru" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
+          <li class="list-inline-item social-links"><a href="https://twitter.com/adelavalverde" target="_blank"><i class="fa-brands fa-x-twitter"></i></a></li>
+          <li class="list-inline-item social-links"><a href="https://www.instagram.com/adelavalverde/" target="_blank"><i class="fab fa-instagram"></i></a></li>
+          <li class="list-inline-item social-links d-sm-none"><a href="https://ar.linkedin.com/in/adelavalverde" target="_blank"><i class="fa-brands fa-linkedin"></i></a></li>
+        </ul>
       </div>
     </footer>
     {% block core_js%}
