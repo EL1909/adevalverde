@@ -20,8 +20,7 @@ urlpatterns = [
         path('clear/', views.Cart.as_view(), {'action': 'clear'}, name='cart_clear'),
     ])),
     path('orders/', include([
-        path('create/', views.CreateOrder.as_view(), name='create_order'),
-        path('update_payment/', views.UpdateOrder.as_view(), name='update_order_payment'),
+        path('manage_order/', views.ManageOrder.as_view(), name='manage_order'),
     ])),
     path('category/', include([
         path('add/', views.CategoryView.as_view(), name='add_category'),

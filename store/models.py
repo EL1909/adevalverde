@@ -60,12 +60,7 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} - {self.user.username}"
     
-    def get_total_price(self):
-        # Calculate the total price by summing up all item prices * quantity
-        return sum(item.quantity * item.price for item in self.items.all())
-    
     def save(self, *args, **kwargs):
-        self.totalAmount = self.get_total_price()
         super().save(*args, **kwargs)
 
 

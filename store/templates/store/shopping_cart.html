@@ -30,7 +30,7 @@
                           {% csrf_token %}
                           <small><input id="selected-product-quantity" class="form-control" style="max-width: 40%;" type="number" name="quantity" value="1" min="1"></small>
                           <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check"></i></button>
-                          <a id="remove-product-link" href="#" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></a>
+                          <a id="remove-product-link" href="#" class="btn btn-danger btn-sm remove-item"><i class="fa-solid fa-trash"></i></a>
                         </form>
                         <h4 id="selected-product-price"></h4>
                       </div>
@@ -42,7 +42,7 @@
         </div>
         <div class="tab-pane fade" id="envio" role="tabpanel" aria-labelledby="envio-tab">
           <div class="ticket border p-3">
-            <form method="post" action="#">
+            <form method="post" action="{% url 'store:manage_order' %}">
               {% csrf_token %}
               <div class="mb-3">
                 <label for="name" class="form-label">Nombre</label>
@@ -79,9 +79,9 @@
       <div class="ticket border p-3">
         <div class="d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Resumen del Carrito</h5>
-          <i class="fa-solid fa-trash toggle-icon"></i>
+          <a href="{% url 'store:cart_clear' %}" class="btn btn-danger btn-sm  mt-2" onclick="return confirm('Confirme para Vaciar el carrito')"><i class="fa-solid fa-trash toggle-icon"></i></a>
         </div>
-        <a href="{% url 'store:cart_clear' %}" class="btn btn-danger btn-sm w-100 mt-2 toggle-link d-none">Vaciar Carrito</a>
+        <span id="order_id" data-order-id="{{ order_id }}"><small><p>Order ID: {{ order_id }}</p></small></span>
         <hr>
         <ul id="cart-items" class="list-unstyled">
           {% for product_id, item in cart.items %}
@@ -108,5 +108,8 @@
       </div>
     </div>
   </div>
+  <script>
+    const manageOrderUrl = "{% url 'store:manage_order' %}";
+  </script>
 {% endblock %}
 

@@ -261,6 +261,56 @@ The User class is the default User class from Django.
 
 
 ## Store App:
+    Custom app intended to handle management, publication and process payments of products and services hostd in this website.
+
+### Models:
+    -Class Category:
+        Stores categories for products.
+        Has a name field for the category title.
+    - Class Provider:
+        Represents suppliers or manufacturers of products.
+        Contains only a name field to identify each provider.
+    -Class Product:
+        Central model for items in the store.
+        Contains details like name, description, price, and an image link.
+        Relates to users who can create products, categories to which products belong, and providers who supply them.
+        Features a custom image path generator for unique image uploads.
+    - Class Order:
+        Manages individual customer orders.
+        Includes user association, payment status, total amount, and timestamps for order creation and updates.
+        Automatically sorts orders by the most recent creation date.
+    -Class OrderItem:
+        Represents individual items within an order.
+        Links to an Order and a Product, specifying quantity and price at the time of purchase.
+
+### Model Relationships
+
+- **Category** 
+  - One-to-many with **Product**: Each category can have multiple products, but each product belongs to one category (or none).
+
+- **Provider**
+  - Many-to-many with **Product**: Products can have multiple providers, and providers can supply multiple products.
+
+- **Product**
+  - Many-to-one with **Category**: Links to a single category (nullable).
+  - Many-to-many with **Provider**: Can be associated with multiple providers.
+  - Many-to-one with **User** (via `created_by`): Each product can be linked to a user who created it.
+
+- **Order**
+  - Many-to-one with **User**: Each order is associated with exactly one user.
+  - One-to-many with **OrderItem**: An order can have multiple items.
+
+- **OrderItem**
+  - Many-to-one with **Order**: Each item belongs to one order.
+  - Many-to-one with **Product**: Each item references one product.
+
+### Relationship Diagram:
+- *Product* → *Category* (FK)
+- *Product* ↔ *Provider* (M2M)
+- *Product* ← *User* (FK, creator)
+- *Order* ← *User* (FK)
+- *Order* → *OrderItem* (FK, can have multiple items)
+- *OrderItem* → *Product* (FK, each item points to a product)
 
 ## KeyMoments App:
 
@@ -407,7 +457,7 @@ www.adelavalverde.info
 
         5.5 - Bind project's wsgi file to a port
                 
-                $ gunicorn --bind 127.0.0.1:8080 adevalverde.wsgi:application
+                $ gunicorn --bind 127.0.0.1:8082 adevalverde.wsgi:application
 
     6. Create NginX config file
         6.1 Navigate to nginx site-availables folder
@@ -477,23 +527,6 @@ www.adelavalverde.info
             $ sudo certbot renew --dry-run
 
             This ensures that Certbot will renew your certificates without issues when the time comes.
-
-
-#
-
-Madre bendición
-
-ya puedes entrar en la pagina e ir viendo, 
-
-Para empezar con la venta del libro, dime que es lo que voy a ir haciendo con:
-
-1. Que va a salir en en home
-2. Que poner/quitar en general
-
-Por el tipo de pagina (pagina de persona/influencer) todavia tengo ue vover a instalar:
-
-1. Generador de biografia
-2. 
 
 
 
@@ -891,3 +924,5 @@ Imagen de fondo o ilustraciones secundarias:
 
 </body>
 </html>
+
+

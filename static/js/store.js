@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             .then(data => {
                 // Log the message sent from the view to the console
                 console.log(data.message);  // This will print the message, e.g., "Product added to cart!"
-
+                console.log("Order Id:", data.order_id);
                 // Optionally update other parts of the page, like cart count
                 alert("Product added to cart!");  // This can be a temporary message for feedback
             })
@@ -32,13 +32,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     });
 
-
     // Delete item from cart behavior
     document.querySelectorAll('.remove-item').forEach(button => {
         button.addEventListener('click', function (e) {
             e.preventDefault();
             const productId = this.getAttribute('data-product-id');
-            const url = this.getAttribute('href');
+            const url = 'store/cart/cart_remove/' + productId;
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -62,11 +61,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     });
 
-
     // Product info within shoppingCart
     document.querySelectorAll('#cart-items .ticket-item').forEach((item) => {
         item.addEventListener('click', function () {
-            console.log('Item clicked:', this);
             // Retrieve data from the clicked item's attributes
             const productName = this.getAttribute('data-name');
             const productPrice = this.getAttribute('data-price');
@@ -90,20 +87,25 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     });
 
-
-    // Show Paypal Button
+    // Call Paypal Buttons and Update Order
     $(document).ready(function() {
         var shippingForm = $('#envio form');
         var sessionData = sessionStorage.getItem('shippingData') ? JSON.parse(sessionStorage.getItem('shippingData')) : {};
-        let orderId;
+        var order_id = document.getElementById('order_id').getAttribute('data-order-id');
 
+        if (order_id)   {
+            sessionStorage.setItem('order_id', order_id)
+        }
 
+        // Debugging step: Log session data and order_id
+        console.log("Session Data:", sessionData);
+        console.log("Order ID from sessionStorage:", order_id);
 
         // Function to save shipping data to session
         function saveToSession(formData) {
             sessionStorage.setItem('shippingData', JSON.stringify(formData));
         }
-
+    
         // If the form exists, listen for changes
         if (shippingForm.length) {
             shippingForm.on('change', function() {
@@ -117,7 +119,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 };
                 saveToSession(formData);
             });
-
+    
             // On page load, if data exists in session, fill the form
             if (Object.keys(sessionData).length > 0) {
                 $('#name').val(sessionData.name || '');
@@ -128,34 +130,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 $('#country').val(sessionData.country || '');
             }
         }
-
+    
         $('#proceed_to_pay').on('click', function(event) {
             event.preventDefault();
-
-            // Gather cart data
-            var cartItems = [];
-            $('#cart-items li').each(function() {
-                var item = {
-                    'product_id': $(this).data('id'),
-                    'name': $(this).data('name'),
-                    'price': $(this).data('price'),
-                    'quantity': $(this).data('quantity')
-                };
-                cartItems.push(item);
-            });
-
-            // Check if cart has items
-            if (cartItems.length === 0) {
-                alert('El carrito esta vacio.');
-                return;
-            }
-
-            // Gather user data
-            var userData = {};
+            // Log shipping data from sessionStorage
+            console.log("Shipping Data:", sessionData);
+            console.log("Order Id:", order_id);
+    
+            // Verify if shippingForm is completed
             if (shippingForm.length) {
                 var requiredFields = shippingForm.find('input[required]');
                 var allFilled = true;
-
+    
                 requiredFields.each(function() {
                     if ($(this).val().trim() === '') {
                         allFilled = false;
@@ -164,142 +150,92 @@ document.addEventListener('DOMContentLoaded', (event) => {
                         $(this).removeClass('is-invalid');
                     }
                 });
-
+    
                 if (!allFilled) {
-                    alert('Por favor verifique los datos para el envio.');
-                    return;
-                }
-
-                userData = sessionData; // Use session data for the form
-            } else {
-                // If user is logged in, you might fetch this data from another part of the page or directly from user object
-                userData = {
-                    'name': '{{ user.first_name }} {{ user.last_name }}',
-                    'email': '{{ user.email }}',
-                    'address': '{{ user.profile.address }}',
-                    'city': '{{ user.profile.city }}',
-                    'zipcode': '{{ user.profile.zipcode }}',
-                    'country': '{{ user.profile.country }}'
-                };
-
-                // Check if any of these fields are empty for logged-in users
-                if (Object.values(userData).some(value => value === '' || value === undefined)) {
-                    alert('Datos del usuario insuficientes. Por favor, completa tu perfil o inicia sesión.');
+                    alert('Por favor verifique los datos para el envío.');
                     return;
                 }
             }
-
-            // Total amount check
-            var totalAmount = $('#cart-total').text().replace('Total: $', '');
-            if (totalAmount === '' || isNaN(parseFloat(totalAmount))) {
-                alert('Error calculating the total amount.');
+    
+            if (!order_id) {
+                alert('El carrito esta vacio.');
+                return;
+            }
+    
+            // Calculate TotalAmount
+            var totalAmount = parseFloat($('#cart-total').text().replace('Total: $', ''));
+            if (isNaN(totalAmount)) {
+                alert('Error al calcular el monto total.');
                 return;
             }
 
-            // Combine all data
-            var postData = {
-                'cart': cartItems,
-                'user': userData,
-                'paymentStatus': 'pending',
-                'totalAmount': parseFloat(totalAmount)
-            };
-
-            // AJAX request to create order
-            $.ajax({
-                type: 'POST',
-                url: '/products/create_order/',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(postData),
-                dataType: 'json',
-                success: function(response) {
-                    console.log('Order created successfully:', response);
-                    orderId = response.order_id;
-                    if (shipmentDataExists) {
-                        document.getElementById('paypal-button-container').style.display = 'block';
-                        initPayPalButtons(orderId);
-                    } else {
-                        // If no shipment data, you might want to show a different message or proceed to another checkout method
-                        alert('La orden ha sido creada, pero no se han proporcionado datos de envío. Por favor, completa los datos de envío para continuar con el pago.');
-                    }
-                },
-                error: function(error) {
-                    console.error('Error creating order:', error);
-                    alert('An error occurred. Please try again.');
-                }
-            });
+            console.log("Amount:", totalAmount);
+    
+            $('#paypal-button-container').show();
+            initPayPalButtons(order_id);
         });
-
-
-        // Call Paypal Buttons
-        function initPayPalButtons(orderId) {
+    
+        // Call PayPal Buttons
+        function initPayPalButtons(totalAmount) {
             $('#paypal-button-container').empty();
             paypal.Buttons({
                 createOrder: function (data, actions) {
-                    // Retrieve total amount from DOM
-                    let totalAmount = parseFloat($('#cart-total').text().replace('Total: $', ''));
                     return actions.order.create({
                         purchase_units: [{
                             amount: {
                                 currency_code: 'USD',
-                                value: totalAmount.toFixed(2)
+                                value: totalAmount,
                             }
                         }]
                     });
                 },
                 onApprove: function (data, actions) {
                     return actions.order.capture().then(function(details) {
-                        console.log("Payment completed by " + details.payer.name.given_name);
-                        // Retrieve session data
-                        let sessionData = sessionStorage.getItem('shippingData') ? JSON.parse(sessionStorage.getItem('shippingData')) : {};
-                        handlePaymentObject(data.orderID, orderId, 'approved', sessionData, details.purchase_units[0].amount.value);
+                        console.log("Pago completado por " + details.payer.name.given_name);
+                        updateOrder(data.orderId, order_id, 'completed');
                     });
                 },
                 onError: function(err) {
-                    console.error(err); 
-                    alert('There was an error processing the payment. Please try again.');
+                    console.error(err);
+                    updateOrder(null, order_id, 'failed');
+                    alert('Hubo un error al procesar el pago. Por favor, intenta de nuevo.');
                 }
             }).render('#paypal-button-container');
         }
-        
-
-        // Handle Payment Object
-        function handlePaymentObject(paypalOrderId, orderId, paymentStatus, sessionData, amount) {
+    
+        // Function to update order status via AJAX
+        function updateOrder(paypalOrderId, order_id, status) {
             let postData = {
-                'paypal_order_id': paypalOrderId,
-                'order_id': orderId,
-                'payment_status': paymentStatus,
-                'user': {
-                    'name': sessionData.name,
-                    'email': sessionData.email,
-                    'address': sessionData.address,
-                    'city': sessionData.city,
-                    'zipcode': sessionData.zipcode,
-                    'country': sessionData.country
-                },
-                'total_amount': amount
+                'paypal_order_id': paypalOrderId || null,
+                'order_id': order_id,
+                'payment_status': status
             };
-        
+    
             $.ajax({
                 type: 'POST',
-                url: '/products/update_order_payment/',
+                url: '/store/orders/manage_order/',
+                headers: {
+                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                },
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify(postData),
                 dataType: 'json',
                 success: function(response) {
-                    console.log('Payment status updated:', response);
-                    if (paymentStatus === 'approved') {
-                        alert('Payment completed successfully!');
+                    console.log('Estado del pedido actualizado:', response);
+                    if (status === 'completed') {
+                        alert('¡Pago completado con éxito!');
                         // Optionally redirect or update UI
+                    } else {
+                        alert('El pago ha fallado. Por favor, intenta de nuevo o elige otro método de pago.');
                     }
                 },
                 error: function(error) {
-                    console.error('Error updating payment status:', error);
-                    alert('An error occurred while updating payment status. Please try again.');
+                    console.error('Error al actualizar el estado del pedido:', error);
+                    alert('Ocurrió un error al actualizar el estado del pedido. Por favor, intenta de nuevo.');
                 }
             });
         }
     });
-
 
 
     // CATEGORIES
