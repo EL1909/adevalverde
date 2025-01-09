@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 return;
             }
     
-            // Calculate TotalAmount
+            // Get TotalAmount from #cart-total
             var totalAmount = parseFloat($('#cart-total').text().replace('Total: $', ''));
             if (isNaN(totalAmount)) {
                 alert('Error al calcular el monto total.');
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 onApprove: function (data, actions) {
                     return actions.order.capture().then(function(details) {
                         console.log("Pago completado por " + details.payer.name.given_name);
-                        updateOrder(data.orderId, order_id, 'completed');
+                        updateOrder(data.orderId, order_id, 'completed', sessionData);
                     });
                 },
                 onError: function(err) {
@@ -202,40 +202,41 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 }
             }).render('#paypal-button-container');
         }
-    
-        // Function to update order status via AJAX
-        function updateOrder(paypalOrderId, order_id, status) {
-            let postData = {
-                'paypal_order_id': paypalOrderId || null,
-                'order_id': order_id,
-                'payment_status': status
-            };
-    
-            $.ajax({
-                type: 'POST',
-                url: '/store/orders/manage_order/',
-                headers: {
-                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
-                },
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(postData),
-                dataType: 'json',
-                success: function(response) {
-                    console.log('Estado del pedido actualizado:', response);
-                    if (status === 'completed') {
-                        alert('¡Pago completado con éxito!');
-                        // Optionally redirect or update UI
-                    } else {
-                        alert('El pago ha fallado. Por favor, intenta de nuevo o elige otro método de pago.');
-                    }
-                },
-                error: function(error) {
-                    console.error('Error al actualizar el estado del pedido:', error);
-                    alert('Ocurrió un error al actualizar el estado del pedido. Por favor, intenta de nuevo.');
-                }
-            });
-        }
     });
+
+    // Function to update order status via AJAX
+    function updateOrder(paypalOrderId, order_id, status, shippingData) {
+        let postData = {
+            'paypal_order_id': paypalOrderId || null,
+            'order_id': order_id,
+            'payment_status': status,
+            'shipping_data': shippingData,
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/store/orders/manage_order/',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(postData),
+            dataType: 'json',
+            success: function(response) {
+                console.log('Estado del pedido actualizado:', response);
+                if (status === 'completed') {
+                    alert('¡Pago completado con éxito!');
+                    // Optionally redirect or update UI
+                } else {
+                    alert('El pago ha fallado. Por favor, intenta de nuevo o elige otro método de pago.');
+                }
+            },
+            error: function(error) {
+                console.error('Error al actualizar el estado del pedido:', error);
+                alert('Ocurrió un error al actualizar el estado del pedido. Por favor, intenta de nuevo.');
+            }
+        });
+    }
 
 
     // CATEGORIES
@@ -252,8 +253,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     });
 
-    
-    
+        
     // INVENTORY
     //  Add new product to Inventory
     document.querySelector('#addProduct form').addEventListener('submit', function(e) {
@@ -274,9 +274,54 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
 
     
+    // ORDERS
+    // Product info within Orders
+    // Select all order rows
+    const orderRows = document.querySelectorAll('.order-item');
     
-    
-    
+    orderRows.forEach(row => {
+        row.addEventListener('click', function() {
+            const orderDetails = document.getElementById('order-details');
+            const orderId = this.dataset.order_id;
+            const userId = this.dataset.user;
+            const created_at = this.dataset.created_at;
+            const updated_at = this.dataset.updated_at;
+            const itemCount = this.dataset.items;
+            const totalAmount = this.dataset.totalamount;
+            const paymentStatus = this.dataset.paymentstatus;
 
-    
+            // Populate order details
+            document.querySelector('#order-details .order-id-display').textContent = orderId;
+            document.querySelector('#order-details .total-price-display').textContent = `$${totalAmount}`;
+            document.querySelector('#order-details .status-display').textContent = `${paymentStatus}`;
+            document.querySelector('#order-details .user-id-display').textContent = `${userId}`;
+            document.querySelector('#order-details .created-display').textContent = `${created_at}`;
+            document.querySelector('#order-details .updated-display').textContent = `${updated_at}`;
+            
+            // Update or clear any existing items
+            const itemsList = document.getElementById('order-items');
+            itemsList.innerHTML = ''; // Clear previous items
+
+            // Here we'll simulate adding items. In real use, you'd fetch this via AJAX.
+            for (let i = 0; i < itemCount; i++) {
+                let item = document.createElement('li');
+                item.textContent = `Item ${i+1} - Placeholder for real item details`;
+                itemsList.appendChild(item);
+            }
+
+            // Toggle visibility of order details
+            orderDetails.classList.toggle('d-none');
+
+            // Update order button's functionality with the current order's ID
+            document.getElementById('update_order').onclick = function() {
+                console.log(`Update status for order ID: ${orderId}`);
+                if (orderId) {
+                    updateOrder(null, orderId, 'completed')
+                } else {
+                    console.error('No order Id found to update')
+                }
+            };
+        });
+    });
+
 });

@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.utils.crypto import get_random_string
-import os
+import os, json
 
 PAYMENT_STATUS_CHOICES = [
     ('pending', 'Pending'),
@@ -53,6 +53,14 @@ class Order(models.Model):
     totalAmount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    shipping_data = models.TextField(default='{}')
+
+    @property
+    def get_shipping_data(self):
+        return json.loads(self.shipping_data)
+
+    def set_shipping_data(self, data):
+        self.shipping_data = json.dumps(data)
 
     class Meta:
         ordering = ['-created_at']

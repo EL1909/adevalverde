@@ -17,30 +17,20 @@
                                 <img class="card-img-top img-fluid" src="{{ MEDIA_URL }}noimage.png" alt="{{ product.name }}">
                             </a>
                             {% endif %}
-                            <div class="card-body pb-0">
-                                <p class="mb-0">{{ product.name }}</p>
+                            <div class="card-body pb-2">
+                                <h6 class="mb-2">{{ product.name }}</h6>
                             </div>
                             <div class="card-footer bg-white pt-0 border-0 text-left">
                                 <div class="row">
-                                    <p class="lead mb-0 font-weight-bold text-end">${{ product.price }}</p>
-                                    <div class="d-flex">
+                                    <div class="d-flex justify-content-between">
                                         <!-- Add to Cart Button -->
                                         <form action="{% url 'store:cart_add' product_id=product.id %}" class="add-to-cart-form" method="post">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-primary" data-product-id="{{ product.id }}"><i class="fa-solid fa-cart-shopping"></i></button>
                                             <button type="button" class="btn btn-primary"><i class="fa-brands fa-amazon"><a href="{{ product.other_site_link }}"></a></i></button>
+                                            <button type="submit" class="btn btn-primary" data-product-id="{{ product.id }}"><i class="fa-solid fa-cart-shopping"></i></button>
                                         </form>
+                                        <h4 class="mb-2 text-end">${{ product.price }}</h4>
                                     </div>
-                                    <!-- <div class="d-flex">
-                                        {% if product.category %}
-                                        <p class="small mt-1 mb-0">
-                                            <a class="text-muted" href="{% url 'store:products' %}?category={{ product.category.name }}">
-                                                <i class="fas fa-tag mr-1"></i>{{ product.category.friendly_name }}
-                                            </a>
-                                        </p>
-                                        {% endif %}
-                                        <small class="text-muted">No Rating</small>
-                                    </div> -->
                                 </div>
                             </div>
                         </div>

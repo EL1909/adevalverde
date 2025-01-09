@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function() {
       event.preventDefault();
       userOptions.classList.toggle("d-none"); // Show or hide user options
       userOptions.classList.toggle("show");
-      menuIcon.classList.toggle("hide"); // Hide the menu icon
+      menuIcon.classList.toggle("d-none"); // Hide the menu icon
     });
   
     // Optional: Hide user options if clicking outside the menu or options
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function() {
       if (!menuIcon.contains(event.target) && !userOptions.contains(event.target)) {
         userOptions.classList.add("d-none"); // Hide user options
         userOptions.classList.remove("show");
-        menuIcon.classList.remove("hide"); // Show the menu icon again
+        menuIcon.classList.remove("d-none"); // Show the menu icon again
       }
     });
     

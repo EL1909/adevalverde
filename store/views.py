@@ -106,7 +106,8 @@ class InventoryManagementView(View):
         return super().dispatch(*args, **kwargs)
 
     def get(self, request):
-        # Fetch all products and categories
+        # Fetch all products, orders and categories
+        orders = Order.objects.all().order_by('-id')  # Order by most recent first
         products = Product.objects.all().order_by('-id')  # Order by most recent first
         categories = Category.objects.all()
         providers = Provider.objects.all()
@@ -115,6 +116,7 @@ class InventoryManagementView(View):
 
         # Prepare context for the template
         context = {
+            'orders': orders,
             'products': products,
             'categories': categories,
             'providers': providers,
@@ -372,7 +374,6 @@ class Cart(View):
     # Clear cart, order_id, and user-related session data
     def clear(self, request):
         session_keys_to_clear = ['cart', 'order_id', 'name', 'email', 'address', 'city', 'zipcode']
-        
         for key in session_keys_to_clear:
             if key in request.session:
                 del request.session[key]
@@ -382,18 +383,23 @@ class Cart(View):
         return redirect('store:cart_view')
 
 
-
 class ManageOrder(View):
     def post(self, request):
         data = json.loads(request.body)
         order_id = data.get('order_id')
         payment_status = data.get('payment_status')
+        shipping_data = data.get('shipping_data', {})
 
         try:
             order = Order.objects.get(id=order_id)
             # Update Payment Status
             order.paymentStatus = payment_status
             order.updated_at = timezone.now()
+            # Update the shipping data
+            if isinstance(order.shipping_data, str):  # If using TextField
+                order.set_shipping_data(shipping_data)
+            else:  # If using JSONField
+                order.shipping_data = shipping_data
             order.save()
 
             # Create OrderItems
@@ -409,9 +415,15 @@ class ManageOrder(View):
                     )
                 except Product.DoesNotExist:
                     print(f"Product {product_id} not found.")
+
             # Clear the cart from session after creating order items
-            request.session.pop('cart', None)
-            request.session.pop('order_id', None)
+            session_keys_to_clear = ['cart', 'order_id', 'name', 'email', 'address', 'city', 'zipcode']
+            for key in session_keys_to_clear:
+                if key in request.session:
+                    del request.session[key]
+            
+                request.session.modified = True  # Mark session as modified
+                messages.info(request, "Cart and session data cleared.")
 
             return JsonResponse({
                 'message': 'Order status updated successfully.',
