@@ -1,21 +1,24 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.utils.crypto import get_random_string
+import uuid
 import os, json
 
 PAYMENT_STATUS_CHOICES = [
-    ('pending', 'Pending'),
-    ('completed', 'Completed'),
-    ('failed', 'Failed'),
+    ('pending', 'Pendiente'),
+    ('completed', 'Completado'),
+    ('failed', 'Fallido'),
 ]
 
 
 class Category(models.Model):
+    name = models.CharField(max_length=256)
+    description = models.TextField(null=True, blank=True)
+
     class Meta:
         verbose_name_plural = 'Categories'
-
-    name = models.CharField(max_length=256)
 
     def __str__(self):
         return self.name
@@ -32,7 +35,11 @@ class Product(models.Model):
     # Custom upload path for images
     def get_image_path(self, filename):
         name, ext = os.path.splitext(filename)
-        return f'products/{slugify(name)}-{get_random_string(length=8)}{ext}'
+        return f'store/products/{slugify(name)}-{get_random_string(length=8)}{ext}'
+    
+    def get_download_file(self, filename):
+        name, ext = os.path.splitext(filename)
+        return f'store/download_file/{slugify(name)}-{get_random_string(length=8)}{ext}'
     
     name = models.CharField(max_length=256)
     description = models.TextField()
@@ -42,6 +49,16 @@ class Product(models.Model):
     providers = models.ManyToManyField('Provider', related_name='articles', blank=True)
     other_site_link = models.URLField(blank=True, null=True)
     image = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    is_downloadable = models.BooleanField(default=False)
+    download_file = models.FileField(
+        upload_to='store/products/to_download/{name}',
+        null=True, blank=True,  # ← allow empty
+        help_text="Obligatorio solo si el producto es descargable"
+    )
+
+    def clean(self):
+        if self.is_downloadable and not self.download_file:
+            raise ValidationError("El archivo de descarga es obligatorio para productos descargables.")
     
     def __str__(self):
         return self.name
@@ -55,6 +72,16 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     shipping_data = models.TextField(default='{}')
 
+    class Meta:
+        ordering = ['-created_at']
+
+    def status_badge(self):
+        return  {
+            'pending': 'warning',
+            'completed': 'success',
+            'failed': 'danger',
+        }.get(self.paymentStatus, 'secondary')
+
     @property
     def get_shipping_data(self):
         return json.loads(self.shipping_data)
@@ -62,11 +89,8 @@ class Order(models.Model):
     def set_shipping_data(self, data):
         self.shipping_data = json.dumps(data)
 
-    class Meta:
-        ordering = ['-created_at']
-
     def __str__(self):
-        return f"Order {self.id} - {self.user.username}"
+        return f"Pedido {self.id} - {self.user.username}"
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -80,3 +104,11 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} of {self.product.name} for Order {self.order.id}"
+    
+
+class Downloadable(models.Model):
+    order_item = models.OneToOneField('store.OrderItem', on_delete=models.CASCADE, related_name='downloadable')
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    qr_image = models.ImageField(upload_to='store/qr_codes/', null=True, blank=True)
+    downloaded_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)

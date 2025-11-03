@@ -1,289 +1,140 @@
-/* General ---------------------------------------*/
-:root {
-    --main-bg-color: rgb(81, 95, 110);
-    --main-text-color: #f2f1f1;
-    --highlight-color: rgba(211, 179, 34, 0.777);
-    --dropdown-bg: #fff;
-}
+/* GENERAL RESET AND BODY STYLES */
 
-body {
-    min-height: 100%;
-    color: var(--main-text-color);
-    font-family: "PT Sans", sans-serif; 
-    background-color: #f2f1f1;
+* {
+    box-sizing: border-box;
     margin: 0;
-    width: 100%; /* Ensure it scales down for smaller screen sizes */
-    background-color: #ffffff; /* Optional: Set a background for the content */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow for better visibility */
+    padding: 0;
 }
 
-.content  {
+html, body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333; /* Dark gray for high contrast text */
+    background-color: #F8F8F8; /* Light off-white background */
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 100px);
-    width: 100%; /* Ensure it scales down for smaller screen sizes */
+    height: 100%;
 }
 
-/* Utils ----------------------------------------*/
+/* * Colors Used: 
+* - #333: Dark Text
+* - #F8F8F8: Background
+* - #5F5B3C: Muted Olive Green (Accent/Primary Link Color)
+* - #1D1D1D: Dark Header/Footer Background
+*/
 
-.d-none {
-    display: none;
+/* HEADER (TOPBAR) STYLES */
+
+.topbar {
+    background-color: #fff; /* White header background */
+    padding: 15px 5%;
+    display: flex;
+    justify-content: space-between; /* Space out logo and menu */
+    align-items: center;
+    border-bottom: 1px solid #eee; /* Subtle separator */
+    position: relative; /* Keeps the header visible when scrolling */
+    top: 0;
+    z-index: 1000;
 }
 
-.section {
-    padding: 40px 20px;
+.logo a {
+    text-decoration: none;
+    color: #333;
+}
+
+.logo h1 {
+    font-family: "Quicksand", sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    letter-spacing: 1px;
+}
+
+
+/* NAVIGATION MENU STYLES */
+
+.nav-menu ul {
+    list-style: none;
+    display: flex;
+    gap: 25px; /* Spacing between menu items */
+}
+
+.nav-menu a {
+    text-decoration: none;
+    color: #333; /* Default link color */
+    font-size: 12px;
+    font-weight: bolder;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.nav-menu a:hover,
+.nav-menu a:focus {
+    color: #5F5B3C; /* Muted Olive Green hover color */
+}
+
+/* MAIN CONTENT AND IFRAME */
+
+.content {
+    display: block;
+    height: 100%;
+    background-color: #F8F8F8; /* Light off-white background */
+}
+
+.main {
+    flex-grow: 1; /* Allows the main content to take up the available space */
+}
+
+iframe {
+    height: 100%;
+    width: 100%;
+}
+
+/* Footer styles ---------------------------------------*/
+
+.footer {
+    background-color: #1D1D1D; /* Very dark background for the footer */
+    color: #ccc; /* Light gray text for contrast */
+    padding: 40px 5%;
     text-align: center;
+    font-size: 14px;
+    position: fixed; 
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0; 
+    pointer-events: none; /* Allows clicks to pass through when hidden */
+    transition: opacity 0.5s ease-in-out; 
+    z-index: 999; /* Ensure it is on top of other content */
 }
 
-.section h2 {
-    color: var(--main-bg-color);
-    font-size: 28px;
+.footer-content p {
     margin-bottom: 20px;
 }
 
-.section p {
-    font-size: 18px;
-    line-height: 1.6;
-    margin-bottom: 30px;
+.footer-links,
+.footer-social {
+    margin-bottom: 15px;
 }
 
-.features {
-    display: flex;
-    gap: 30px;
-    justify-content: center;
-    flex-wrap: wrap;
-    color: var(--main-text-color);
-}
-
-.feature {
-    background-color: rgba(81, 95, 110, 0.655);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 300px;
-}
-
-.feature h3 {
-    color: var(--main-text-color);
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-.feature p {
-    color: var(--main-text-color);
-    font-size: 16px;
-    margin-bottom: 10px;
-}
-
-.cta-button {
-    background-color: #ff4500;
-    color: white;
-    padding: 15px 30px;
-    font-size: 18px;
-    border: none;
-    cursor: pointer;
-    bottom: 50px;
+.footer-links a,
+.footer-social a {
+    color: #ccc;
     text-decoration: none;
-    display: inline-block;
-    border: var(--main-text-color) 2px solid;
-    border-radius: 15px;
-    
+    margin: 0 10px;
+    padding-bottom: 2px;
+    transition: color 0.3s ease, border-color 0.3s ease;
 }
 
-.cta-button:hover {
-    color: var(--main-text-color);
-    font-weight: bold;
-    background-color: #021989ce;
-    border: #ff4500 2px solid;
+.footer-links a:hover,
+.footer-social a:hover {
+    color: #5F5B3C; /* Muted Olive Green hover color */
 }
-
-.mundo {
-    background-image: url(/media/site/mundo.jpeg);
-    background-repeat: no-repeat;
-    background-size: 100%;
-    object-fit: cover;
-    overflow: hidden;
-}
-
-.loto {
-    background-image: url(/media/site/fondo-loto.png);
-    background-color: #33333322;
-    background-blend-mode: multiply;
-    background-repeat: no-repeat;
-    background-size: 45%;
-    background-position-y: 150%;
-    background-position-x: 110%;
-}
-
-
-/* Header ---------------------------------------*/
-#topbar {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    height: 105px;
-    background-color: var(--main-bg-color);
-    border: 5px solid rgba(102, 102, 102, 0.3);
-    color: var(--main-text-color);
-    margin: 0;
-    font-family: "Poppins", sans-serif;
-}
-
-.logo {
-    padding: 15px;
-    color: var(--main-text-color);
-}
-
-#menu-icon {
-    display: flex;
-    justify-content: flex-end;
-    color: var(--main-text-color);
-    font-size: 1.2em;
-    width: 95%;
-    margin: 2rem;
-}
-
-#menu-icon:hover {
-    color: var(--highlight-color);
-}
-
-#menu-icon.hide {
-    color: var(--main-bg-color);
-}
-  
-.user-options {
-    align-items: center;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    margin: 10px;
-}
-  
-.user-options ul {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    margin: 0;
-}
-  
-.user-options li {
-    list-style-type: none;
-    color: var(--main-text-color);
-    margin: 0 15px; /* Add some margin between icons */
-}
-  
-.user-options a {
-    color: var(--main-text-color);
-    display: inline-block;
-}
-  
-.user-options a:hover {
-    color: var(--highlight-color);
-}
-
-/* Main Navigation (iPhone bar) -----------------*/
-
-#main-nav-container {
-    position: absolute;
-    bottom: auto;
-    left: 50%;
-    display: flex;
-    justify-content: center;
-    width: fit-content;
-    height: 6px;
-    z-index: 2;
-    background-color: #f2f1f1;
-    padding: 0;
-    margin: 0;
-    opacity: 1;
-    border-radius: 15px 15px 0 0;
-    transform: translateX(-50%) translateY(-85%); /* Center the container relative to its own width */
-    transform-origin: bottom;
-    transition: height 0.5s ease;
-}
-
-#main-nav {
-    position: relative;
-    max-width: fit-content;
-    color: rgb(81, 95, 110);
-    display: flex;
-    opacity: 0;
-    bottom: 0;
-    transition: opacity 0.5s ease;
-    white-space: nowrap;
-}
-
-#main-nav-container:hover #main-nav {
-    opacity: 1; /* Show the menu items when hovering the container */
-    pointer-events: auto;
-}
-
-#main-nav .navbar-nav {
-    display: flex;
-    flex-direction: row;
-    align-items: right;
-    color: rgb(81, 95, 110);
-    position: relative; /* Add this to enable absolute positioning of #main-nav */
-}
-
-#main-nav .nav-item {
-    display: inline-block;
-    align-items: center;
-    color: rgb(81, 95, 110);
-}
-
-#main-nav .nav-link {
-    display: inline;
-    font-size: 1rem;
-    color: rgb(81, 95, 110);
-    padding: 0 1rem;
-}
-
-#main-nav a:hover {
-    color: #fafafa;
-    background-color: rgb(81, 95, 110);
-    border-radius: 15px;
-}
-
-#main-nav-container:hover {
-    height: 30px; /* Change the height on hover to show the full menu */
-}
-
-  
-/* Footer ---------------------------------------*/
-footer {
-    display: flex;
-    flex-direction: row;
-    height: 50px;
-    border-top: 5px solid #6666664a;
-    background-color: rgb(81, 95, 110);
-    align-items: center;
-    margin: 0;
-    padding: 10px;
-}
-
-footer .logo {
-    padding: 0;
-}
-
-footer .list-inline {
-    float: right;
-    margin-top: 10px;
-}
-
-.social-links a {
-    color: #fafafa;
-    font-size: 1rem;
-    padding: 5px 10px;
-}
-
 
 /* Form's styles ---------------------------------------*/
 .form-group {
-    padding: 5px;
+    padding: 10px 5px;
     max-height: 250px;
     overflow-y: scroll;
 }
@@ -301,13 +152,12 @@ input   {
     width: 100%;
     color: #333;
     text-align: right;
-    font-family: "Josefin Slab", serif;
     font-weight: 400;
 }
 
 .form-button {
     background-color: transparent;
-    font-family: "Saira", sans-serif;
+    font-family: "Quicksand", sans-serif;
     font-size: 1.5em;
     font-weight: bolder;
     color: #333;
@@ -342,6 +192,16 @@ input   {
 
 /* Store App ------------------------------------*/
 
+/* inventory_mgm.html */
+
+.ticket {
+    background-color: #fff;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 1px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .tab-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch; /* For smooth scrolling on touch devices */
@@ -358,233 +218,155 @@ input   {
     float: none; /* Override Bootstrap's float behavior */
 }
 
+.request-list {
+    display: none; /* Default state: hidden */
+    padding: 0;
+}
+
+.request-list.active {
+    display: block; /* Show the list when the 'active' class is applied */
+}
+
+/* selector temporal para ajustar el tamano de la descripcion*/
+.description-section {
+    max-height: 10em;
+    overflow-y: scroll;
+    
+}
+
+/* --- NEW/ADJUSTED CAROUSEL STYLES --- */
+
+.category-section   {
+    padding: 1em;
+}
+
+/* Product Carousel (Flex container) */
+.product-carousel {
+    display: flex;
+    gap: 20px;
+    overflow-x: scroll; /* Enables the horizontal scroll effect */
+    padding: 10px 0; 
+}
+
+/* Individual Product Card */
+.product-card {
+    /* Define fixed width and prevent shrinking/growing */
+    /* This ensures a smooth horizontal scroll effect */
+    flex: 0 0 220px; 
+    text-align: center;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    transition: box-shadow 0.3s ease;
+    /* Since we're in an 8-column section, slightly smaller cards are better */
+}
+
+.product-image {
+    width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+    border-radius: 3px;
+}
+
+/* Category Header (Adjust alignment for the new column layout) */
+.section-header {
+    /* Remove text-align: center from base.css section-header */
+    margin-bottom: 0; /* Adjust spacing since it's now next to the carousel */
+    padding: 0;
+}
+
+/* Ensure the title is legible */
+.section-title {
+    /* font-size: 1.8em; (Keep existing style) */
+    text-transform: uppercase;
+}
+
+/* Small divider only visible when columns stack on mobile/tablet */
+.section-divider-small {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 20px auto;
+    width: 50%;
+}
+
+
+
+
+
+
+
+/* product_detail.html*/
+
 .product-details-container   {
     text-align: right;
     padding: 10px 20px;
     margin-top: 3rem;
 }
 
+#order-details  {
+    border: 1px solid #1D1D1D;
+    border-radius: 5px;
+    padding: 1rem;
+}
 
-/* Retos De Oro ---------------------------------*/
 
-#rdo1 {
+
+
+/* Users App -------------------------------------*/
+
+#modalError {
+    display: none;
+    max-height: 100px;
     width: 100%;
-    height: 80vh;
-    color: var(--main-text-color);
-    background-image: url(/media/site/rdo1.jpeg);
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
-    overflow: hidden;
+    color: #fff;
+    padding: 5px;
+    border: 2px solid #5F5B3C;
+    border-radius: 5px;
 }
 
-#rdo1 .cta-button   {
-    position: absolute;       /* Position relative to the nearest positioned ancestor */
-    bottom: 20vh;             /* Distance from the bottom */
-    left: 50%;                /* Center horizontally */
-    transform: translateX(-50%); /* Adjust for exact centering */
+#modalError li {
+    list-style: none;
 }
 
-#rdo2   {
-    color: var(--main-bg-color);
-    height: 250px;
-    background-color: rgba(255, 255, 255, 0.418);
-    padding: 50px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+/* RESPONSIVENESS (Mobile Adjustments) */
 
-#rdo3   {
-    background-image: url(/media/site/rdo.jpeg);
-    background-repeat: no-repeat;
-    width: auto;
-    height: 60vh;
-    background-size: 70%;
-    background-position: center;
-    overflow: hidden;
-}
-
-#rdo4   {
-    padding: 50px 20px;
-    text-align: center;
-    align-items: center;
-    background-image: url(/media/site/rdo4.jpeg);
-    background-repeat: no-repeat;
-    width: auto;
-    height: 80vh;
-    background-size: cover;
-    background-position: center;
-    overflow: hidden;
-}
-
-#rdo4  h2 {
-    color: var(--main-text-color);
-}
-
-#rdo5   {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    color: var(--main-bg-color);
-    padding: 50px 50px 50px 50px;
-}
-
-#rdo5-1  {
-    padding: 50px 50px 50px 50px;
-    text-align: center;
-    justify-content: center;
-}
-
-#rdo5-1  h2 {
-    color: var(--main-bg-color);
-    font-size: 28px;
-    margin-bottom: 20px;
-}
-
-#rdo5-2  {
-    text-align: center;
-    justify-content: center;
-}
-
-#rdo5 img {
-    justify-content: center;
-    overflow: hidden;
-    width: fit-content;
-    height: 450px;
-    object-fit: contain;
-    border-radius: 15px;
-}
-
-#rdo6   {
-    position: relative;
-    clear:both;
-    margin-top: 15px;
-    background-image: url(/media/site/rdo2.jpeg);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    color: var(--main-text-color);
-    padding: 20px; /* Add padding for spacing inside */
-    margin-top: 20px; /* Add spacing above */
-    text-align: center; /* Center align content */
-}
-
-#rdo6  h2 {
-    color: var(--main-text-color);
-}
-
-/* Canva Content -----------------------------------*/
-.svg-container  {
-    height: calc(100vh - 100px);
-    padding: 15px;
-    display: flex;
-    justify-content: right;
-    align-items: center;
-    overflow-y: scroll;
-    object-fit: contain;
-    opacity: 0;
-    transition: opacity 0.5s ease-in;
-}
-  
-.svg-container.show {
-    opacity: 1;
-}
-  
-.svg  {
-    margin: 5px;
-    width: 40vw;
-    height: 100%;
-    border: 5px solid #6666664a;
-    border-radius: 15px;
-    overflow: hidden;
-    object-fit: cover;
-}
-
-
-/* Media Queries -----------------------------------*/
-@media (min-width: 1200px) {
-    #body {
-        max-width: 1200px;
-        margin: 0 auto; /* Centers the content horizontally */
-        width: 100%; /* Ensures the width doesn't exceed the screen */
-    }
-
-}
-
-@media (max-width: 600px) {
-
-    #menu-icon {
-        margin: 1rem;
-    }
-
-    .user-options   {
-        margin: 0;
-        padding: 0.5rem;
+@media (max-width: 768px) {
+    .topbar {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px 0;
     }
 
     .logo {
-        padding: 2px;
-    }
-    
-    .section {
-        padding: 20px 10px;
-        text-align: center;
+        margin-bottom: 15px;
     }
 
-    .social-links a {
+    .nav-menu ul {
+        flex-direction: row;
+        gap: 5px;
+        padding: 0 5px;
+    }
+
+    .nav-menu a {
+        padding: 5px 0;
+    }
+
+    .dropdown-menu  {
         padding: 5px;
     }
 
-    /* RDO */
-    #rdo1 {
-        background-image: url(/media/site/rdo3.jpeg);
+    .footer-links a,
+    .footer-social a {
+        display: block;
+        margin: 5px 0;
     }
-
-    #rdo1 .cta-button   {
-        bottom: 15vh;
-        width: 80%;
-        text-align: center;
-    }
-
-    #rdo2   {
-        height: auto;
-        padding: 15px;
-    }
-
-    #rdo4   {
-        padding: 20px 10px;
-        overflow: hidden;
-        overflow-y: scroll;
-    }
-    
-    #rdo5   {
-        padding: 25px;
-        margin-bottom: 10px;
-    }
-
-    #rdo5-1  {
-        padding: 5px;
-        overflow: hidden;
-        overflow-y: scroll;
-    }
-    
-    #rdo5-1  h2 {
-        color: var(--main-bg-color);
-        font-size: 14px;
-        margin-bottom: 5px;
-    }
-
-    /* Store */
-    .tab-container .nav-tabs .nav-link {
-        padding: 0.5rem 1rem; /* Adjust as needed */
-    }
-
-    .product-details-container   {
-        text-align: right;
-        padding: 10px;
-        margin-top: 1rem;
-    }
-    
 }
 
+/* RESPONSIVENESS ADJUSTMENT */
+@media (max-width: 991.98px) {
+    /* For devices smaller than large (i.e., tablet/mobile), columns stack */
+    .section-header {
+        text-align: center !important; /* Re-center the header when it's full width */
+        margin-bottom: 20px;
+    }
+}

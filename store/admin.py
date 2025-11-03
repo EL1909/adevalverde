@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, Category, Order
+from .models import Product, Category, Order, Downloadable
 
 # Register your models here.
 
@@ -26,7 +26,17 @@ class OrderAdmin(admin.ModelAdmin):
         'totalAmount',
     )
 
+class DownloadableAdmin(admin.ModelAdmin):
+    list_display = (
+        'order_item',
+        'token',
+        'qr_image',
+        'downloaded_at',
+        'created_at'
+    )
+
 
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Order, OrderAdmin)
+admin.site.register(Downloadable, DownloadableAdmin)

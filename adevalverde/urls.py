@@ -24,7 +24,6 @@ from users import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # URL for serving base.html directly if you don't have a specific view for it
     path('', include('users.urls')),
     path('users/', include('users.urls')),
     path('store/', include('store.urls')),

@@ -1,19 +1,81 @@
 <div>
     <h4 class="title">Agregar Producto</h4>
-    <div class="col-12 ticket border">
+    <div class="col-12 ticket border">  
         <form method="POST" class="p-4" action="{% url 'store:add_product' %}" enctype="multipart/form-data">
             {% csrf_token %}
-            {% for field in form %}
-                <div class="form-group">
-                    {{ field.label_tag }} :  {{ field }}
-                    {% if field.help_text %}
-                        <small class="form-text text-muted">{{ field.help_text }}</small>
-                    {% endif %}
+            <div class="row g-3">
+                {{ form.non_field_errors }}
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.name.label_tag }}
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
                 </div>
-            {% endfor %}
-            <div>
-                <a class="btn btn-primary mb-3" href="{% url 'store:products' %}">Cancelar</a>
-                <button class="btn btn-primary mb-3" type="submit">Agregar Producto</button>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.price.label_tag }}
+                        {{ form.price }}
+                        {% if form.price.errors %}
+                            <div class="invalid-feedback d-block">{{ form.price.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-group">
+                        {{ form.description.label_tag }}
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-group">
+                        {{ form.category.label_tag }}
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="invalid-feedback d-block">{{ form.category.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-group">
+                        {{ form.other_site_link.label_tag }}
+                        {{ form.other_site_link }}
+                        {% if form.other_site_link.errors %}
+                            <div class="invalid-feedback d-block">{{ form.other_site_link.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-group">
+                        {{ form.image.label_tag }}
+                        {{ form.image }}
+                        {% if form.image.help_text %}
+                            <small class="form-text text-muted">{{ form.image.help_text }}</small>
+                        {% endif %}
+                        {% if form.image.errors %}
+                            <div class="invalid-feedback d-block">{{ form.image.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div>
+                        {{ form.is_downloadable }} {{ form.is_downloadable.label }}
+                    </div>
+                    <div id="download-file-section" style="display: none; margin-top: 10px;">
+                        {{ form.download_file.label_tag }}
+                        {{ form.download_file }}
+                        {{ form.download_file.errors }}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <a class="btn btn-secondary me-2" href="{% url 'store:products' %}">Cancelar</a>
+                <button class="btn btn-primary" type="submit">Agregar Producto</button>
             </div>
         </form>
     </div>            

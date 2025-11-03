@@ -12,16 +12,12 @@ from .forms import SignupForm
 
 def HomeIndex(request):
     """ A View to return the index page"""
-    svgPaths = [
-        'CanvaContent/1.svg',
-        'CanvaContent/5.svg',
-    ]
+    return render(request, 'home-content.html')
 
-    context = {
-        'svgPaths': svgPaths,
-    }
 
-    return render(request, 'home-content.html', context)
+def Bio(request):
+    """ A View to return the Bio page"""
+    return render(request, 'bio.html')
 
 
 class LoginView(LoginView):
@@ -43,11 +39,11 @@ class LoginView(LoginView):
         if user is not None:
             login(request, user)
             # Return success response
-            return redirect('home')
+            return JsonResponse({'success': True})
         else:
             # Return error response
             errors = form.errors
-            return JsonResponse({'errors':errors}, status=400)  
+            return JsonResponse({'errors':errors}, status=400)       
 
 
 class SignupView(View):
@@ -57,18 +53,21 @@ class SignupView(View):
     def get(self, request, *args, **kwargs):
         form = self.form_class()
         return render(request, self.template_name, {'form': form})
-    
-    def post(self, request):
-        form = self.form_class(request.POST)
+        
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, request.FILES)
         if form.is_valid():
-            user = form.save()
-            login(request, user)  # Log the user in after signing up
-            return JsonResponse({'success': True})
+            try:
+                user = form.save()
+                return JsonResponse({'success': True})
+            except IntegrityError:
+                return JsonResponse({'errors': {'non_field_errors': ['Ese usuario ya existe.']}}, status=400)
         else:
-            # Return the errors in JSON format
-            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+            errors = form.errors.as_json()  # Ensure errors are serialized properly
+            return JsonResponse({'errors': errors}, status=400)
         
 
 def direct_logout_view(request):
     logout(request)
     return redirect('home')
+

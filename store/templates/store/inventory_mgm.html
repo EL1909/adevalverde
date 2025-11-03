@@ -8,7 +8,7 @@
                     <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="false">Pedidos</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="warehouse-tab" data-bs-toggle="tab" data-bs-target="#warehouse" type="button" role="tab" aria-controls="warehouse" aria-selected="false">Deposito</button>
+                    <button class="nav-link" id="warehouse-tab" data-bs-toggle="tab" data-bs-target="#warehouse" type="button" role="tab" aria-controls="warehouse" aria-selected="false">Inventario</button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="addProduct-tab" data-bs-toggle="tab" data-bs-target="#addProduct" type="button" role="tab" aria-controls="addProduct" aria-selected="false">Agregar Producto</button>
@@ -24,71 +24,110 @@
         <div class="tab-content" id="inventoryTabsContent">
             <div class="tab-pane fade show active p-4" id="orders" role="tabpanel" aria-labelledby="orders-tab">
                 <div class="d-flex justify-content-between">
-                    <h4>Pedidos</h4> 
-                </div>
-                <div>
-                    <!-- Orders List -->
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Nro.</th>
-                                <th>Cliente</th>
-                                <th>Producto</th>
-                                <th>Monto</th>
-                                <th>Estatus</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders %}
-                            <tr id="order-{{ order.id }}" class="order-item"
-                                data-user="{{ order.user }}"
-                                data-items="{{ order.items.count }}"
-                                data-totalAmount="{{ order.totalAmount }}"
-                                data-paymentStatus="{{ order.paymentStatus }}"
-                                data-created_at="{{ order.created_at }}"
-                                data-updated_at="{{ order.updated_at }}"
-                                data-order_id="{{ order.id }}">
-                                <td>{{ order.id }}</td>
-                                <td>{{ order.user }}</td>
-                                <td>
-                                    {% for item in order.items.all %}
-                                        {{ item.product.name }} x{{ item.quantity }}<br>
-                                    {% endfor %}
-                                </td>
-                                <td>{{ order.totalAmount|floatformat:2 }}</td>
-                                <td>{{ order.paymentStatus }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4">No hay pedidos.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    <div id="order-details" class="ticket border p-3 d-none">
-                        <div class="d-flex justify-content-between">
-                            <h5>Detalles del pedido</h5>
-                            <span id="order_id"><strong><p>Order ID:<span class="order-id-display"></span></p></strong></span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span id="client_id"><strong><p>Cliente:<span class="user-id-display"></span></p></strong></span>
-                            <p id="cart-total" class="text-end fw-bold">Total: <span class="total-price-display"></span></p>
-                            <p id="order-status" class="text-end fw-bold"><span class="status-display"></span></p>
-                        </div>
-                        <div class="d-flex">
-                            <a id="update_order" href="#" class="btn btn-primary btn-sm mt-2">Actualizar estatus</a>
-                            <button class="btn btn-danger btn-sm mt-2" onclick="archiveOrder(event)">Archivar</button>
-                        </div>
-                        <hr>
-                        <ul class="list-unstyled" id="order-items">
-                            <!-- Items will be populated via JS -->
+                    <h4>Pedidos</h4>
+                    <div class="tab-container">
+                        <ul class="nav nav-tabs" id="ordersSubTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="openOrders-tab" type="button" role="tab" aria-controls="openOrders" aria-selected="false">Abiertos</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="closedOrders-tab" type="button" role="tab" aria-controls="closedOrders" aria-selected="false">Cerrados</button>
+                            </li>
                         </ul>
-                        <hr>
-                        <div>
-                            <span id="created_at"><p>Fecha de creación:<span class="created-display"></span></p></span>
-                            <span id="updated_at"><p>Ultima actualización:<span class="updated-display"></span></p></span>
-                        </div>
                     </div>
+                </div>
+                <div class="col-12 order-1">
+                    <ul class="request-list active" id="openOrders-list">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nro.</th>
+                                    <th>Cliente</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Monto</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for open in openOrders %}
+                                <tr id="open-{{ open.id }}" class="order-item"
+                                    data-user="{{ open.user }}"
+                                    data-items="{{ open.items.count }}"
+                                    data-totalAmount="{{ open.totalAmount }}"
+                                    data-paymentStatus="{{ open.paymentStatus }}"
+                                    data-created_at="{{ open.created_at }}"
+                                    data-updated_at="{{ open.updated_at }}"
+                                    data-order_id="{{ open.id }}" data-shipping="{{ open.shipping_data | safe }}">
+                                    <td>{{ open.id }}</td>
+                                    <td>{{ open.user }}</td>
+                                    <td>
+                                        {% for item in open.items.all %}
+                                            {{ item.product.name }}<br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for item in open.items.all %}
+                                            {{ item.quantity }}<br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ open.totalAmount|floatformat:2 }}</td>
+                                    <td>{{ open.paymentStatus }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6">No hay pedidos abiertos.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </ul>
+                    <ul class="request-list" id="closedOrders-list">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nro.</th>
+                                    <th>Cliente</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Monto</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for closed in closedOrders %}
+                                <tr id="closed-{{ closed.id }}" class="order-item"
+                                    data-user="{{ closed.user }}"
+                                    data-items="{{ closed.items.count }}"
+                                    data-totalAmount="{{ closed.totalAmount }}"
+                                    data-paymentStatus="{{ closed.paymentStatus }}"
+                                    data-created_at="{{ closed.created_at }}"
+                                    data-updated_at="{{ closed.updated_at }}"
+                                    data-order_id="{{ closed.id }}"
+                                    data-shipping="{{ closed.shipping_data | safe }}">
+                                    <td>{{ closed.id }}</td>
+                                    <td>{{ closed.user }}</td>
+                                    <td>
+                                        {% for item in closed.items.all %}
+                                            {{ item.product.name }}<br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for item in closed.items.all %}
+                                            {{ item.quantity }}<br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ closed.totalAmount|floatformat:2 }}</td>
+                                    <td>{{ closed.paymentStatus }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6">No hay pedidos cerrados.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </ul>
                 </div>
             </div>
             <div class="tab-pane fade p-4" id="warehouse" role="tabpanel" aria-labelledby="warehouse-tab">
@@ -110,7 +149,10 @@
                         </thead>
                         <tbody>
                             {% for product in products %}
-                            <tr>
+                            <tr class="warehouse-item" 
+                                data-product-id="{{ product.id }}"
+                                data-edit-url="{% url 'store:edit_product' product.id %}"
+                                data-delete-url="{% url 'store:delete_product' product.id %}">
                                 <td>{{ product.name }}</td>
                                 <td>{{ product.category.name }}</td>
                                 <td>{{ product.price }}</td>
@@ -120,9 +162,6 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="5">No hay productos.</td>
-                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -135,49 +174,41 @@
             </div>
             <div class="tab-pane fade p-4" id="categories" role="tabpanel" aria-labelledby="categories-tab">
                 <!-- Categories -->
+                <div class="d-flex justify-content-between">
+                    <h4>Categorias de Productos</h4>
+                    <button id="show-add-category" class="btn btn-primary mb-3 offset-1">Crear categoria</button>
+                </div>
+                <!-- Category List -->
                 <div>
-                    <div class="d-flex justify-content-between">
-                        <h3>Categorias</h3>
-                        <button id="show-add-category" class="btn btn-primary mb-3 offset-1">Crear categoria</button>
-                        <div id="add-category" style="display: none;">
-                            <form class="d-flex justify-content-between" method="POST" action="{% if category %}{% url 'store:edit_category' category.id %}{% else %}{% url 'store:add_category' %}{% endif %}">
-                                {% csrf_token %}
-                                {{ catform.as_p }}
-                                <button type="submit" class="btn btn-primary mb-3 offset-1">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    <!-- Category List -->
-                    <div>
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Categoria</th>
-                                    <th>Productos</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for category in categories %}
-                                <tr>
-                                    <td>{{ category.name }}</td>
-                                    <td>{{ category.products.count }}</td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm"><i class="fa-regular fa-pen-to-square"></i></a>
-                                        <a href="{% url 'store:delete_category' category.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirme para eliminar {{ category.name }}')"><i class="fa-regular fa-trash-can"></i></a>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5">No hay categorias.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>  
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Categoria</th>
+                                <th>Productos</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in categories %}
+                            <tr class="category-item" 
+                                data-category-id="{{ category.id }}"
+                                data-edit-url="{% url 'store:edit_category' category.id %}"
+                                data-delete-url="{% url 'store:delete_category' category.id %}">
+                                <td>{{ category.name }}</td>
+                                <td>{{ category.products.count }}</td>
+                                <td>
+                                    <a href="#" class="edit-category-btn btn btn-sm"><i class="fa-regular fa-pen-to-square"></i></a>
+                                    <a href="{% url 'store:delete_category' category.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirme para eliminar {{ category.name }}')"><i class="fa-regular fa-trash-can"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">No hay categorias.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="tab-pane fade p-4" id="providers" role="tabpanel" aria-labelledby="providers-tab">
                 <div class="ticket border p-3">
@@ -195,8 +226,109 @@
         </div>
     </div>
     <div class="col-12 col-md-4 p-4">
-        <div class="ticket border p-3 loto">
-            <p>Speakers</p>
+        <div class="">
+            <div id="order-details" class="ticket d-none">
+                <div class="d-flex justify-content-between">
+                    <h5>Detalles del pedido</h5>
+                    <span id="order_id"><small><p>ID: <span class="order-id-display"></span></p></small></span>
+                </div>
+                <span id="client_id"><p>Cliente: <span class="user-id-display"></span></p></span>
+                <div class="text-end">
+                    <strong><span class="status-display"><p id="order-status"></p></span></strong>
+                </div>
+                <div>
+                    <label><strong>Estado del pedido:</strong></label>
+                    <div class="mt-3 d-flex justify-content-between">  
+                        <select id="order-status-select" class="form-select w-auto d-inline-block">
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                            <option: value="failed">Failed</option>
+                        </select>
+                        <button id="update_order" class="btn btn-primary btn-sm ms-2">Update Status</button>
+                    </div>
+                </div>
+                <hr>
+                <ul class="list-unstyled" id="order-items">
+                    <!-- Items will be populated via JS -->
+                </ul>
+                <hr>
+                <div>
+                    <p id="cart-total" class="text-end fw-bold">Total: <span class="total-price-display"></span></p>
+                    <span id="created_at"><small><p>Fecha de creación:<span class="created-display"></span></p></small></span>
+                    <span id="updated_at"><small><p>Ultima actualización:<span class="updated-display"></span></small></p></span>
+                </div>
+                <div id="shipment-details" class="ticket border p-3 mt-3 d-none">
+                    <h6>Datos de Envío:</h6>
+                    <p class="mb-1"><strong>Nombre:</strong> <span class="shipping-name-display"></span></p>
+                    <p class="mb-1"><strong>Email:</strong> <span class="shipping-email-display"></span></p>
+                    <p class="mb-1"><strong>Dirección:</strong> <span class="shipping-address-display"></span></p>
+                    <p class="mb-1"><strong>Ciudad:</strong> <span class="shipping-city-display"></span></p>
+                    <p class="mb-1"><strong>Código Postal:</strong> <span class="shipping-zipcode-display"></span></p>
+                </div>
+            </div>
+            <div id="warehouse-details" class="ticket d-none">
+                <div class="d-flex justify-content-between">
+                    <h5>Detalles del Producto</h5>
+                    <p class="text-end"><small>ID:<span id="product-id-display"></span></small></p>
+                </div>
+                <hr>
+                <div class="">
+                    <p><strong>Nombre:</strong> <span id="product-name-display">neutro</span></p>
+                    <p><strong>Precio:</strong> <span id="product-price-display"></span></p>
+                    <p><strong>Categoría:</strong> <span id="product-category-display"></span></p>
+                    <p><strong>Link Externo:</strong> <a id="product-link-display" href="#" target="_blank">Ver</a></p>
+                </div>
+                <hr>
+                <div class="description-section">
+                    <p><strong>Descripción:</strong></p>
+                    <p><span id="product-description-display"></span></p>   
+                </div>
+                <hr>
+                <h6>Acciones:</h6>
+                <div class="d-flex justify-content-between">
+                    <a id="edit-product-btn" href="#" class="btn btn-info btn-sm">Editar Producto</a>
+                    <a id="delete-product-btn" href="#" class="btn btn-danger btn-sm">Eliminar Producto</a>
+                </div>
+            </div>
+            <div id="category-details" class="ticket d-none">
+                <div id="add-category" class="d-none">
+                    <form class="p-4" method="POST" action="{% if category %}{% url 'store:edit_category' category.id %}{% else %}{% url 'store:add_category' %}{% endif %}">
+                    {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="form-group">
+                                {{ catform.name.label_tag }}
+                                {{ catform.name }}
+                                {% if catform.name.errors %}
+                                    <div class="text-danger small">{{ catform.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                {{ catform.description.label_tag }}
+                                {{ catform.description }}
+                                {% if catform.description.errors %}
+                                    <div class="text-danger small">{{ catform.description.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            Confirmar
+                        </button>
+                    </form>
+                </div>
+                <div id="selected-category">
+                    <h5>Detalles de Categoria</h5>
+                    <hr>
+                    <p><strong>Id:</strong> <span id="category-id-display"></span></p>
+                    <p><strong>Nombre:</strong> <span id="category-name-display"></span></p>
+                    <p><strong>Descripción:</strong> <span id="category-description-display"></span></p>
+                    <hr>
+                    <h6>Acciones:</h6>
+                    <div class="d-flex justify-content-between">
+                        <a id="edit-category-btn" href="#" class="edit-category-btn btn btn-info btn-sm">Editar Categoria</a>
+                        <a id="delete-category-btn" href="#" class="btn btn-danger btn-sm">Eliminar Categoria</a>
+                    </div>
+                </div>    
+            </div>
         </div>
     </div>
 </div>

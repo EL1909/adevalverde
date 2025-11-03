@@ -1,64 +1,71 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<div class="loto">	
-    <div class="row">
-        <div class="product-container col-10 offset-1 p-4">
-            <div class="row">
-                {% for product in products %}
-                    <div class="col-sm-6 col-md-6 col-lg-4 col-xl-3">
-                        <div class="card h-100 border-0">
-                            {% if product.image %}
-                            <a href="{% url 'store:product_detail' product.id %}">
-                                <img class="card-img-top img-fluid" src="{{ product.image.url }}" alt="{{ product.name }}">
-                            </a>
+<div class="content">
+    {% for category_obj, product_list in categories_with_products %}
+    <section class="category-section">
+        <div class="container-fluid">
+            <div class="row align-items-center mb-4">
+                <div class="col-lg-4 col-md-12">
+                    <header class="section-header">
+                        <h2 class="section-title">{{ category_obj.name }}</h2> 
+                        <p class="category-intro">
+                            {% if category_obj.description %}
+                                {{ category_obj.description }}
                             {% else %}
-                            <a href="{% url 'store:product_detail' product.id %}">
-                                <img class="card-img-top img-fluid" src="{{ MEDIA_URL }}noimage.png" alt="{{ product.name }}">
-                            </a>
+                                Explore our selection of {{ category_obj.name|lower }} items, curated for quality and style.
                             {% endif %}
-                            <div class="card-body pb-2">
-                                <h6 class="mb-2">{{ product.name }}</h6>
-                            </div>
-                            <div class="card-footer bg-white pt-0 border-0 text-left">
-                                <div class="row">
-                                    <div class="d-flex justify-content-between">
-                                        <!-- Add to Cart Button -->
-                                        <form action="{% url 'store:cart_add' product_id=product.id %}" class="add-to-cart-form" method="post">
+                        </p>
+                    </header>
+                    <hr class="d-lg-none section-divider-small">
+                </div>
+                <div class="col-lg-8 col-md-12">
+                    <div class="tab-container carousel-wrapper">
+                        <div class="product-carousel">
+                            {% for product in product_list %}
+                            <div class="product-card">
+                                {% if product.image %}
+                                <a href="{% url 'store:product_detail' product.id %}">
+                                    <img class="product-image" src="{{ product.image.url }}" alt="{{ product.name }}">
+                                </a>
+                                {% else %}
+                                <a href="{% url 'store:product_detail' product.id %}">
+                                    <img class="product-image" src="{% static 'images/noimage.png' %}" alt="{{ product.name }}">
+                                </a>
+                                {% endif %}
+                                
+                                <div class="card-body pb-2">
+                                    <h6 class="mb-2">{{ product.name }}</h6>
+                                </div>
+                                
+                                <div class="card-footer bg-white pt-0 border-0 text-left">
+                                    <div class="d-flex justify-content-between align-items-center w-100">
+                                        <h4 class="mb-0">${{ product.price }}</h4>
+                                        <form action="{% url 'store:cart_add' product_id=product.id %}" class="add-to-cart-form d-flex gap-2" method="post">
                                             {% csrf_token %}
-                                            <button type="button" class="btn btn-primary"><i class="fa-brands fa-amazon"><a href="{{ product.other_site_link }}"></a></i></button>
+                                            {% if product.other_site_link %}
+                                            <a href="{{ product.other_site_link }}" class="btn btn-primary" target="_blank"><i class="fa-brands fa-amazon"></i></a>
+                                            {% endif %}
                                             <button type="submit" class="btn btn-primary" data-product-id="{{ product.id }}"><i class="fa-solid fa-cart-shopping"></i></button>
                                         </form>
-                                        <h4 class="mb-2 text-end">${{ product.price }}</h4>
                                     </div>
                                 </div>
                             </div>
+                            
+                            {% endfor %}
+                            
                         </div>
                     </div>
-                    {% if forloop.counter|divisibleby:1 %}
-                        <div class="col-12 d-sm-none mb-5">
-                            <hr>
-                        </div>
-                    {% endif %}                        
-                    {% if forloop.counter|divisibleby:2 %}
-                        <div class="col-12 d-none d-sm-block d-md-block d-lg-none mb-5">
-                            <hr>
-                        </div>
-                    {% endif %}
-                    {% if forloop.counter|divisibleby:3 %}
-                        <div class="col-12 d-none d-lg-block d-xl-none mb-5">
-                            <hr>
-                        </div>
-                    {% endif %}
-                    {% if forloop.counter|divisibleby:4 %}
-                        <div class="col-12 d-none d-xl-block mb-5">
-                            <hr>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+                </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    {% if not forloop.last %}
+    <hr class="section-divider">
+    {% endif %}
+    
+    {% endfor %}
+
 </div>
 {% endblock %}
-

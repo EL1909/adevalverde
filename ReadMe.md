@@ -1,10 +1,18 @@
 ![Avalverde](include image path)
 <center><a href="www.adelavalverde.info" target="_blank">Click here to visit the site</a> - <a href="https://github.com/EL1909/adevalverde" target="_blank">Click here to visit repository</a></center>
 
-Currently:
+20.01.25 - Current Status:
     - Users can Register and Login 
     - Admin is able to update items in the store
-    - Products are linked to Amaon Store for inmediate purchase
+    - Products are linked to Amazon Store for inmediate purchase
+
+Furthermore:
+    - Implement Canal App.
+    - Review UI with owner
+    - Create User levels and access accordingly
+    - Implement paypal functionallity outside SandBox
+    - Implement access to Esfuerzo Whithin footer
+
 
 
 
@@ -257,7 +265,6 @@ This diagram shows how each model relates to others, highlighting the foreign ke
 
 ## Users App:
 The User class is the default User class from Django.
-
 
 
 ## Store App:
@@ -586,7 +593,6 @@ Retos de Oro
 
 	5.	Acción Requerida:
 	•	El programador puede agregar el enlace de compra en los botones que están definidos con #order, para que el usuario sea dirigido a la página de compra del libro.
-
 
 
 
@@ -928,6 +934,28 @@ Imagen de fondo o ilustraciones secundarias:
 
 
 
+
+
+
+
+
+
+
+REVISION CON ADELA 06.02.2025
+
+EN EL INICIO, COLOCAR INFORMACION DEL LIBRITO DEL ORO
+
+sec.1    Colocar imagen de adela en el inicio con acceso a workshop mas reciente
+    
+sec.2    Workshops con diferentes niveles
+            habilitar creacion de fecha para un evento en vivo con el acceso al taller 
+
+sec.3    Acceso a otros libros
+
+sec.4    Acceso a nformacion de Reinicio
+
+
+        Correos de bienvenida a suscriptores
 
 
 

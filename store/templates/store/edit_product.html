@@ -1,24 +1,103 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<div class="">
-    <h6 class="text-muted title">Editar producto</h6>
-    <hr>
-    <div class="col-6 ticket border">
-        <form method="POST" action="{% url 'store:edit_product' product.id %}" class="p-4 mb-4" enctype="multipart/form-data">
-            {% csrf_token %}
-            {% for field in form %}
-                {% if field.name != 'image' %}
-                    {{ field.label_tag }} :  {{ field }}
-                    <br>
-                {% else %}
-                    {{ field }}
-                {% endif %}
-            {% endfor %}
-            <div class="text-right">
-                <a class="btn btn-outline-black rounded-0" href="{% url 'store:products' %}">Cancel</a>
-                <button class="btn btn-black rounded-0" type="submit">Update Product</button>
+<div class="container py-5">
+    <!-- Header with product name -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="section-title">Editar Producto: {{ product.name }}</h4>
+            <p class="text-muted">ID del Producto: {{ product.id }}</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="ticket border p-4 shadow-sm bg-white rounded">
+                <!-- The form action points to the specific edit URL for this product -->
+                <form method="POST" action="{% url 'store:edit_product' product_id=product.id %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% with form=form %}
+                        <h5 class="mb-3 text-primary">Información General</h5>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    {{ form.name.label_tag }}
+                                    {{ form.name }}
+                                    {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.price.label_tag }}
+                                    {{ form.price }}
+                                    {% if form.price.errors %}<div class="invalid-feedback d-block">{{ form.price.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    {{ form.category.label_tag }}
+                                    {{ form.category }}
+                                    {% if form.category.errors %}<div class="invalid-feedback d-block">{{ form.category.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <!-- Provider Field (Selection List - Full Width) -->
+                            <!-- Currently not added to Form -->
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ form.providers.label_tag }}
+                                    {{ form.providers }}
+                                    {% if form.providers.errors %}<div class="invalid-feedback d-block">{{ form.providers.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ form.other_site_link.label_tag }}
+                                    {{ form.other_site_link }}
+                                    {% if form.other_site_link.errors %}<div class="invalid-feedback d-block">{{ form.other_site_link.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ form.description.label_tag }}
+                                    {{ form.description }}
+                                    {% if form.description.errors %}<div class="invalid-feedback d-block">{{ form.description.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ form.image.label_tag }}
+                                    
+                                    <!-- Display current image and link -->
+                                    {% if product.image %}
+                                        <div class="mb-2">
+                                            <p class="mb-1"><strong>Imagen actual:</strong></p>
+                                            <a href="{{ product.image.url }}" target="_blank">
+                                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width: 150px; height: auto; border: 1px solid #ddd; border-radius: 5px;">
+                                            </a>
+                                            <p class="text-muted small mt-1">Selecciona un archivo para reemplazar la imagen actual.</p>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {{ form.image }}
+                                    {% if form.image.help_text %}<small class="form-text text-muted">{{ form.image.help_text }}</small>{% endif %}
+                                    {% if form.image.errors %}<div class="invalid-feedback d-block">{{ form.image.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden fields (such as created_by if it's included in the form's fields list) -->
+                            {{ form.created_by }}
+
+                        </div>
+                    {% endwith %}
+                    
+                    <!-- Action Buttons -->
+                    <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                        <!-- Go back to the product details or inventory management page -->
+                        <a class="btn btn-secondary me-2" href="{% url 'store:product_detail' product_id=product.id %}">Cancelar</a>
+                        <button class="btn btn-success" type="submit">Guardar Cambios</button>
+                    </div>
+                </form>
             </div>
-        </form>
-    </div> 
+        </div>
+    </div>
 </div>
 {% endblock %}
