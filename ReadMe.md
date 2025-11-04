@@ -14,6 +14,173 @@ Furthermore:
     - Implement access to Esfuerzo Whithin footer
 
 
+04.11.2025
+
+configure VM GCC with NginX for multiple site hosting
+
+That's a smart setup for managing multiple sites. Here is an updated, step-by-step guide to create the Google Cloud Compute (GCC) VM and set it up for multi-site hosting with Nginx.
+
+🚀 Part 1: Create the Google Cloud VM
+We will create a VM with a Static External IP to ensure your DNS settings remain stable.
+
+1. Configure the VM Instance
+
+Navigate to Compute Engine: In the Google Cloud Console, go to Compute Engine > VM instances.
+
+Create Instance: Click CREATE INSTANCE.
+
+Name and Region:
+
+Name: Give it a memorable name (e.g., nginx-host-server).
+
+Region/Zone: Choose a region close to your users.
+
+Machine Configuration:
+
+Series and Machine Type: Select a type that fits your needs (e.g., E2 Series, e2-micro for light testing, or e2-small for production hosting).
+
+Boot Disk:
+
+Image: Choose a popular Linux distribution, such as Ubuntu 22.04 LTS or Debian 12.
+
+Size: The default size is usually sufficient, but consider increasing it if you expect large files or many sites.
+
+Firewall:
+
+Check both Allow HTTP traffic and Allow HTTPS traffic.
+
+2. Configure the Network (Crucial for Static IP)
+
+Expand the Management, security, disks, networking, sole tenancy section.
+
+Click on the Networking tab.
+
+Under Network interfaces, click the default interface to open the details.
+
+In the External IP dropdown, select Create IP address.
+
+Give it a name (e.g., multi-host-static-ip).
+
+Click RESERVE.
+
+This ensures your VM's public IP address never changes, which is essential for DNS records.
+
+Click Done.
+
+Click CREATE to start the VM.
+
+🔒 Part 2: Connect and Initial Setup
+3. SSH into the VM
+
+Once the VM is running (Status is green), click the SSH button next to the instance name in the VM instances list. This opens a browser-based terminal.
+
+Update the System: Run the following commands to ensure your VM is up-to-date:
+
+Bash
+sudo apt update
+sudo apt upgrade -y
+4. Install Nginx
+
+Install the Nginx web server, which will handle all incoming traffic and direct it to the correct website folder.
+
+Bash
+sudo apt install nginx -y
+5. Verify Nginx is Running
+
+Check the status of the Nginx service:
+
+Bash
+sudo systemctl status nginx
+It should show active (running). You can also test this by opening a web browser and navigating to your VM's External IP address; you should see the default Nginx welcome page.
+
+🌐 Part 3: Configure Nginx for Multiple Sites
+This process is repeated for every site you want to host.
+
+6. Create Directory Structure for the First Site
+
+Create a dedicated directory for your first domain (e.g., site1.com).
+
+Bash
+# Replace site1.com with your actual domain
+sudo mkdir -p /var/www/site1.com/html
+7. Create a Sample Index File
+
+Create a simple index.html file to test the configuration.
+
+Bash
+sudo nano /var/www/site1.com/html/index.html
+Paste this content (press Ctrl+O, then Enter, then Ctrl+X to save and exit):
+
+HTML
+<h1>Welcome to Site 1 (site1.com)!</h1>
+8. Create the Nginx Server Block (Virtual Host)
+
+Create a configuration file for the site in Nginx's sites-available directory.
+
+Bash
+sudo nano /etc/nginx/sites-available/site1.com
+Paste the following configuration, replacing site1.com with your actual domain:
+
+Nginx
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name site1.com www.site1.com;
+
+    root /var/www/site1.com/html;
+    index index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+9. Enable the Configuration and Test
+
+Create a Symlink (link the config file to Nginx's active directory):
+
+Bash
+sudo ln -s /etc/nginx/sites-available/site1.com /etc/nginx/sites-enabled/
+Test Nginx Configuration:
+
+Bash
+sudo nginx -t
+If successful, you should see test is successful.
+
+Restart Nginx:
+
+Bash
+sudo systemctl restart nginx
+10. Update DNS Records
+
+Go to your domain registrar or DNS provider and create an A record for both site1.com and www.site1.com, pointing them to your VM's Static External IP address.
+
+🔐 Part 4: Install SSL Certificates with Certbot (Let's Encrypt)
+Securing your sites with HTTPS is mandatory. We will use Certbot's Nginx plugin for a fully automated setup.
+
+11. Install Certbot
+
+Bash
+sudo snap install core; sudo snap refresh core
+sudo snap install --classic certbot
+sudo ln -s /snap/bin/certbot /usr/bin/certbot
+12. Run Certbot for Automatic SSL
+
+Run the following command, replacing the domains with your site's names. Certbot will automatically find your Nginx configuration, issue the certificate, and update the file to use HTTPS.
+
+Bash
+sudo certbot --nginx -d site1.com -d www.site1.com
+Follow the prompts (enter email, agree to terms).
+
+When asked, select option 2 (Redirect) to automatically force all HTTP traffic to HTTPS.
+
+13. Repeat for Additional Sites
+
+To host a second site (e.g., site2.com), repeat steps 6 through 12, replacing site1.com with site2.com. Nginx will handle the traffic based on the domain name (server_name).
+
+Would you like me to detail the process for creating a production-grade systemd service to run your Python (Gunicorn) or Node.js applications, which is the reliable alternative to the basic screen method?
+
+
 
 
 # Table of Contents - v1
