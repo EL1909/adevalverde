@@ -1,3 +1,4 @@
 .env
 ade_env
 db.sqlite3
+settings.py
