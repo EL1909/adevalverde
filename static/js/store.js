@@ -447,4 +447,108 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         });
     });
+
+    // -----------------------------------------------------------------
+    // 12. Categories - 
+    // -----------------------------------------------------------------
+
+    // CATEGORIES
+    // Selectors
+    var warehouseDetailsPane = document.getElementById('warehouse-details');
+    var ordersDetailsPane = document.getElementById('order-details');
+    var categoryDetailsPane = document.getElementById('category-details');
+    var addCategory = document.getElementById('add-category');
+    var selectedCategory = document.getElementById('selected-category');
+    const categoryRows = document.querySelectorAll('.category-item');
+
+    // Handle "Crear categoria" button to reset form
+    document.getElementById('show-add-category').addEventListener('click', function(e) {
+        e.preventDefault();
+        const catform = addCategory.querySelector('form');
+        
+        // Reset form for new category
+        catform.querySelector('input[name="name"]').value = '';
+        catform.querySelector('textarea[name="description"]').value = '';
+        catform.action = `/store/category/add/`;
+        
+        // Show the add-category form
+        categoryDetailsPane.classList.remove('d-none');
+        addCategory.classList.remove('d-none');
+    });
+
+    function populateCategoryDetails(clickedElement) {
+        // 1. Clear selection from all warehouse rows and mark the current one
+        categoryRows.forEach(row => {
+            row.classList.remove('selected');
+        });
+        clickedElement.classList.add('selected');
+
+        // 2. Get Data (ID and URLs from the row's data attributes)
+        const categoryId = clickedElement.dataset.categoryId;
+        const editCategoryUrl = clickedElement.dataset.editUrl;
+        const deleteCategoryUrl = clickedElement.dataset.deleteUrl;
+
+        ordersDetailsPane.classList.add('d-none');
+        warehouseDetailsPane.classList.add('d-none');
+        categoryDetailsPane.classList.remove('d-none');
+
+        // Temporarily indicate loading on the Name field
+        document.getElementById('category-name-display').textContent = 'Cargando...';
+
+        // 3. Fetch Category's Data via AJAX
+        fetch(`/store/category/${categoryId}/details/api/`) 
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: Failed to fetch product details.`);
+                }
+                return response.json();
+            })
+            .then(data => {         
+                // Update text content fields
+                document.getElementById('category-id-display').textContent = data.id || 'N/A';
+                document.getElementById('category-name-display').textContent = data.name || 'N/A';
+                document.getElementById('category-description-display').textContent = data.description || 'N/A';
+                // Update Action Buttons
+                document.getElementById('edit-category-btn').href = editCategoryUrl;
+                document.getElementById('delete-category-btn').href = deleteCategoryUrl;
+
+            })
+            .catch(error => {
+            // On error, only update the main field and console log the message
+            console.error('Error fetching product details:', error);
+            document.getElementById('category-name-display').textContent = `ERROR: ${error.message}`;
+            document.getElementById('category-description-display').textContent = '';
+            });
+    }
+
+    // Attach Event Listener ---
+    categoryRows.forEach(row => {
+        row.addEventListener('click', function() {
+            populateCategoryDetails(this); 
+        });
+    });
+
+    document.querySelectorAll('.edit-category-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent page refresh
+            e.stopPropagation(); // Stop event bubbling
+            const categoryId = document.getElementById('category-id-display').textContent;
+            const categoryName = document.getElementById('category-name-display').textContent;
+            const categoryDescription = document.getElementById('category-description-display').textContent || '';
+            const form = addCategory.querySelector('form');
+
+            console.log(categoryName);
+            
+            // Populate form fields
+            form.querySelector('input[name="name"]').value = categoryName;
+            form.querySelector('textarea[name="description"]').value = categoryDescription;
+            
+            // Update form action for edit
+            form.action = `/store/category/edit/${categoryId}/`;
+            
+            // Show the add-category form
+            addCategory.classList.remove('d-none');
+        });
+    });
+
 });
