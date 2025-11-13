@@ -13,6 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.http import require_GET
 from io import BytesIO
 from pypdf import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
@@ -84,11 +85,8 @@ class CategoryView(View):
     def remove_category(self, request, *args, **kwargs):
         category_id = kwargs.get('category_id')
         category = get_object_or_404(Category, pk=category_id)
-        if request.method == 'POST':
-            category.delete()
-            messages.success(request, "Categoria eliminada.")
-            return redirect('store:invmgm')
-        messages.error(request, "Deletion requires a POST request.")
+        category.delete()
+        messages.success(request, "Categoria eliminada.")
         return redirect('store:invmgm')
 
     def edit_category(self, request, *args, **kwargs):
@@ -257,18 +255,13 @@ def add_product(request):
             product.created_by = request.user
             product.save()
             form.save_m2m()
-            return JsonResponse({
-                'success': True,
-                'message': '¡Producto creado!',
-                'product_id': product.id
-            })
+            messages.success(request, '¡Producto creado exitosamente y añadido al inventario!')
+            return redirect('store:products')
         else:
-            return JsonResponse({
-                'success': False,
-                'errors': form.errors
-            }, status=400)
+            return render(request, 'add_product.html', {'form': form})
     else:
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        form = ProductForm()
+    return render(request, 'add_product.html', {'form': form})
 
 
 @login_required
@@ -320,7 +313,7 @@ def delete_product(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     product.delete()
     messages.success(request, 'Product deleted!')
-    return redirect(reverse('store:products'))
+    return redirect(reverse('store:invmgm'))
 
 
 ## Cart Views
@@ -539,8 +532,76 @@ class Cart(View):
                 del request.session[key]
         
         request.session.modified = True
-        messages.info(request, "Cart and session data cleared.")
+        messages.info(request, "El carrito esta vacio.")
         return redirect('store:cart_view')
+
+ # Assuming you have a Cart class/session handler
+
+
+from django.shortcuts import redirect, get_object_or_404
+from django.views.decorators.http import require_GET
+from django.db.models import Sum
+from .models import Product, Order, OrderItem # Ensure you import all necessary models
+from django.http import JsonResponse
+
+# Define the status used for an active shopping cart
+ACTIVE_CART_STATUS = 'pending' 
+
+@require_GET
+def add_to_cart_via_link(request, product_id):
+    """
+    Handles a GET request from an external Gamma link, adds the product to the cart,
+    and redirects the user to the cart view. This replicates the non-AJAX part of your add_item logic.
+    """
+    product = get_object_or_404(Product, id=product_id)
+    quantity = 1
+
+    # --- 1. Get or create the active Order (Cart) based on paymentStatus ---
+    if request.user.is_authenticated:
+        # Find or create a 'pending' order (cart) for the logged-in user
+        order, created = Order.objects.get_or_create(
+            user=request.user,
+            paymentStatus=ACTIVE_CART_STATUS,
+            defaults={'totalAmount': 0.00}
+        )
+    else:
+        # For guest users, use a session-based order
+        order_id = request.session.get('order_id')
+        if order_id:
+            try:
+                # Retrieve the existing, 'pending' order for the guest session
+                order = Order.objects.get(id=order_id, paymentStatus=ACTIVE_CART_STATUS) 
+            except Order.DoesNotExist:
+                # Order expired or deleted, create a new one
+                order = Order.objects.create(paymentStatus=ACTIVE_CART_STATUS, totalAmount=0.00)
+                request.session['order_id'] = order.id
+        else:
+            # No order in session, create a new one
+            order = Order.objects.create(user=None, paymentStatus=ACTIVE_CART_STATUS, totalAmount=0.00)
+            request.session['order_id'] = order.id
+            
+    # --- 2. Get or create the OrderItem and update quantity ---
+    order_item, created = OrderItem.objects.get_or_create(
+        order=order,
+        product=product,
+        defaults={'quantity': quantity, 'price': product.price}
+    )
+    if not created:
+        order_item.quantity += quantity
+        order_item.save()
+
+    # --- 3. Update the total amount of the Order ---
+    # Optimized calculation for total amount
+    total_amount_result = OrderItem.objects.filter(order=order).aggregate(
+        total=Sum('price', output_field=models.DecimalField()) * Sum('quantity', output_field=models.IntegerField())
+    )
+    # Using your original sum logic is safer if the above is too complex:
+    order.totalAmount = sum(item.quantity * item.price for item in order.items.all())
+    order.save()
+
+    # --- 4. Redirect the user ---
+    # Since this is triggered by an external link (not AJAX), we only perform the redirect.
+    return redirect('store:cart_view')
 
 
 ## Order Management Views

@@ -46,6 +46,9 @@
                         Mi Obra
                         </a>
                         <div class="dropdown-menu" aria-labelledby="mi-obra">
+                            <!-- {% for category in categories %}
+                            <a>{{ category.name }}</a>
+                            {% endfor %} -->
                             <a href="{% url 'store:products' %}?category=Libros" class="dropdown-item">Libros</a>
                             <a href="{% url 'store:products' %}?category=Seminarios" class="dropdown-item">Seminarios</a>
                             <a href="#" class="dropdown-item">Podcast</a>
@@ -86,6 +89,15 @@
             </nav>
         </div>
     </header>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                {{ message }}
+            </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     <div class="main">
         {% block content %}
         {% endblock %}

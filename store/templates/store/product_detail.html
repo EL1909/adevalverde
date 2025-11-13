@@ -1,6 +1,19 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
+{% if product.other_site_link %}
+<div class="content">
+    <iframe src="{{ product.other_site_link }}" style="width: 100%; height: 600px; border: none;"></iframe>
+</div>
+<div id="gamma-floating-cta">
+    <form action="{% url 'store:cart_add' product.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="gamma-primary-btn">
+            <i class="fa-solid fa-cart-shopping"></i>
+        </button>
+    </form>
+</div>
+{% else %}
 <div>
     <div class="row">
         <div class="col-12 col-md-6 col-lg-4 offset-lg-2">
@@ -34,26 +47,13 @@
                         <button type="submit" class="btn btn-primary" data-product-id="{{ product.id }}"><i class="fa-solid fa-cart-shopping"></i></button>
                         <button type="button" class="btn btn-primary" onclick="window.open('{{ product.other_site_link }}', '_blank')"><i class="fa-brands fa-amazon"></i></button>
                     </form>
-                    
                 </div>
                 <div class="running-text">
                     <p>{{ product.description }}</p>
                 </div>
-                {% if product.rating %}
-                    <small class="text-muted"><i class="fas fa-star mr-1"></i>{{ product.rating }} / 5</small>
-                {% else %}
-                    <small class="text-muted">Deja tu comentario:</small>
-                {% endif %}
             </div>
         </div>
     </div>
-    <section class="section" style="background-color: #f1f1f1;">
-        <h2>🌱 Beneficios para tu bienestar personal</h2>
-        <ul>
-            <li><strong>Reducción del estrés:</strong> Las actividades interactivas y reflexiones te ayudarán a desconectar y a encontrar momentos de paz interior.</li>
-            <li><strong>Mayor enfoque:</strong> Establecerás metas claras y aprenderás a priorizar lo que realmente importa en tu vida.</li>
-            <li><strong>Crecimiento espiritual:</strong> Las afirmaciones y los temas profundos fomentan una conexión más cercana con tu propósito divino y tu bienestar interior.</li>
-        </ul>
-    </section>
 </div>
+{% endif %}
 {% endblock %}

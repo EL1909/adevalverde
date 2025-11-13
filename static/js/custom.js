@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Set timeout for message display
     setTimeout(function () {
-        let messages = document.getElementById('msg');
+        let messages = document.querySelector('.messages');
         let alert = new bootstrap.Alert(messages);
         alert.close();
     }, 3420);

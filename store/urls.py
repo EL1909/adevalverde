@@ -18,6 +18,7 @@ urlpatterns = [
         path('remove/<int:product_id>/', views.Cart.as_view(), {'action': 'remove'}, name='cart_remove'),
         path('update/<int:product_id>/', views.Cart.as_view(), {'action': 'update'}, name='cart_update'),
         path('clear/', views.Cart.as_view(), {'action': 'clear'}, name='cart_clear'),
+        path('add-to-cart-via-link/<int:product_id>/', views.add_to_cart_via_link, name='add_link_cart'),
     ])),
     path('orders/', include([
         path('manage_order/', views.ManageOrder.as_view(), name='manage_order'),

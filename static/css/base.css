@@ -91,6 +91,50 @@ iframe {
     width: 100%;
 }
 
+
+#gamma-floating-cta {
+    /* Fixes the button relative to the viewport */
+    position: fixed; 
+    /* Adjust these values to place it where you want (e.g., bottom right) */
+    top: 50px; 
+    right: 30px; 
+    /* Ensures it stays on top of all other content */
+    z-index: 1050; 
+}
+
+/* --- 2. Button Styling (Gamma Aesthetic) --- */
+.gamma-primary-btn {
+    background-color: rgba(255, 255, 255, 0.653);
+    color: #5B5BDD;
+    border: none;
+    padding: 12px 20px;
+    font-size: 2rem;
+    font-weight: 600;
+    /* Moderate rounding */
+    border-radius: 8px; 
+    /* Subtle lift/shadow effect */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); 
+    /* Ensures smooth transition on hover */
+    transition: all 0.2s ease-in-out;
+    /* Optional: Slightly increase letter spacing */
+    letter-spacing: 0.5px; 
+}
+
+/* Hover Effect for interaction feedback */
+.gamma-primary-btn:hover {
+    color: white;
+    background-color: #4C4CDD; /* Slightly darker on hover */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25); /* More pronounced lift */
+    transform: translateY(-2px); /* Slight vertical shift */
+}
+
+/* Focus/Active state (important for accessibility) */
+.gamma-primary-btn:focus,
+.gamma-primary-btn:active {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(91, 91, 221, 0.5); /* Focus ring matching button color */
+}
+
 /* Footer styles ---------------------------------------*/
 
 .footer {
@@ -238,6 +282,7 @@ input   {
 
 .category-section   {
     padding: 1em;
+    min-height: 80vh;
 }
 
 /* Product Carousel (Flex container) */
@@ -258,12 +303,13 @@ input   {
     border: 1px solid #eee;
     border-radius: 5px;
     transition: box-shadow 0.3s ease;
+    min-height: 416px;
     /* Since we're in an 8-column section, slightly smaller cards are better */
 }
 
 .product-image {
     width: 100%;
-    height: auto;
+    min-height: 280px;
     margin-bottom: 10px;
     border-radius: 3px;
 }
