@@ -65,7 +65,13 @@ class Product(models.Model):
 
     
 class Order(models.Model):
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='orders')
+    user = models.ForeignKey(
+        get_user_model(), 
+        on_delete=models.CASCADE, 
+        related_name='orders',
+        null=True,
+        blank=True
+    )
     paymentStatus = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     totalAmount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)

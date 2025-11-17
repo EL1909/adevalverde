@@ -114,7 +114,7 @@ $(document).ready(function() {
                         .css('background-color', '#09a70e7a' )
                         .show(); // Show the modal error
                     setTimeout(function() {
-                        window.location.href = '/'; // Hide the modal after 2 seconds
+                        window.location.href = response.redirect_url; // Hide the modal after 2 seconds
                     }, 2000); // 2000 milliseconds = 2 seconds
                 } else if (response.errors) {
                     // Display errors in modal

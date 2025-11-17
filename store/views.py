@@ -354,7 +354,8 @@ class Cart(View):
                 # Use .filter().first() to avoid MultipleObjectsReturned, as handled below
                 order = Order.objects.filter(
                     id=order_id, 
-                    paymentStatus=ACTIVE_CART_STATUS
+                    paymentStatus=ACTIVE_CART_STATUS,
+                    user__isnull=True
                 ).first()
         
         return order
@@ -387,45 +388,25 @@ class Cart(View):
     def add_item(self, request, product_id):
         product = get_object_or_404(Product, id=product_id)
         quantity = 1
-        # Define the status that indicates an active cart (not yet purchased)
         ACTIVE_CART_STATUS = 'pending'
 
-        # 1. Get or create the active Order (Cart) based on paymentStatus
-        if request.user.is_authenticated:
-            # Find or create a 'pending' order (cart) for the logged-in user
-            order, created = Order.objects.get_or_create(
-                user=request.user,
-                paymentStatus=ACTIVE_CART_STATUS, # Use the existing field as the filter
-                defaults={'totalAmount': 0.00}
-            )
-        else:
-            # For guest users, use a session-based order
-            order_id = request.session.get('order_id')
-            if order_id:
-                try:
-                    # Retrieve the existing, 'pending' order for the guest session
-                    order = Order.objects.get(id=order_id, paymentStatus=ACTIVE_CART_STATUS) 
-                except Order.DoesNotExist:
-                    # Order expired or deleted, create a new one
-                    order = Order.objects.create(paymentStatus=ACTIVE_CART_STATUS, totalAmount=0.00)
-                    request.session['order_id'] = order.id
-            else:
-                # No order in session, create a new one
-                order = Order.objects.create(user=None, paymentStatus=ACTIVE_CART_STATUS, totalAmount=0.00)
-                request.session['order_id'] = order.id
-                
-        # 2. Get or create the OrderItem and update quantity
-        # This logic remains the same as it's dependent on the Order object found above
+        # 1. Get Order if exists, otherwise create one
+        order = self._get_active_order(request)
+        if not order:
+            order = Order.objects.create(user=None, paymentStatus=ACTIVE_CART_STATUS, totalAmount=0.00)
+            request.session['order_id'] = order.id
+            request.session.modified = True
+        
         order_item, created = OrderItem.objects.get_or_create(
             order=order,
             product=product,
             defaults={'quantity': quantity, 'price': product.price}
         )
         if not created:
-            order_item.quantity += quantity
+            order_item.quantity += quantity,
             order_item.save()
 
-        # 3. Update the total amount of the Order
+        # 2. Update the total amount of the Order
         order.totalAmount = sum(item.quantity * item.price for item in order.items.all())
         order.save()
 
@@ -439,7 +420,7 @@ class Cart(View):
             })
 
         return redirect('store:cart_view')
-
+        
     # Remove an item from the cart
     def remove_item(self, request, product_id):
         order = self._get_active_order(request)
@@ -535,47 +516,46 @@ class Cart(View):
         messages.info(request, "El carrito esta vacio.")
         return redirect('store:cart_view')
 
- # Assuming you have a Cart class/session handler
 
-
-
-# Define the status used for an active shopping cart
+# Define esta constante si no está definida globalmente
 ACTIVE_CART_STATUS = 'pending' 
 
 @require_GET
 def add_to_cart_via_link(request, product_id):
-    """
-    Handles a GET request from an external Gamma link, adds the product to the cart,
-    and redirects the user to the cart view. This replicates the non-AJAX part of your add_item logic.
-    """
     product = get_object_or_404(Product, id=product_id)
     quantity = 1
+    
+    order = None
 
-    # --- 1. Get or create the active Order (Cart) based on paymentStatus ---
+    # --- 1. Obtener/Crear la orden (Carrito) ---
     if request.user.is_authenticated:
-        # Find or create a 'pending' order (cart) for the logged-in user
+        # Usuario Autenticado: Buscar/Crear por usuario
         order, created = Order.objects.get_or_create(
             user=request.user,
             paymentStatus=ACTIVE_CART_STATUS,
             defaults={'totalAmount': 0.00}
         )
     else:
-        # For guest users, use a session-based order
+        # Usuario Anónimo: Buscar por order_id en sesión
         order_id = request.session.get('order_id')
         if order_id:
-            try:
-                # Retrieve the existing, 'pending' order for the guest session
-                order = Order.objects.get(id=order_id, paymentStatus=ACTIVE_CART_STATUS) 
-            except Order.DoesNotExist:
-                # Order expired or deleted, create a new one
-                order = Order.objects.create(paymentStatus=ACTIVE_CART_STATUS, totalAmount=0.00)
-                request.session['order_id'] = order.id
-        else:
-            # No order in session, create a new one
-            order = Order.objects.create(user=None, paymentStatus=ACTIVE_CART_STATUS, totalAmount=0.00)
+            order = Order.objects.filter(
+                id=order_id,
+                user__isnull=True, # Solo carritos de invitado
+                paymentStatus=ACTIVE_CART_STATUS
+            ).first()
+
+        if not order:
+            # Si no se encuentra la orden (no hay sesión o expiró), crear una nueva
+            order = Order.objects.create(
+                user=None, # user=None ahora permitido por el cambio de modelo previo
+                paymentStatus=ACTIVE_CART_STATUS,
+                totalAmount=0.00
+            )
             request.session['order_id'] = order.id
-            
-    # --- 2. Get or create the OrderItem and update quantity ---
+            request.session.modified = True
+
+    # --- 2. Obtener/Crear el OrderItem y actualizar cantidad ---
     order_item, created = OrderItem.objects.get_or_create(
         order=order,
         product=product,
@@ -585,17 +565,12 @@ def add_to_cart_via_link(request, product_id):
         order_item.quantity += quantity
         order_item.save()
 
-    # --- 3. Update the total amount of the Order ---
-    # Optimized calculation for total amount
-    total_amount_result = OrderItem.objects.filter(order=order).aggregate(
-        total=Sum('price', output_field=models.DecimalField()) * Sum('quantity', output_field=models.IntegerField())
-    )
-    # Using your original sum logic is safer if the above is too complex:
+    # --- 3. Actualizar el total de la Orden (FIX: Usando sum simple) ---
+    # Se usa la suma en Python, que es más segura que la compleja agregación fallida.
     order.totalAmount = sum(item.quantity * item.price for item in order.items.all())
     order.save()
 
-    # --- 4. Redirect the user ---
-    # Since this is triggered by an external link (not AJAX), we only perform the redirect.
+    # --- 4. Redirigir al usuario ---
     return redirect('store:cart_view')
 
 
