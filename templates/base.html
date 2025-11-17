@@ -16,6 +16,7 @@
     {% block core_css%}
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'css/compliance.css' %}" type="text/css">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,9 +29,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <!-- Paypal SKD -->
-    <script src="https://www.paypal.com/sdk/js?client-id=ATQDgKmYhI7gtmB8gGQ1V8fPtN0Id2QRiAYTe8imoVL4vu-IfnCtZ9uzcHcruGNwvdCs1s3TbbPOUSjH&currency=USD"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=BAAmQKRDtf9lHg5HX5NQzBeqepZl-XRBcl94YSJs-uxFWR1CSzgHFouWtvnkt0Fh8DipUFenmwGM5VJZ_8&currency=USD&intent=capture" data-sdk-integration-source="button-factory"></script>
     {% endblock %}
     <title>Adela Valverde {% block extra_title %}{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
   </head>
   <body>
     <header class="topbar">
@@ -55,7 +57,7 @@
                             <a href="{% url 'store:products' %}?category=Sesiones" class="dropdown-item">Sesiones Privadas</a>
                         </div>
                     </li>
-                    <li><a href="#" target="content-frame">Contacto</a></li>
+                    <!-- <li><a href="#" target="content-frame">Contacto</a></li> -->
                     <li>
                         {% if request.user.is_authenticated %}
                         <a href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -98,27 +100,32 @@
         {% endfor %}
     </ul>
     {% endif %}
-    <div class="main">
+    <main class="main">
+        <div class="page-content-wrapper">
         {% block content %}
         {% endblock %}
-    </div>
+        </div>
+    </main>
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
-            <p>&copy; 2025 El Silencio es Tu Gurú. Todos los derechos reservados.</p>
             <div class="footer-links">
-                <a href="privacy.html" target="content-frame">Política de Privacidad</a>
-                <a href="terms.html" target="content-frame">Términos y Condiciones</a>
+                <a href="{% url 'privacy' %}" target="content-frame">Política de Privacidad</a>
+                <a href="{% url 'tyc' %}" target="content-frame">Términos y Condiciones</a>
                 <a href="contact.html" target="content-frame">Contacto</a>
             </div>
             <div class="footer-social">
-                <a href="https://facebook.com" target="_blank">Facebook</a>
-                <a href="https://instagram.com" target="_blank">Instagram</a>
-                <a href="https://youtube.com" target="_blank">YouTube</a>
+                <a href="https://www.facebook.com/elsilencioestuguru" target="_blank">Facebook</a>
+                <a href="https://www.instagram.com/adelavalverde/" target="_blank">Instagram</a>
+                <a href="https://www.youtube.com/@AdelaValverde" target="_blank">YouTube</a>
+                <a href="https://www.tiktok.com/@elbiensilente?fbclid=IwY2xjawOH-3FleHRuA2FlbQIxMABicmlkETBxRDZxTmU1dnE3TWppTFozc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MghjYWxsc2l0ZQEyAAEeI0uQGBRB8momJnj7bhuSAmhvuotZf-shVIJL3jHerARCokH6zudLPqJuCN8_aem_S2l3AEjYukP86Ne1gNfKCg" target="_blank">TikTok</a>
             </div>
+            <a href="www.esfuerzovz.info"><p>&copy; 2025 Esfuerzo VZ. Todos los derechos reservados.</p></a>
         </div>
     </footer>
     {% include 'users/loginModal.html' %}
+    <!-- CookieBanner -->
+    {% include 'cookie-banner.html' %}
     {% block core_js%}
     <!-- Include jQuery and jQuery UI Autocomplete -->
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>

@@ -1,0 +1,39 @@
+{% load static %}
+<div id="cookie-banner">
+    <div class="cookie-preferences">
+        <h4>Cookies:</h4>
+        <div class="cookie-switch">
+            <label for="strictly-necessary">Necesarios</label>
+            <a href="https://en.wikipedia.org/wiki/Strictly_necessary_cookies" target="_blank"><small>Ver mas</small></a>
+            <input type="checkbox" id="strictly-necessary" checked>
+        </div>
+        <div class="cookie-switch">
+            <label for="performance">Analisis y Desempeño</label>
+            <a href="https://en.wikipedia.org/wiki/Performance_cookies" target="_blank"><small>Ver mas</small></a>
+            <input type="checkbox" id="performance">
+        </div>
+        <div class="cookie-switch">
+            <label for="advertising">Publicidad Relevante</label>
+            <a href="https://en.wikipedia.org/wiki/Advertising_cookies" target="_blank"><small>Ver mas</small></a>
+            <input type="checkbox" id="advertising">
+        </div>
+    </div>
+    <button id="accept-cookies">Confirmar</button>
+</div>
+<script>
+    $(document).ready(function() {
+        $('#accept-cookies').on('click', function() {
+            $('#cookie-banner').fadeOut(); // Fade out the banner
+        });
+        
+        // Check if the user has already accepted cookies
+        if (localStorage.getItem('cookiesAccepted')) {
+            $('#cookie-banner').hide(); // Hide the banner if cookies are accepted
+        }
+
+        $('#accept-cookies').on('click', function() {
+            localStorage.setItem('cookiesAccepted', 'true'); // Set the item in localStorage
+            $('#cookie-banner').fadeOut(); // Fade out the banner
+        });
+    });
+</script>

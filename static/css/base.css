@@ -7,13 +7,19 @@
 }
 
 html, body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    line-height: 1.6;
-    color: #333; /* Dark gray for high contrast text */
-    background-color: #F8F8F8; /* Light off-white background */
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    height: 100%;
+}
+
+a   {
+    text-decoration: none;
+    color: var(--main-text-color);
 }
 
 /* * Colors Used: 
@@ -76,21 +82,37 @@ html, body {
 
 /* MAIN CONTENT AND IFRAME */
 
+.page-content-wrapper {
+    flex: 1 0 auto;           /* ¡Esto es la clave! */
+    width: 100%;
+}
+
+/* Si usas iframe en home, asegúrate también de que crezca */
+.page-content-wrapper iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
 .content {
     display: block;
-    height: 100%;
-    background-color: #F8F8F8; /* Light off-white background */
+    min-height: 100vh;
+    background-color: #F8F8F8; 
 }
 
 .main {
     flex-grow: 1; /* Allows the main content to take up the available space */
+    display: flex;
+    flex-direction: column;
 }
 
 iframe {
-    height: 100%;
+    flex:1;
+    border: none;
+    min-height: 100vh;
     width: 100%;
 }
-
 
 #gamma-floating-cta {
     /* Fixes the button relative to the viewport */
@@ -138,23 +160,20 @@ iframe {
 /* Footer styles ---------------------------------------*/
 
 .footer {
-    background-color: #1D1D1D; /* Very dark background for the footer */
-    color: #ccc; /* Light gray text for contrast */
-    padding: 40px 5%;
-    text-align: center;
-    font-size: 14px;
-    position: fixed; 
+    position: relative;
     bottom: 0;
-    left: 0;
-    width: 100%;
-    opacity: 0; 
-    pointer-events: none; /* Allows clicks to pass through when hidden */
-    transition: opacity 0.5s ease-in-out; 
-    z-index: 999; /* Ensure it is on top of other content */
+    width: 100vw;
+    background: #1D1D1D;
+    color: #fff;
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 0.95rem;
 }
 
-.footer-content p {
-    margin-bottom: 20px;
+.footer a {
+    color: #ccc;
+    text-decoration: none;
+    margin: 0 12px;
 }
 
 .footer-links,

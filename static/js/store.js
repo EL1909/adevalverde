@@ -1,3 +1,9 @@
+// -----------------------------------------------------------------
+// 0. CSRF token – always present in Django forms
+// -----------------------------------------------------------------
+const csrfTokenEl = document.querySelector('input[name="csrfmiddlewaretoken"]');
+const csrfToken = csrfTokenEl ? csrfTokenEl.value : '';
+
 function updateOrderStatus(paypalOrderId, orderId, status) {
     fetch('/store/orders/manage_order/', {
         method: 'POST',
@@ -24,13 +30,8 @@ function updateOrderStatus(paypalOrderId, orderId, status) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // -----------------------------------------------------------------
-    // 0. CSRF token – always present in Django forms
-    // -----------------------------------------------------------------
-    const csrfTokenEl = document.querySelector('input[name="csrfmiddlewaretoken"]');
-    const csrfToken = csrfTokenEl ? csrfTokenEl.value : '';
 
+document.addEventListener('DOMContentLoaded', () => {
     // -----------------------------------------------------------------
     // 1. Product Add Form – toggle download file
     // -----------------------------------------------------------------
@@ -176,35 +177,51 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -----------------------------------------------------------------
-    // 5. PayPal Buttons
+    // 5. PayPal Buttons - Acepta un containerId opcional
     // -----------------------------------------------------------------
-    const initPayPalButtons = totalAmount => {
+    const initPayPalButtons = (totalAmount, containerId = 'paypal-button-container') => {
         if (typeof paypal === 'undefined') {
             console.error('PayPal SDK not loaded');
             alert('PayPal no está disponible. Recarga la página.');
             return;
         }
-
-        const container = document.getElementById('paypal-button-container');
+        
+        // Usa el ID proporcionado o el ID por defecto del checkout
+        const container = document.getElementById(containerId);
         if (!container) return;
         container.innerHTML = '';
+
+        // El orderId se sigue tomando de sessionStorage (que actualizaremos justo antes de llamar a esta función)
+        const orderId = sessionStorage.getItem('order_id');
+        
+        // Es vital que el orderId exista antes de intentar procesar el pago
+        if (!orderId) {
+            console.error('No order ID available for PayPal transaction.');
+            alert('Error: ID de orden no encontrado.');
+            return;
+        }
 
         paypal.Buttons({
             createOrder: (data, actions) => actions.order.create({
                 purchase_units: [{
-                    amount: { currency_code: 'USD', value: totalAmount.toFixed(2) }
+                    amount: { 
+                        currency_code: 'USD', 
+                        value: totalAmount.toFixed(2) 
+                    }
                 }]
             }),
             onApprove: (data, actions) => actions.order.capture()
                 .then(details => {
                     console.log('Pago por:', details.payer.name.given_name);
-                    updateOrderStatus(data.orderID, orderId, 'completed');
+                    // Aquí el orderId se obtiene del ámbito de la función que contiene initPayPalButtons
+                    updateOrderStatus(data.orderID, orderId, 'completed'); 
                 }),
             onError: err => {
                 console.error('PayPal error:', err);
+                // Aquí el orderId se obtiene del ámbito de la función que contiene initPayPalButtons
                 updateOrderStatus(null, orderId, 'failed');
             }
-        }).render('#paypal-button-container');
+        }).render(`#${containerId}`); // Renderiza en el contenedor específico
     };
 
     // -----------------------------------------------------------------
@@ -410,7 +427,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -----------------------------------------------------------------
-    // 11. Cart – click item → show #selected-item (AJAX)
+    // 11. Repay Pending/Failed Order Logic
+    // -----------------------------------------------------------------
+    document.querySelectorAll('.repago-btn').forEach(button => {
+        button.addEventListener('click', e => {
+            e.preventDefault();
+
+            const orderId = button.dataset.orderId;
+            const totalAmount = parseFloat(button.dataset.orderAmount);
+            const containerId = `paypal-container-${orderId}`; // ID específico de esa orden
+
+            // 1. **CRÍTICO:** Sobreescribir el order_id activo en sessionStorage.
+            // Esto asegura que `initPayPalButtons` y `updateOrderStatus` utilicen el ID de la orden pendiente de Django.
+            sessionStorage.setItem('order_id', orderId);
+            
+            // Opcional: Ocultar el botón "Continuar con el Pago"
+            button.classList.add('d-none');
+
+            // 2. Mostrar el contenedor de PayPal para esa orden
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.classList.remove('d-none');
+            }
+
+            // 3. Inicializar los botones de PayPal
+            if (totalAmount > 0) {
+                initPayPalButtons(totalAmount, containerId);
+            } else {
+                alert('Monto de la orden inválido para procesar el pago.');
+            }
+        });
+    });
+
+    // -----------------------------------------------------------------
+    // 12. Cart – click item → show #selected-item (AJAX)
     // -----------------------------------------------------------------
     document.querySelectorAll('#cart-items .ticket-item').forEach(item => {
         item.addEventListener('click', () => {
@@ -449,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -----------------------------------------------------------------
-    // 12. Categories - 
+    // 13. Categories - 
     // -----------------------------------------------------------------
 
     // CATEGORIES
@@ -462,7 +512,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoryRows = document.querySelectorAll('.category-item');
 
     // Handle "Crear categoria" button to reset form
-    document.getElementById('show-add-category').addEventListener('click', function(e) {
+    const showAddCategoryBtn = document.getElementById('show-add-category');
+
+    // Handle "Crear categoria" button to reset form
+    showAddCategoryBtn?.addEventListener('click', function(e) {
         e.preventDefault();
         const catform = addCategory.querySelector('form');
         

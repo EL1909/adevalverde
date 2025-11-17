@@ -1,11 +1,17 @@
 document.addEventListener("DOMContentLoaded", function() {
 
     // Set timeout for message display
-    setTimeout(function () {
-        let messages = document.querySelector('.messages');
-        let alert = new bootstrap.Alert(messages);
-        alert.close();
+    setTimeout(function () { 
+        let messages = document.querySelector('.messages'); 
+        // **Verifica si el elemento existe** 
+        if (messages) { 
+            let alert = new bootstrap.Alert(messages);
+            alert.close(); 
+        // Si messages existe, la alerta se inicializa bien y se cierra. 
+        } 
     }, 3420);
+
+    
 
     // UserOptions icon behavior
     const menuIcon = document.getElementById("menu-icon");

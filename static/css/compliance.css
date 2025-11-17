@@ -1,0 +1,118 @@
+.compliance {
+    max-width: 960px;
+    margin: 40px auto;
+    padding: 40px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.compliance h1 {
+    font-size: 2.4rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #1a1a1a;
+}
+.compliance h2 {
+    font-size: 1.6rem;
+    margin: 2.5rem 0 1rem;
+    color: #222;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+h3 { font-size: 1.3rem; margin-top: 2rem; }
+p, ul, ol {
+    margin: 1rem 0;
+}
+ul { padding-left: 1.5rem; }
+a {
+    color: #0066cc;
+    text-decoration: underline;
+}
+a:hover { color: #004499; }
+hr {
+    border: none;
+    border-top: 1px solid #dee2e6;
+    margin: 3rem 0;
+}
+
+/* COOKIES */
+
+#cookie-banner {
+    position: fixed;
+    bottom: 10vh;
+    background-color: hsla(0, 100%, 99%, 0.798);
+    border: 2px solid #f2f1f1;
+    border-radius: 25px;
+    color: rgb(122, 116, 116);
+    padding: 5px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Align items to start (left) */
+    width: 50%;
+}
+
+.cookie-preferences {
+    padding: 5px;
+    margin: 5px 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* Set width to 100% for proper alignment */
+}
+
+.cookie-switch {
+    display: flex;  /* Use flex to align checkbox and label */
+    justify-content: space-between;  /* Align items with space between */
+    align-items:end; /* Center align checkbox and label */
+    margin: 5px 0;
+}
+
+.cookie-switch input {
+    margin-left: auto; /* Push the checkbox to the right */
+}
+
+.cookie-switch label {
+    font-weight: bold;
+}
+
+.cookie-switch label:hover {
+    color: orange;
+    font-weight: bold;
+}
+
+.cookie-switch a {
+    color: #ddd;
+    margin: 0 5px;
+    font-size: 0.9em;
+    text-decoration: underline;
+}
+
+button#accept-cookies {
+    background-color: #0056b3;
+    color: #f2f1f1;
+    font-weight: bold;
+    border: 2px solid orange;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 25px;
+    width: 100%; /* Center button by setting width */
+    align-self: center; /* Center the button within the banner */
+    margin-top: 10px; /* Add space above the button */
+}
+
+button#accept-cookies:hover {
+    color: #0056b3;
+    background-color: #f2f1f1;
+}
+
+/* RESPONSIVENESS */
+
+@media (max-width: 768px) {
+    .container {
+        margin: 20px 15px;
+        padding: 25px;
+        border-radius: 10px;
+    }
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.5rem; }
+}

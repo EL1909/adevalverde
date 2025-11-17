@@ -20,6 +20,15 @@ def Bio(request):
     return render(request, 'bio.html')
 
 
+def Privacy(request):
+    """ A View to return the Privacy page"""
+    return render(request, 'privacy.html')
+
+def TyC(request):
+    """ A View to return the Privacy page"""
+    return render(request, 'tyc.html')
+
+
 class LoginView(LoginView):
     template_name = 'users/login.html'
     form_class = AuthenticationForm

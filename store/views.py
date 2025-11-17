@@ -152,7 +152,7 @@ class InventoryManagementView(View):
 
         # Separate orders
         openOrders = orders.filter(paymentStatus='pending')
-        closedOrders = orders.filter(paymentStatus='completed')
+        closedOrders = orders.filter(paymentStatus__in=['completed', 'failed'])
 
         # Prepare context for the template
         context = {
@@ -538,11 +538,6 @@ class Cart(View):
  # Assuming you have a Cart class/session handler
 
 
-from django.shortcuts import redirect, get_object_or_404
-from django.views.decorators.http import require_GET
-from django.db.models import Sum
-from .models import Product, Order, OrderItem # Ensure you import all necessary models
-from django.http import JsonResponse
 
 # Define the status used for an active shopping cart
 ACTIVE_CART_STATUS = 'pending' 
@@ -720,8 +715,50 @@ class DownloadFile(View):
     
 
 @login_required
+def repeat_order(request, order_id):
+    """
+    Copia los OrderItems de una orden histórica (completed) a la orden/carrito
+    activo (pending) del usuario, y luego redirige al carrito.
+    """
+    # 1. Obtener la orden original completada (Solo puede repetir órdenes propias).
+    try:
+        original_order = Order.objects.get(id=order_id, user=request.user)
+    except Order.DoesNotExist:
+        messages.error(request, "La orden solicitada no existe o no te pertenece.")
+        return redirect('store:user_orders')
+    active_cart, created = Order.objects.get_or_create(
+        user=request.user,
+        paymentStatus=ACTIVE_CART_STATUS,
+        defaults={'totalAmount': 0.00}
+    )
+
+    active_cart.items.all().delete()
+    
+    for order_item in original_order.items.all():
+        # Crear un nuevo OrderItem para el carrito activo
+        OrderItem.objects.create(
+            order=active_cart,
+            product=order_item.product,
+            quantity=order_item.quantity,
+            price=order_item.price
+        )
+    
+    active_cart.totalAmount = sum(item.quantity * item.price for item in active_cart.items.all())
+    active_cart.save()
+    
+    # Opcional: Mensaje de éxito
+    messages.success(request, f"La Orden #{order_id} ha sido copiada a tu carrito. ¡Revisa tu pedido!")
+
+    # 6. Redirigir al usuario a la página del carrito.
+    # Asume que el nombre de la URL para la vista del carrito (Cart.get) es 'store:cart_view'.
+    return redirect('store:cart_view')
+
+
+@login_required
 def user_orders(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'store/orders_history.html', {
         'orders': orders
     })
+
+

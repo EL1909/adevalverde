@@ -5,7 +5,7 @@ $(document).ready(function() {
 
     
     // Add a click event listener to the link
-    loginModalLink.addEventListener("click", function (event) {
+    loginModalLink?.addEventListener("click", function (event) {
         // Prevent the default behavior of the link (e.g., navigating to another page)
         event.preventDefault();
     
