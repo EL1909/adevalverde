@@ -1,7 +1,12 @@
+import os
+import json
+import qrcode
+import uuid
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.sites.models import Site
 from django.core.files.base import ContentFile
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import transaction
@@ -14,14 +19,12 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_GET
+from json.decoder import JSONDecodeError
 from io import BytesIO
 from pypdf import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 from reportlab.lib.pagesizes import letter
-import os
-import json
-import qrcode
-import uuid
 from .models import Product, Category, Provider, Order, OrderItem, Downloadable
 from .forms import ProductForm, CategoryForm
 
@@ -578,14 +581,23 @@ def add_to_cart_via_link(request, product_id):
 
 class ManageOrder(View):
     def post(self, request):
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except JSONDecodeError:
+            return JsonResponse({'error': 'Invalid or empty JSON body received.'}, status=400)
+        
         order_id = data.get('order_id')
+        paypal_order_id = data.get('paypal_order_id')
         payment_status = data.get('payment_status')
         shipping_data = data.get('shipping_data', {})
+
+        if not all([order_id, payment_status]):
+            return JsonResponse({'error': 'Missing required payment data (order_id or payment_status).'}, status=400)
 
         # Validate payment_status
         if payment_status not in ['pending', 'completed', 'failed']:
             return JsonResponse({'error': 'Invalid payment status'}, status=400)
+        redirect_url = None
         try:
             with transaction.atomic():
                 order = Order.objects.get(id=order_id)
@@ -595,13 +607,18 @@ class ManageOrder(View):
                     order.save()
 
                 if payment_status == 'completed' and order.paymentStatus == 'completed':
+                    current_site = Site.objects.get_current(request)
+                    site_domain = current_site.domain
+                    base_url = f"https://{site_domain}"
+
                     for item in order.items.filter(product__is_downloadable=True):
                         if hasattr(item, 'downloadable'):
                             continue
 
                         token = uuid.uuid4()
-                        verify_url = request.build_absolute_uri(f'/verify/{token}/')
-                        qr = qrcode.make(verify_url)
+                        verify_path = reverse('store:verify_download', args=[token])
+                        verification_url_full = f"{base_url}{verify_path}"
+                        qr = qrcode.make(verification_url_full)
                         qr_buffer = BytesIO()
                         qr.save(qr_buffer, 'PNG')
                         qr_file = ContentFile(qr_buffer.getvalue(), name=f"qr_{token}.png")
@@ -609,19 +626,28 @@ class ManageOrder(View):
                         Downloadable.objects.create(
                             order_item=item,
                             token=token,
-                            qr_image=qr_file
+                            verification_url=verification_url_full,
+                            qr_image=qr_file,
                         )
+                    redirect_url = reverse('store:user_orders')
 
-            return JsonResponse({
-                            'message': 'Order processed successfully.', 
-                            'order_id': order.id,
-                            'status': order.paymentStatus
-                        })
+            response_data = {
+                'message': 'Order processed successfully.', 
+                'order_id': order.id,
+                'status': order.paymentStatus,
+            }
+            if redirect_url:
+                response_data['redirect_url'] = redirect_url # Incluimos la URL para JS
 
+            return JsonResponse(response_data)
+
+        except Order.DoesNotExist:
+             return JsonResponse({'error': f'Order with ID {order_id} not found.'}, status=404)
         except ValidationError as e:
             return JsonResponse({'error': str(e)}, status=400)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            # Captura errores de base de datos o lógica interna
+            return JsonResponse({'error': f'Internal Server Error: {str(e)}'}, status=500)
 
 
 class GetOrderItems(View):
@@ -639,7 +665,6 @@ class GetOrderItems(View):
         
 
 class DownloadFile(View):
-
     def get(self, request, token):
         downloadable = get_object_or_404(Downloadable, token=token)
         item = downloadable.order_item
@@ -656,15 +681,23 @@ class DownloadFile(View):
         reader = PdfReader(product_file)
         writer = PdfWriter()
 
-        # Get QR image
+        # Get QR image\ 
         qr_image = downloadable.qr_image
         if not qr_image:
             raise Http404("QR missing.")
+        
+        qr_image_buffer = BytesIO(qr_image.read())
+        try:
+            reportlab_qr_image = ImageReader(qr_image_buffer)
+        except Exception as e:
+            # Manejar errores si ReportLab no puede leer el PNG del buffer.
+            print(f"Error al leer imagen QR con ReportLab: {e}")
+            raise Http404("No se pudo procesar la imagen QR.")
 
         # Create overlay with QR
         overlay_buffer = BytesIO()
         c = canvas.Canvas(overlay_buffer, pagesize=letter)
-        c.drawImage(qr_image.path, 50, 50, width=80, height=80)
+        c.drawImage(reportlab_qr_image, 50, 50, width=80, height=80)
         c.save()
         overlay_buffer.seek(0)
         overlay = PdfReader(overlay_buffer)
@@ -688,6 +721,47 @@ class DownloadFile(View):
         response['Content-Disposition'] = f'attachment; filename="{item.product.name}_with_proof.pdf"'
         return response
     
+
+class VerifyDownloadView(View):
+    """
+    Vista que se ejecuta cuando se escanea el código QR en el PDF.
+    Verifica el token de descarga y muestra el estado de la orden al usuario.
+    Si la descarga es válida, proporciona el enlace a la vista DownloadFile.
+    """
+    def get(self, request, token):
+        try:
+            # 1. Buscar el objeto Downloadable por el token único
+            downloadable = get_object_or_404(Downloadable, token=token)
+        except Http404:
+            # Token inválido o no encontrado
+            raise Http404("Código de verificación inválido o no encontrado.")
+
+        order = downloadable.order_item.order
+        
+        # 2. Determinar el estado de la descarga
+        is_completed = order.paymentStatus == 'completed'
+        is_used = downloadable.downloaded_at is not None
+        
+        # 3. Generar la URL de descarga solo si es válida y no ha sido usada
+        download_url = None
+        if is_completed and not is_used:
+            # Crea la URL a la vista DownloadFile, pasando el mismo token
+            download_url = reverse('store:download_file', args=[token])
+        
+        # 4. Preparar el contexto para el template
+        context = {
+            'downloadable': downloadable,
+            'order': order,
+            'product_name': downloadable.order_item.product.name,
+            'is_completed': is_completed, # Pago completado?
+            'is_used': is_used,           # Ya fue descargado?
+            'download_url': download_url, # URL de descarga (si es válida)
+        }
+
+        # 5. Renderizar el template
+        # (Debes crear el template 'store/verify_download.html')
+        return render(request, 'store/verify_download.html', context)
+
 
 @login_required
 def repeat_order(request, order_id):

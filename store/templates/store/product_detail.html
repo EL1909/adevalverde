@@ -6,7 +6,7 @@
     <iframe src="{{ product.other_site_link }}" style="width: 100%; height: 600px; border: none;"></iframe>
 </div>
 <div id="gamma-floating-cta">
-    <form action="{% url 'store:cart_add' product.id %}" method="post">
+    <form action="{% url 'store:add_link_cart' product_id=product.id %}" method="get">
         {% csrf_token %}
         <button type="submit" class="gamma-primary-btn">
             <i class="fa-solid fa-cart-shopping"></i>
@@ -45,7 +45,6 @@
                     <form action="{% url 'store:cart_add' product_id=product.id %}" class="add-to-cart-form" method="post">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary" data-product-id="{{ product.id }}"><i class="fa-solid fa-cart-shopping"></i></button>
-                        <button type="button" class="btn btn-primary" onclick="window.open('{{ product.other_site_link }}', '_blank')"><i class="fa-brands fa-amazon"></i></button>
                     </form>
                 </div>
                 <div class="running-text">

@@ -115,6 +115,10 @@ class OrderItem(models.Model):
 class Downloadable(models.Model):
     order_item = models.OneToOneField('store.OrderItem', on_delete=models.CASCADE, related_name='downloadable')
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    verification_url = models.CharField(max_length=500, null=True, blank=True)
     qr_image = models.ImageField(upload_to='store/qr_codes/', null=True, blank=True)
     downloaded_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Download for {self.order_item.product.name} ({self.token})"

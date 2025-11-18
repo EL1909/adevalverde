@@ -26,6 +26,7 @@ urlpatterns = [
         path('order/<int:order_id>/items/', views.GetOrderItems.as_view(), name='get_order_items'),
         path('my-orders/', views.user_orders, name='user_orders'),
         path('download_product/<str:token>/', views.DownloadFile.as_view(), name='download_product'),
+        path('verify/<uuid:token>/', views.VerifyDownloadView.as_view(), name='verify_download'),
     ])),
     path('category/', include([
         path('add/', views.CategoryView.as_view(), name='add_category'),

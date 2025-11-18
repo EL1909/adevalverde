@@ -82,13 +82,20 @@
                                     {% if form.image.errors %}<div class="invalid-feedback d-block">{{ form.image.errors }}</div>{% endif %}
                                 </div>
                             </div>
-                            
+                            <div class="col-12">
+                                <div>
+                                    {{ form.is_downloadable }} {{ form.is_downloadable.label }}
+                                </div>
+                                <div id="download-file-section" style="display: none; margin-top: 10px;">
+                                    {{ form.download_file.label_tag }}
+                                    {{ form.download_file }}
+                                    {{ form.download_file.errors }}
+                                </div>
+                            </div>
                             <!-- Hidden fields (such as created_by if it's included in the form's fields list) -->
                             {{ form.created_by }}
-
                         </div>
                     {% endwith %}
-                    
                     <!-- Action Buttons -->
                     <div class="mt-4 pt-3 border-top d-flex justify-content-end">
                         <!-- Go back to the product details or inventory management page -->

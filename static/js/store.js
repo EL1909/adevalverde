@@ -245,17 +245,35 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(r => r.json())
         .then(data => {
-            console.log('Order updated:', data);
-            if (status === 'completed') {
-                alert('¡Pago completado!');
-                sessionStorage.clear();
+            console.log('Order processed response:', data);
+            
+            // 1. Manejo del éxito de la llamada POST
+            if (data.status === 'completed') {
+                alert('¡Pago completado! Redirigiendo a tus órdenes.');
+                sessionStorage.clear(); // Limpia la sesión del carrito
+
+                // 2. REDIRECCIÓN DINÁMICA: Usa la URL del backend si está presente
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    // Fallback: Si el backend no envió la URL (ej: por error de configuración),
+                    // usa la URL estática para no dejar al usuario varado.
+                    window.location.href = '/store/orders/my-orders/'; 
+                }
+
+            } else if (data.status === 'failed') {
+                alert('Pago fallido. Por favor, revisa tu estado de órdenes.');
+                // Puedes optar por redirigir a la vista de órdenes para que el usuario vea el estado:
+                window.location.href = '/store/orders/my-orders/';
+                
             } else {
-                alert('Pago fallido.');
+                // Manejar otros mensajes (como 'error' de la vista ManageOrder)
+                alert('Error en el procesamiento de la orden: ' + (data.error || 'Mensaje desconocido'));
             }
         })
-        .catch(err => {
-            console.error('Update error:', err);
-            alert('Error al procesar el pedido.');
+        .catch(error => {
+            console.error('Error al comunicarse con ManageOrder:', error);
+            alert('Error de conexión o servidor al procesar el pago.');
         });
     };
 

@@ -1,0 +1,100 @@
+{% extends 'base.html' %} 
+{% load static %}
+
+{% block title %}Verificación de Descarga{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-body p-4 p-md-5">
+                    
+                    <div class="text-center pb-4 mb-4 border-bottom">
+                        <h1 class="h3 fw-bolder text-dark">
+                            Verificación de Autenticidad
+                        </h1>
+                        <p class="mt-2 text-muted">
+                            Resultados del escaneo para el documento: <span class="fw-semibold text-primary">{{ product_name }}</span>
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Lógica para determinar las clases y el mensaje según el estado -->
+                        {% if is_completed and not is_used %}
+                            {% with alert_class="alert-success" icon_class="text-success" text_class="fw-bold text-success" message="¡Token Válido! (Primera Descarga Disponible)" %}
+                            {% endwith %}
+                        {% elif is_used %}
+                            {% with alert_class="alert-warning" icon_class="text-warning" text_class="fw-bold text-warning" message="¡Token Usado! (Documento ya descargado)" %}
+                            {% endwith %}
+                        {% else %}
+                            {% with alert_class="alert-danger" icon_class="text-danger" text_class="fw-bold text-danger" message="Estado de Pago Inválido o Pendiente" %}
+                            {% endwith %}
+                        {% endif %}
+
+                        <!-- Sección de ESTADO (Usando la estructura Alert de Bootstrap) -->
+                        <div class="alert {{ alert_class }} d-flex align-items-center rounded-3 p-3" role="alert">
+                            <!-- Nota: Requiere Font Awesome (fa-solid) -->
+                            <i class="fa-solid fa-circle-info me-3 {{ icon_class }}"></i>
+                            <div>
+                                <span class="{{ text_class }}">{{ message }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Detalles del Documento y Orden (Usando Listas de Definición - dl) -->
+                        <div class="card border-secondary rounded-3 p-3">
+                            <dl class="row mb-0 small">
+                                <dt class="col-5 text-muted">Documento:</dt>
+                                <dd class="col-7 fw-semibold text-end">{{ product_name }}</dd>
+                                
+                                <dt class="col-5 text-muted">Orden ID:</dt>
+                                <dd class="col-7 text-end">#{{ order.id }}</dd>
+                                
+                                <dt class="col-5 text-muted">Propietario:</dt>
+                                <dd class="col-7 text-end">{{ order.user.get_full_name|default:"Usuario Anónimo" }}</dd>
+                                
+                                {% if downloadable.downloaded_at %}
+                                <dt class="col-5 text-muted">Descargado el:</dt>
+                                <dd class="col-7 text-end">{{ downloadable.downloaded_at|date:"Y-m-d H:i" }}</dd>
+                                {% endif %}
+                                
+                                <dt class="col-5 text-muted">Estado de Pago:</dt>
+                                <dd class="col-7 text-end capitalize">{{ order.get_paymentStatus_display }}</dd>
+                            </dl>
+                        </div>
+
+                        <!-- Sección de Acción y Mensajes -->
+                        {% if download_url %}
+                            <p class="text-center text-muted pt-2">
+                                Tu archivo está listo para ser descargado.
+                            </p>
+                            <a href="{{ download_url }}" 
+                               class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
+                                <i class="fa-solid fa-download me-2"></i> Descargar Documento
+                            </a>
+                        {% elif is_used %}
+                            <div class="alert alert-warning text-center rounded-3 p-3">
+                                <p class="mb-0 fw-medium">
+                                    Este documento ya fue descargado. El QR confirma la autenticidad y el momento de la descarga.
+                                </p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger text-center rounded-3 p-3">
+                                <p class="mb-0 fw-medium">
+                                    El pago aún no ha sido completado. Contacta a soporte si crees que esto es un error.
+                                </p>
+                            </div>
+                        {% endif %}
+
+                        <div class="text-center pt-3">
+                            <a href="{% url 'store:user_orders' %}" class="text-decoration-none text-secondary">
+                                Volver a Mis Órdenes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
