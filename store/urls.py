@@ -27,6 +27,7 @@ urlpatterns = [
         path('my-orders/', views.user_orders, name='user_orders'),
         path('download_product/<str:token>/', views.DownloadFile.as_view(), name='download_product'),
         path('verify/<uuid:token>/', views.VerifyDownloadView.as_view(), name='verify_download'),
+        path('order/<int:order_id>/details/api/', views.order_detail_api, name='order_detail_api'),
     ])),
     path('category/', include([
         path('add/', views.CategoryView.as_view(), name='add_category'),

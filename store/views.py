@@ -811,3 +811,39 @@ def user_orders(request):
     })
 
 
+def order_detail_api(request, order_id):
+    try:
+        order = get_object_or_404(Order, pk=order_id)
+
+        items_queryset = OrderItem.objects.filter(order=order).values(
+            'quantity', 
+            'price', 
+            'product__name'
+        )
+        
+        items_list = []
+        for item in items_queryset:
+            items_list.append({
+                'quantity': item['quantity'],
+                'price': float(item['price']),
+                'product_name': item['product__name']
+            })
+
+        data = {
+            'id': order.id,
+            'user': order.user.username if order.user else 'Invitado',
+            'paymentStatus': order.paymentStatus,
+            "totalAmount": float(order.totalAmount),
+            "created_at": order.created_at.strftime("%Y-%m-%d %H:%M:%S"), 
+            "updated_at": order.updated_at.strftime("%Y-%m-%d %H:%M:%S") if order.updated_at else 'Sin cambios',
+            "shipping_data": order.shipping_data or 'Sin datos de envio',
+            "items": items_list 
+        }
+
+        return JsonResponse(data, status=200)
+
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found.'}, status=404)
+    except Exception as e:
+        # Manejo general de errores
+        return JsonResponse({'error': str(e)}, status=500)

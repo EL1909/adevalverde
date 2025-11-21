@@ -7,9 +7,9 @@ import uuid
 import os, json
 
 PAYMENT_STATUS_CHOICES = [
-    ('pending', 'Pendiente'),
-    ('completed', 'Completado'),
-    ('failed', 'Fallido'),
+    ('pendiente', 'Pendiente'),
+    ('completado', 'Completado'),
+    ('fallido', 'Fallido'),
 ]
 
 
@@ -89,6 +89,7 @@ class Order(models.Model):
         }.get(self.paymentStatus, 'secondary')
 
     @property
+    
     def get_shipping_data(self):
         return json.loads(self.shipping_data)
 

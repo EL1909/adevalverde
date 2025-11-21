@@ -1,6 +1,54 @@
 ![Avalverde](include image path)
 <center><a href="www.adelavalverde.info" target="_blank">Click here to visit the site</a> - <a href="https://github.com/EL1909/adevalverde" target="_blank">Click here to visit repository</a></center>
 
+Project Brief: Adela Valverde Website
+Overview
+The adevalverde project is a Django-based web application designed as a personal platform for Adela Valverde. It combines a personal portfolio/timeline with a fully functional e-commerce store for physical and digital products.
+
+Architecture
+Framework: Django 4.2.7
+Database: SQLite (default for development)
+Frontend: Django Templates with HTML, CSS, and JavaScript (AJAX used for forms).
+Authentication: Standard Django Auth with custom views for Login/Signup.
+Key Components (Apps)
+1. Store App (/store/)
+A comprehensive e-commerce solution.
+
+Models:
+Product: Supports physical and digital items. Digital items have a download_file.
+Category & Provider: Organization for products.
+Order & OrderItem: Manages shopping carts and completed orders.
+Downloadable: Handles secure digital downloads using UUID tokens and QR codes.
+Key Features:
+Shopping Cart: Session-based for guests, database-backed for users. Merges guest cart upon login/signup.
+Digital Downloads: Generates a PDF with an embedded QR code upon purchase. The QR code verifies the download validity.
+Inventory Management: Custom admin-like views for superusers to manage products and categories.
+AJAX Integration: For adding/removing items from the cart without page reloads.
+2. Key Moments App (/keymoments/)
+A timeline feature to showcase life events.
+
+Models:
+KeyMoment: Represents an event with title, description, date, image, and type (Social, Academic, Work).
+Key Features:
+Timeline Display: Lists moments chronologically.
+CRUD Operations: Users (likely admin/owner) can Create, Edit, and Delete moments via AJAX modals.
+Custom Image Handling: Unique path generation for uploaded images.
+3. Users App (/users/)
+Handles user management and static pages.
+
+Features:
+Custom Auth: Login and Signup views that return JSON for seamless UI integration.
+Cart Merging: Logic to transfer a guest's shopping cart to their account upon registration.
+Static Pages: Home, Bio, Privacy Policy, Terms & Conditions.
+Technical Highlights
+Security: Uses python-decouple for environment variables (secrets not in code).
+PDF Generation: Uses pypdf and reportlab to dynamically stamp QR codes onto downloaded PDFs.
+AJAX Heavy: Many interactions (cart, forms) use fetch or XMLHttpRequest for a modern, app-like feel.
+
+
+
+
+
 20.01.25 - Current Status:
     - Users can Register and Login 
     - Admin is able to update items in the store

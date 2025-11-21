@@ -32,6 +32,47 @@ function updateOrderStatus(paypalOrderId, orderId, status) {
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    
+    // === Tab Handler for inventory_mgm.html ===
+    
+    const tabContainer = document.getElementById('storeTabs'); // UL/Padre de los botones de pestaña
+    const parentContainerToClean = document.getElementById('invmgm_2'); // Contenedor de detalles
+    
+    // Verificación de existencia
+    if (tabContainer && parentContainerToClean) {
+        
+        // **1. Añadir UN ÚNICO escuchador al contenedor padre de las pestañas.**
+        tabContainer.addEventListener('click', function(event) {
+            
+            // 2. Determinar si el clic fue en un botón de pestaña (Delegación).
+            // Usamos event.target.closest() para encontrar el elemento relevante que activó el evento.
+            // Los botones de pestaña típicamente usan la clase 'nav-link' o tienen 'data-bs-toggle'.
+            const clickedButton = event.target.closest('[data-bs-toggle="tab"]');
+            
+            if (clickedButton) {
+                // Prevenir la acción predeterminada si es un enlace, aunque Bootstrap lo maneja
+                // event.preventDefault(); 
+                
+                // 3. Ocultar todos los divs 'ticket' visibles dentro de #invmgm_2.
+                // Esta lógica sigue siendo la misma y es eficiente.
+                const visibleContents = parentContainerToClean.querySelectorAll('.ticket:not(.d-none)');
+
+                visibleContents.forEach(contentDiv => {
+                    contentDiv.classList.add('d-none');
+                    contentDiv.classList.remove('d-block'); // Por si acaso
+                });
+                
+                // Si la lógica de Bootstrap ya maneja el cambio de pestaña,
+                // no necesitas hacer nada más aquí. ¡El trabajo está hecho!
+            }
+        });
+    }
+
+
+
+
+
+
     // -----------------------------------------------------------------
     // 1. Product Add Form – toggle download file
     // -----------------------------------------------------------------
@@ -328,17 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('product-price-display').textContent = `$${data.price?.toFixed(2)}`;
                     document.getElementById('product-description-display').textContent = data.description || 'N/A';
 
-                    const link = document.getElementById('product-link-display');
-                    if (link) {
-                        if (data.external_link) {
-                            link.href = data.external_link;
-                            link.textContent = 'Ver Link';
-                        } else {
-                            link.href = '#';
-                            link.textContent = 'N/A';
-                        }
-                    }
-
                     document.getElementById('edit-product-btn').href = row.dataset.editUrl;
                     document.getElementById('delete-product-btn').href = row.dataset.deleteUrl;
                 })
@@ -372,77 +402,84 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -----------------------------------------------------------------
-    // 10. Order Details Panel
+    // 10. Orders – order’s detail panel
     // -----------------------------------------------------------------
     document.querySelectorAll('.order-item').forEach(row => {
         row.addEventListener('click', () => {
-            const details = document.getElementById('order-details');
-            const orderId = row.dataset.order_id;
-            const currentStatus = row.dataset.paymentstatus;
+            document.querySelectorAll('.order—item')
+                .forEach(r => r.classList.remove('selected'));
+            row.classList.add('selected');
 
-            // static fields
-            document.querySelector('#order-details .order-id-display').textContent = orderId;
-            document.querySelector('#order-details .total-price-display').textContent = `$${row.dataset.totalamount}`;
-            document.querySelector('#order-details .status-display').textContent = row.dataset.paymentstatus;
-            document.querySelector('#order-details .user-id-display').textContent = row.dataset.user;
-            document.querySelector('#order-details .created-display').textContent = row.dataset.created_at;
-            document.querySelector('#order-details .updated-display').textContent = row.dataset.updated_at;
+            const detailsPane = document.getElementById('order-details');
+            if (detailsPane) detailsPane.classList.remove('d-none');
 
-            // === Set current status in dropdown ===
-            const statusSelect = document.getElementById('order-status-select');
-            if (statusSelect) {
-                statusSelect.value = currentStatus;
-            }
-
-            // shipping
-            let shipping = { name:'N/A', email:'N/A', address:'N/A', city:'N/A', zipcode:'N/A' };
-            try { shipping = JSON.parse(row.dataset.shipping); } catch (_) {}
-            document.querySelector('.shipping-name-display').textContent = shipping.name;
-            document.querySelector('.shipping-email-display').textContent = shipping.email;
-            document.querySelector('.shipping-address-display').textContent = shipping.address;
-            document.querySelector('.shipping-city-display').textContent = shipping.city;
-            document.querySelector('.shipping-zipcode-display').textContent = shipping.zipcode;
-
-            // items list
+            const orderId = row.id;
             const itemsList = document.getElementById('order-items');
             itemsList.innerHTML = '<li>Cargando...</li>';
 
-            fetch(`/store/orders/order/${orderId}/items/`)
-                .then(r => r.json())
+            fetch(`/store/orders/order/${orderId}/details/api/`)
+                .then(r => r.ok ? r.json() : Promise.reject(r.status))
                 .then(data => {
-                    itemsList.innerHTML = '';
-                    if (data.error) {
-                        itemsList.innerHTML = '<li>Error</li>';
-                        return;
+                    document.querySelector('#order-details .order-id-display').textContent = data.id;
+                    document.querySelector('#order-details .total-price-display').textContent = `$${data.totalAmount}`;
+                    document.querySelector('#order-details .status-display').textContent = data.paymentstatus;
+                    document.querySelector('#order-details .user-id-display').textContent = data.user;
+                    document.querySelector('#order-details .created-display').textContent = data.created_at;
+                    document.querySelector('#order-details .updated-display').textContent = data.updated_at;
+
+                    if (itemsList) itemsList.textContent = `Detalles de la Orden #${data.id}`;
+                    // shipping
+                    let shipping = { name: 'N/A', email: 'N/A', address: 'N/A', city: 'N/A', zipcode: 'N/A' };
+                    try {
+                        shipping = JSON.parse(data.shipping_data) || shipping;
+                    } catch (_) { }
+                    document.querySelector('.shipping-name-display').textContent = shipping.name;
+                    document.querySelector('.shipping-email-display').textContent = shipping.email;
+                    document.querySelector('.shipping-address-display').textContent = shipping.address;
+                    document.querySelector('.shipping-city-display').textContent = shipping.city;
+                    document.querySelector('.shipping-zipcode-display').textContent = shipping.zipcode;
+
+                    if (itemsList) {
+                        itemsList.innerHTML = '';
+                        if (data.items && data.items.length > 0) {
+                            data.items.forEach(item => {
+                                const li = document.createElement('li');
+                                li.className = 'd-flex justify-content-between py-1';
+                                const itemTotal = (item.quantity * item.price).toFixed(2);
+                                li.innerHTML = `
+                                    <span>${item.product_name} x ${item.quantity}</span>
+                                    <span class="fw-bold">$${itemTotal}</span>
+                                `;
+                                itemsList.appendChild(li);
+                            });
+                        } else {
+                            itemsList.innerHTML = `<li>El pedido esta vacio</li>`
+                        }
                     }
-                    data.items.forEach(item => {
-                        const li = document.createElement('li');
-                        li.className = 'd-flex justify-content-between py-1';
-                        li.innerHTML = `
-                            <span>${item.product__name} x ${item.quantity}</span>
-                            <span class="fw-bold">$${(item.quantity * item.price).toFixed(2)}</span>
-                        `;
-                        itemsList.appendChild(li);
-                    });
+
+                    const updateBtn = document.getElementById('update_order');
+                    const statusSelect = document.getElementById('order-status-select');
+                    if (updateBtn && statusSelect) {
+                        updateBtn.onclick = (e) => {
+                            e.preventDefault();
+                            const newStatus = statusSelect.value;
+
+                            if (typeof updateOrderStatus === 'function' && confirm(`¿Cambiar el estado de la orden #${orderId} a "${newStatus}"?`)) {
+                                updateOrderStatus(e, orderId, newStatus);
+                            } else if (typeof updateOrderStatus !== 'function') {
+                                console.error('ERROR: La función updateOrderStatus no está definida.');
+                            }
+                        };
+                    }
                 })
-                .catch(() => { itemsList.innerHTML = '<li>Error</li>'; });
-
-            details.classList.toggle('d-none');
-
-            // === Update button click ===
-            const updateBtn = document.getElementById('update_order');
-            if (updateBtn) {
-                updateBtn.onclick = (e) => {
-                    e.preventDefault();
-                    const newStatus = statusSelect.value;
-
-                    if (confirm(`Change order #${orderId} to "${newStatus}"?`)) {
-                        updateOrderStatus(null, orderId, newStatus);
-                    }
-                };
-            }
+                .catch(err => {
+                    console.error('Fetch Details/Items error:', err);
+                    if (nameEl) nameEl.textContent = 'Error: Fallo al cargar detalles';
+                    if (itemsList) itemsList.innerHTML = '<li>Error de red o del servidor.</li>';
+                });
         });
     });
+
 
     // -----------------------------------------------------------------
     // 11. Repay Pending/Failed Order Logic

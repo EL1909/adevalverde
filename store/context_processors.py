@@ -1,5 +1,11 @@
-from .models import Order
+from .models import Order, Category 
 from django.db.models import Sum
+
+
+def category_menu(request):
+    categories = Category.objects.all()
+    return {'categories': categories}
+
 
 def cart_items(request):
     cart_count = 0
