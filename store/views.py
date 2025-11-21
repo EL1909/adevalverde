@@ -155,7 +155,8 @@ class InventoryManagementView(View):
 
         # Separate orders
         openOrders = orders.filter(paymentStatus='pending')
-        closedOrders = orders.filter(paymentStatus__in=['completed', 'failed'])
+        successOrders = orders.filter(paymentStatus__in=['completed'])
+        closedOrders = orders.filter(paymentStatus__in=['failed'])
 
         # Prepare context for the template
         context = {
@@ -165,6 +166,7 @@ class InventoryManagementView(View):
             'providers': providers,
             'form': form,
             'openOrders': openOrders,
+            'successOrders': successOrders,
             'closedOrders': closedOrders,
             'catform': catform,
         }
@@ -650,18 +652,18 @@ class ManageOrder(View):
             return JsonResponse({'error': f'Internal Server Error: {str(e)}'}, status=500)
 
 
-class GetOrderItems(View):
-    def get(self, request, order_id):
-        try:
-            order = Order.objects.get(id=order_id)
-            items = OrderItem.objects.filter(order=order).values(
-                'product__name', 'quantity', 'price'
-            )
-            return JsonResponse({'items': list(items)}, status=200)
-        except Order.DoesNotExist:
-            return JsonResponse({'error': 'Order not found.'}, status=404)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+# class GetOrderItems(View):
+#     def get(self, request, order_id):
+#         try:
+#             order = Order.objects.get(id=order_id)
+#             items = OrderItem.objects.filter(order=order).values(
+#                 'product__name', 'quantity', 'price'
+#             )
+#             return JsonResponse({'items': list(items)}, status=200)
+#         except Order.DoesNotExist:
+#             return JsonResponse({'error': 'Order not found.'}, status=404)
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)}, status=500)
         
 
 class DownloadFile(View):

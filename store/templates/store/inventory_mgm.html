@@ -5,19 +5,25 @@
         <div class="tab-container">
             <ul class="nav nav-tabs" id="storeTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="false">Pedidos</button>
+                    <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders"
+                        type="button" role="tab" aria-controls="orders" aria-selected="false">Pedidos</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="warehouse-tab" data-bs-toggle="tab" data-bs-target="#warehouse" type="button" role="tab" aria-controls="warehouse" aria-selected="false">Inventario</button>
+                    <button class="nav-link" id="warehouse-tab" data-bs-toggle="tab" data-bs-target="#warehouse"
+                        type="button" role="tab" aria-controls="warehouse" aria-selected="false">Inventario</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="addProduct-tab" data-bs-toggle="tab" data-bs-target="#addProduct" type="button" role="tab" aria-controls="addProduct" aria-selected="false">Agregar Producto</button>
+                    <button class="nav-link" id="addProduct-tab" data-bs-toggle="tab" data-bs-target="#addProduct"
+                        type="button" role="tab" aria-controls="addProduct" aria-selected="false">Agregar
+                        Producto</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab" aria-controls="categories" aria-selected="false">Categorias</button>
+                    <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories"
+                        type="button" role="tab" aria-controls="categories" aria-selected="false">Categorias</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="providers-tab" data-bs-toggle="tab" data-bs-target="#providers" type="button" role="tab" aria-controls="providers" aria-selected="false">Provedores</button>
+                    <button class="nav-link" id="providers-tab" data-bs-toggle="tab" data-bs-target="#providers"
+                        type="button" role="tab" aria-controls="providers" aria-selected="false">Provedores</button>
                 </li>
             </ul>
         </div>
@@ -28,10 +34,16 @@
                     <div class="tab-container">
                         <ul class="nav nav-tabs" id="ordersSubTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="openOrders-tab" type="button" role="tab" aria-controls="openOrders" aria-selected="false">Abiertos</button>
+                                <button class="nav-link active" id="openOrders-tab" type="button" role="tab"
+                                    aria-controls="openOrders" aria-selected="false">Abiertos</button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="closedOrders-tab" type="button" role="tab" aria-controls="closedOrders" aria-selected="false">Cerrados</button>
+                                <button class="nav-link" id="successOrders-tab" type="button" role="tab"
+                                    aria-controls="openOrders" aria-selected="false">Completados</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="closedOrders-tab" type="button" role="tab"
+                                    aria-controls="closedOrders" aria-selected="false">Cancelados</button>
                             </li>
                         </ul>
                     </div>
@@ -51,28 +63,59 @@
                             </thead>
                             <tbody>
                                 {% for open in openOrders %}
-                                <tr id="open-{{ open.id }}" class="order-item"
-                                    data-user="{{ open.user }}"
-                                    data-items="{{ open.items.count }}"
-                                    data-totalAmount="{{ open.totalAmount }}"
-                                    data-paymentStatus="{{ open.paymentStatus }}"
-                                    data-created_at="{{ open.created_at }}"
-                                    data-updated_at="{{ open.updated_at }}"
-                                    data-order_id="{{ open.id }}" data-shipping="{{ open.shipping_data | safe }}">
+                                <tr id="{{ open.id }}" class="order-item">
                                     <td>{{ open.id }}</td>
-                                    <td>{{ open.user }}</td>
+                                    <td>{{ open.user|default:"Invitado" }}</td>
                                     <td>
                                         {% for item in open.items.all %}
-                                            {{ item.product.name }}<br>
+                                        {{ item.product.name }}<br>
                                         {% endfor %}
                                     </td>
                                     <td>
                                         {% for item in open.items.all %}
-                                            {{ item.quantity }}<br>
+                                        {{ item.quantity }}<br>
                                         {% endfor %}
                                     </td>
                                     <td>{{ open.totalAmount|floatformat:2 }}</td>
                                     <td>{{ open.paymentStatus }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6">No hay pedidos abiertos.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </ul>
+                    <ul class="request-list" id="successOrders-list">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nro.</th>
+                                    <th>Cliente</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Monto</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in successOrders %}
+                                <tr id="{{ order.id }}" class="order-item">
+                                    <td>{{ order.id }}</td>
+                                    <td>{{ order.user|default:"Invitado" }}</td>
+                                    <td>
+                                        {% for item in order.items.all %}
+                                        {{ item.product.name }}<br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for item in order.items.all %}
+                                        {{ item.quantity }}<br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ order.totalAmount|floatformat:2 }}</td>
+                                    <td>{{ order.paymentStatus }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -96,25 +139,17 @@
                             </thead>
                             <tbody>
                                 {% for closed in closedOrders %}
-                                <tr id="closed-{{ closed.id }}" class="order-item"
-                                    data-user="{{ closed.user }}"
-                                    data-items="{{ closed.items.count }}"
-                                    data-totalAmount="{{ closed.totalAmount }}"
-                                    data-paymentStatus="{{ closed.paymentStatus }}"
-                                    data-created_at="{{ closed.created_at }}"
-                                    data-updated_at="{{ closed.updated_at }}"
-                                    data-order_id="{{ closed.id }}"
-                                    data-shipping="{{ closed.shipping_data | safe }}">
+                                <tr id="{{ closed.id }}" class="order-item">
                                     <td>{{ closed.id }}</td>
-                                    <td>{{ closed.user }}</td>
+                                    <td>{{ closed.user|default:"Invitado" }}</td>
                                     <td>
                                         {% for item in closed.items.all %}
-                                            {{ item.product.name }}<br>
+                                        {{ item.product.name }}<br>
                                         {% endfor %}
                                     </td>
                                     <td>
                                         {% for item in closed.items.all %}
-                                            {{ item.quantity }}<br>
+                                        {{ item.quantity }}<br>
                                         {% endfor %}
                                     </td>
                                     <td>{{ closed.totalAmount|floatformat:2 }}</td>
@@ -134,7 +169,9 @@
                 <div class="d-flex justify-content-between">
                     <h4>Inventario</h4>
                     <!-- Add Product Button -->
-                    <a href="#" class="btn btn-primary mb-3 offset-1" onclick="event.preventDefault(); document.getElementById('addProduct-tab').click();"> Agregar producto</a>    
+                    <a href="#" class="btn btn-primary mb-3 offset-1"
+                        onclick="event.preventDefault(); document.getElementById('addProduct-tab').click();"> Agregar
+                        producto</a>
                 </div>
                 <div>
                     <!-- Product List -->
@@ -149,16 +186,18 @@
                         </thead>
                         <tbody>
                             {% for product in products %}
-                            <tr class="warehouse-item" 
-                                data-product-id="{{ product.id }}"
+                            <tr class="warehouse-item" data-product-id="{{ product.id }}"
                                 data-edit-url="{% url 'store:edit_product' product.id %}"
                                 data-delete-url="{% url 'store:delete_product' product.id %}">
                                 <td>{{ product.name }}</td>
                                 <td>{{ product.category.name }}</td>
                                 <td>{{ product.price }}</td>
                                 <td>
-                                    <a href="{% url 'store:edit_product' product.id %}" class="btn btn-sm btn-info"><i class="fa-regular fa-pen-to-square"></i></a>
-                                    <a href="{% url 'store:delete_product' product.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirme para eliminar')"><i class="fa-regular fa-trash-can"></i></a>
+                                    <a href="{% url 'store:edit_product' product.id %}" class="btn btn-sm btn-info"><i
+                                            class="fa-regular fa-pen-to-square"></i></a>
+                                    <a href="{% url 'store:delete_product' product.id %}" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Confirme para eliminar')"><i
+                                            class="fa-regular fa-trash-can"></i></a>
                                 </td>
                             </tr>
                             {% empty %}
@@ -170,7 +209,7 @@
             <div class="tab-pane fade p-4" id="addProduct" role="tabpanel" aria-labelledby="addProduct-tab">
                 <div>
                     {% include 'store/add_product.html' with form=form %}
-                </div>      
+                </div>
             </div>
             <div class="tab-pane fade p-4" id="categories" role="tabpanel" aria-labelledby="categories-tab">
                 <!-- Categories -->
@@ -190,15 +229,18 @@
                         </thead>
                         <tbody>
                             {% for category in categories %}
-                            <tr class="category-item" 
-                                data-category-id="{{ category.id }}"
+                            <tr class="category-item" data-category-id="{{ category.id }}"
                                 data-edit-url="{% url 'store:edit_category' category.id %}"
                                 data-delete-url="{% url 'store:delete_category' category.id %}">
                                 <td>{{ category.name }}</td>
                                 <td>{{ category.products.count }}</td>
                                 <td>
-                                    <a href="#" class="edit-category-btn btn btn-sm"><i class="fa-regular fa-pen-to-square"></i></a>
-                                    <a href="{% url 'store:delete_category' category.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirme para eliminar {{ category.name }}')"><i class="fa-regular fa-trash-can"></i></a>
+                                    <a href="#" class="edit-category-btn btn btn-sm"><i
+                                            class="fa-regular fa-pen-to-square"></i></a>
+                                    <a href="{% url 'store:delete_category' category.id %}"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Confirme para eliminar {{ category.name }}')"><i
+                                            class="fa-regular fa-trash-can"></i></a>
                                 </td>
                             </tr>
                             {% empty %}
@@ -221,7 +263,7 @@
                         <li>No tienes ningun proveedor.</li>
                         {% endfor %}
                     </ul>
-                </div>      
+                </div>
             </div>
         </div>
     </div>
@@ -230,21 +272,27 @@
             <div id="order-details" class="ticket d-none">
                 <div class="d-flex justify-content-between">
                     <h5>Detalles del pedido</h5>
-                    <span id="order_id"><small><p>ID: <span class="order-id-display"></span></p></small></span>
+                    <span id="order_id"><small>
+                            <p>ID: <span class="order-id-display"></span></p>
+                        </small></span>
                 </div>
-                <span id="client_id"><p>Cliente: <span class="user-id-display"></span></p></span>
+                <span id="client_id">
+                    <p>Cliente: <span class="user-id-display"></span></p>
+                </span>
                 <div class="text-end">
-                    <strong><span class="status-display"><p id="order-status"></p></span></strong>
+                    <strong><span class="status-display">
+                            <p id="order-status"></p>
+                        </span></strong>
                 </div>
                 <div>
                     <label><strong>Estado del pedido:</strong></label>
-                    <div class="mt-3 d-flex justify-content-between">  
+                    <div class="mt-3 d-flex justify-content-between">
                         <select id="order-status-select" class="form-select w-auto d-inline-block">
                             <option value="pendiente">Pendiente</option>
                             <option value="completado">Completado</option>
-                            <option: value="fallido">Fallido</option>
+                            <option value="fallido">Fallido</option>
                         </select>
-                        <button id="update_order" class="btn btn-primary btn-sm ms-2">Update Status</button>
+                        <button id="update_order" class="btn btn-primary btn-sm ms-2">Actualizar</button>
                     </div>
                 </div>
                 <hr>
@@ -254,8 +302,12 @@
                 <hr>
                 <div>
                     <p id="cart-total" class="text-end fw-bold">Total: <span class="total-price-display"></span></p>
-                    <span id="created_at"><small><p>Fecha de creación:<span class="created-display"></span></p></small></span>
-                    <span id="updated_at"><small><p>Ultima actualización:<span class="updated-display"></span></small></p></span>
+                    <span id="created_at"><small>
+                            <p>Fecha de creación:<span class="created-display"></span></p>
+                        </small></span>
+                    <span id="updated_at"><small>
+                            <p>Ultima actualización:<span class="updated-display"></span>
+                        </small></p></span>
                 </div>
                 <div id="shipment-details" class="ticket border p-3 mt-3 d-none">
                     <h6>Datos de Envío:</h6>
@@ -281,7 +333,7 @@
                 <hr>
                 <div class="description-section">
                     <p><strong>Descripción:</strong></p>
-                    <p><span id="product-description-display"></span></p>   
+                    <p><span id="product-description-display"></span></p>
                 </div>
                 <hr>
                 <h6>Acciones:</h6>
@@ -292,21 +344,22 @@
             </div>
             <div id="category-details" class="ticket d-none">
                 <div id="add-category" class="d-none">
-                    <form class="p-4" method="POST" action="{% if category %}{% url 'store:edit_category' category.id %}{% else %}{% url 'store:add_category' %}{% endif %}">
-                    {% csrf_token %}
+                    <form class="p-4" method="POST"
+                        action="{% if category %}{% url 'store:edit_category' category.id %}{% else %}{% url 'store:add_category' %}{% endif %}">
+                        {% csrf_token %}
                         <div class="row g-3">
                             <div class="form-group">
                                 {{ catform.name.label_tag }}
                                 {{ catform.name }}
                                 {% if catform.name.errors %}
-                                    <div class="text-danger small">{{ catform.name.errors }}</div>
+                                <div class="text-danger small">{{ catform.name.errors }}</div>
                                 {% endif %}
                             </div>
                             <div class="form-group">
                                 {{ catform.description.label_tag }}
                                 {{ catform.description }}
                                 {% if catform.description.errors %}
-                                    <div class="text-danger small">{{ catform.description.errors }}</div>
+                                <div class="text-danger small">{{ catform.description.errors }}</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -324,16 +377,13 @@
                     <hr>
                     <h6>Acciones:</h6>
                     <div class="d-flex justify-content-between">
-                        <a id="edit-category-btn" href="#" class="edit-category-btn btn btn-info btn-sm">Editar Categoria</a>
+                        <a id="edit-category-btn" href="#" class="edit-category-btn btn btn-info btn-sm">Editar
+                            Categoria</a>
                         <a id="delete-category-btn" href="#" class="btn btn-danger btn-sm">Eliminar Categoria</a>
                     </div>
-                </div>    
+                </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-
-
-
-

@@ -23,7 +23,7 @@ urlpatterns = [
     ])),
     path('orders/', include([
         path('manage_order/', views.ManageOrder.as_view(), name='manage_order'),
-        path('order/<int:order_id>/items/', views.GetOrderItems.as_view(), name='get_order_items'),
+        # path('order/<int:order_id>/items/', views.GetOrderItems.as_view(), name='get_order_items'),
         path('my-orders/', views.user_orders, name='user_orders'),
         path('download_product/<str:token>/', views.DownloadFile.as_view(), name='download_product'),
         path('verify/<uuid:token>/', views.VerifyDownloadView.as_view(), name='verify_download'),

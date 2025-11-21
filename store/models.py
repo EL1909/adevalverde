@@ -7,9 +7,9 @@ import uuid
 import os, json
 
 PAYMENT_STATUS_CHOICES = [
-    ('pendiente', 'Pendiente'),
-    ('completado', 'Completado'),
-    ('fallido', 'Fallido'),
+    ('pending', 'Pendiente'),
+    ('completed', 'Completado'),
+    ('failed', 'Fallido'),
 ]
 
 
@@ -73,6 +73,7 @@ class Order(models.Model):
         blank=True
     )
     paymentStatus = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=50, default='PayPal')
     totalAmount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
