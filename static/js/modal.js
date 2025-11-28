@@ -98,6 +98,7 @@ $(document).ready(function() {
         console.error('AJAX error:', xhr.responseText);
     };
 
+
     // Signup Form error handling
     $('#signupForm').submit(function(event) {
         event.preventDefault(); // Prevent default form submission

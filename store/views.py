@@ -1,6 +1,7 @@
 import os
 import json
 import qrcode
+import requests
 import uuid
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -12,13 +13,14 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q, Count, Sum
 from django.db.models.functions import Lower
-from django.http import JsonResponse, HttpResponse, Http404
+from django.http import JsonResponse, HttpResponse, Http404, FileResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from json.decoder import JSONDecodeError
 from io import BytesIO
 from pypdf import PdfReader, PdfWriter
@@ -373,21 +375,21 @@ class Cart(View):
             order_items = order.items.all() 
             total_price = order.totalAmount
             order_id = order.id
-            has_physical_products = any(
-            not item.product.is_downloadable for item in order_items
-        )
+            has_physical = order.hasPhysical
         else:
             order_items = []
             total_price = 0.00
             order_id = None
-            has_physical_products = False
-        
-        return render(request, 'store/shopping_cart.html', {
+            has_physical = False
+
+        context = {
             'order_items': order_items,
             'total_price': total_price,
             'order_id': order_id,
-            'has_physical_products': has_physical_products,
-        })
+            'has_physical': has_physical,
+        }
+        
+        return render(request, 'store/shopping_cart.html', context)
     
     # Add an item to the cart
     def add_item(self, request, product_id):
@@ -398,7 +400,9 @@ class Cart(View):
         # 1. Get Order if exists, otherwise create one
         order = self._get_active_order(request)
         if not order:
-            order = Order.objects.create(user=None, paymentStatus=ACTIVE_CART_STATUS, totalAmount=0.00)
+            # Set user if authenticated, otherwise None for guest checkout
+            user = request.user if request.user.is_authenticated else None
+            order = Order.objects.create(user=user, paymentStatus=ACTIVE_CART_STATUS, totalAmount=0.00)
             request.session['order_id'] = order.id
             request.session.modified = True
         
@@ -581,6 +585,56 @@ def add_to_cart_via_link(request, product_id):
 
 ## Order Management Views
 
+
+def execute_fulfillment_logic(order):
+    """
+    Lógica de cumplimiento: Reducir inventario, generar descargables, etc.
+    Esta función se ejecuta SOLAMENTE si el pago está COMPLETED/PAID.
+    """
+    
+    # # Lógica de Reducción de Inventario (Ejemplo)
+    # for item in order.items.all():
+    #     product = item.product
+    #     # Asegúrate de que tienes un campo 'stock' o similar en tu modelo Product
+    #     # if product.stock >= item.quantity:
+    #     #     product.stock -= item.quantity
+    #     #     product.save()
+    #     # else:
+    #     #     raise Exception(f"Insufficient stock for product {product.name}")
+    #     pass # Simulación: El stock se ha reducido
+
+    # Lógica de Generación de Descargables
+    current_site = Site.objects.get_current() # Asumiendo que se puede obtener sin request
+    site_domain = current_site.domain
+    base_url = f"https://{site_domain}"
+
+    # Generar los enlaces de descarga para los ítems descargables
+    for item in order.items.filter(product__is_downloadable=True):
+        if not hasattr(item, 'downloadable'): # Evitar regenerar
+            token = uuid.uuid4()
+            verify_path = reverse('store:verify_download', args=[token])
+            verification_url_full = f"{base_url}{verify_path}"
+            
+            # Generación de QR (esto puede ser costoso, solo si es necesario)
+            qr = qrcode.make(verification_url_full)
+            qr_buffer = BytesIO()
+            qr.save(qr_buffer, 'PNG')
+            qr_file = ContentFile(qr_buffer.getvalue(), name=f"order_{order.id}_qr_{token}.png")
+
+            Downloadable.objects.create(
+                order_item=item,
+                token=token,
+                verification_url=verification_url_full,
+                qr_image=qr_file,
+            )
+            
+    # El cumplimiento ha sido ejecutado
+    # order.fulfillment_status = 'COMPLETED' # REMOVED
+    # order.save()
+    
+    return True
+
+
 class ManageOrder(View):
     def post(self, request):
         try:
@@ -589,82 +643,117 @@ class ManageOrder(View):
             return JsonResponse({'error': 'Invalid or empty JSON body received.'}, status=400)
         
         order_id = data.get('order_id')
-        paypal_order_id = data.get('paypal_order_id')
-        payment_status = data.get('payment_status')
-        shipping_data = data.get('shipping_data', {})
+        cart_items = data.get('cart_items')
+        execute_fulfillment = data.get('execute_fulfillment', False)
+        manual_status_update = data.get('manual_status_update', False)
+        new_status = data.get('payment_status')
 
-        if not all([order_id, payment_status]):
-            return JsonResponse({'error': 'Missing required payment data (order_id or payment_status).'}, status=400)
+        if not order_id:
+            return JsonResponse({'error': 'Missing required order_id.'}, status=400)
 
-        # Validate payment_status
-        if payment_status not in ['pending', 'completed', 'failed']:
-            return JsonResponse({'error': 'Invalid payment status'}, status=400)
-        redirect_url = None
         try:
+            order = get_object_or_404(Order, pk=order_id)
             with transaction.atomic():
-                order = Order.objects.get(id=order_id)
-                if order.paymentStatus != payment_status:
-                    order.paymentStatus = payment_status
-                    order.set_shipping_data(shipping_data)
+                if manual_status_update:
+                    # --- PROPÓSITO 3: Actualización Manual de Estado (Admin) ---
+                    if not new_status:
+                        return JsonResponse({'error': 'Missing payment_status for manual update.'}, status=400)
+                    
+                    # Validate status is one of the allowed choices
+                    valid_statuses = ['pending', 'completed', 'failed']
+                    if new_status not in valid_statuses:
+                        return JsonResponse({'error': f'Invalid status. Must be one of: {valid_statuses}'}, status=400)
+                    
+                    old_status = order.paymentStatus
+                    
+                    # Update order status and payment method
+                    order.paymentStatus = new_status
+                    order.payment_method = 'MANUAL'
                     order.save()
+                    
+                    # Handle status-specific logic
+                    if new_status == 'completed' and old_status != 'completed':
+                        # Execute fulfillment only if transitioning TO completed (not if already completed)
+                        success = execute_fulfillment_logic(order)
+                        if not success:
+                            return JsonResponse({'error': 'Status updated but fulfillment failed.'}, status=500)
+                        message = f'Order status updated to {new_status} and fulfillment executed.'
+                    else:
+                        message = f'Order status updated to {new_status}.'
+                    
+                    return JsonResponse({
+                        'message': message, 
+                        'order_id': order.id,
+                        'status': order.paymentStatus,
+                        'payment_method': order.payment_method
+                    })
+                    
+                elif execute_fulfillment:
+                    # --- PROPÓSITO 2: Ejecutar Fulfillment (Post-Pago) ---
+                    # Esta lógica es llamada internamente por capture_paypal_orderView.
+                    
+                    if order.paymentStatus != 'completed':
+                        # Si el estado de pago no está completo, no se puede cumplir
+                        return JsonResponse({'error': 'Cannot execute fulfillment: Order payment not completed.'}, status=403)
+                    
+                    # if order.fulfillment_status == 'COMPLETED':
+                    #     # Evitar ejecución duplicada de fulfillment
+                    #     return JsonResponse({'message': 'Fulfillment already executed.'}, status=200)
 
-                if payment_status == 'completed' and order.paymentStatus == 'completed':
-                    current_site = Site.objects.get_current(request)
-                    site_domain = current_site.domain
-                    base_url = f"https://{site_domain}"
-
-                    for item in order.items.filter(product__is_downloadable=True):
-                        if hasattr(item, 'downloadable'):
-                            continue
-
-                        token = uuid.uuid4()
-                        verify_path = reverse('store:verify_download', args=[token])
-                        verification_url_full = f"{base_url}{verify_path}"
-                        qr = qrcode.make(verification_url_full)
-                        qr_buffer = BytesIO()
-                        qr.save(qr_buffer, 'PNG')
-                        qr_file = ContentFile(qr_buffer.getvalue(), name=f"qr_{token}.png")
-
-                        Downloadable.objects.create(
-                            order_item=item,
-                            token=token,
-                            verification_url=verification_url_full,
-                            qr_image=qr_file,
+                    # Ejecutar la lógica de cumplimiento
+                    success = execute_fulfillment_logic(order)
+                    
+                    return JsonResponse({
+                        'message': 'Fulfillment executed successfully.', 
+                        'order_id': order.id,
+                        'order_id': order.id,
+                        # 'fulfillment_status': order.fulfillment_status,
+                    })
+                    
+                else:
+                    # --- PROPÓSITO 1: Crear/Actualizar Carrito (Pre-Pago) ---
+                    
+                    if not cart_items:
+                        return JsonResponse({'error': 'Missing required cart_items for Order Update.'}, status=400)
+                    
+                    has_physical_products = False
+                    
+                    # 1. Actualizar OrderItems y calcular hasPhysical
+                    Order.items.all().delete() # Eliminar ítems existentes para la reconstrucción
+                    total_price = 0
+                    for item_data in cart_items:
+                        product_id = item_data.get('product_id')
+                        quantity = item_data.get('quantity')
+                        product = Product.objects.get(pk=product_id)
+                        
+                        OrderItem.objects.create(
+                            order=order,
+                            product=product,
+                            quantity=quantity,
+                            price=product.price * quantity # O el cálculo que aplique
                         )
-                    redirect_url = reverse('store:user_orders')
-
-            response_data = {
-                'message': 'Order processed successfully.', 
-                'order_id': order.id,
-                'status': order.paymentStatus,
-            }
-            if redirect_url:
-                response_data['redirect_url'] = redirect_url # Incluimos la URL para JS
-
-            return JsonResponse(response_data)
+                        
+                        total_price += product.price * quantity
+                        if not product.is_downloadable: # Si no es descargable, es físico
+                            has_physical_products = True
+                            
+                    # 2. Actualizar campos de la Order
+                    order.total = total_price
+                    order.save()
+                    
+                    return JsonResponse({
+                        'message': 'Order/Cart updated successfully.', 
+                        'order_id': order.id,
+                        'hasPhysical': order.hasPhysical,
+                        'total': order.total,
+                    })
 
         except Order.DoesNotExist:
-             return JsonResponse({'error': f'Order with ID {order_id} not found.'}, status=404)
-        except ValidationError as e:
-            return JsonResponse({'error': str(e)}, status=400)
+                return JsonResponse({'error': f'Order with ID {order_id} not found.'}, status=404)
         except Exception as e:
-            # Captura errores de base de datos o lógica interna
+            print(f"Internal Server Error in ManageOrderView: {e}")
             return JsonResponse({'error': f'Internal Server Error: {str(e)}'}, status=500)
-
-
-# class GetOrderItems(View):
-#     def get(self, request, order_id):
-#         try:
-#             order = Order.objects.get(id=order_id)
-#             items = OrderItem.objects.filter(order=order).values(
-#                 'product__name', 'quantity', 'price'
-#             )
-#             return JsonResponse({'items': list(items)}, status=200)
-#         except Order.DoesNotExist:
-#             return JsonResponse({'error': 'Order not found.'}, status=404)
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-        
+   
 
 class DownloadFile(View):
     def get(self, request, token):
@@ -715,12 +804,14 @@ class DownloadFile(View):
         writer.write(output)
         output.seek(0)
 
-        # Mark as downloaded
+        # Mark as downloaded (update timestamp but allow re-download)
         downloadable.downloaded_at = timezone.now()
         downloadable.save()
 
-        response = HttpResponse(output, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{item.product.name}_with_proof.pdf"'
+        # Use slugify to ensure safe filename
+        safe_filename = slugify(item.product.name)
+        # Use FileResponse for better file handling
+        response = FileResponse(output, as_attachment=True, filename=f"{safe_filename}_with_proof.pdf")
         return response
     
 
@@ -744,11 +835,11 @@ class VerifyDownloadView(View):
         is_completed = order.paymentStatus == 'completed'
         is_used = downloadable.downloaded_at is not None
         
-        # 3. Generar la URL de descarga solo si es válida y no ha sido usada
+        # 3. Generar la URL de descarga (Permitir múltiples descargas para evitar bloqueos por errores)
         download_url = None
-        if is_completed and not is_used:
+        if is_completed: 
             # Crea la URL a la vista DownloadFile, pasando el mismo token
-            download_url = reverse('store:download_file', args=[token])
+            download_url = reverse('store:download_product', args=[token])
         
         # 4. Preparar el contexto para el template
         context = {
@@ -765,44 +856,43 @@ class VerifyDownloadView(View):
         return render(request, 'store/verify_download.html', context)
 
 
-@login_required
+@login_required # <--- ESENCIAL: Solo usuarios registrados pueden repetir órdenes.
+@require_POST
 def repeat_order(request, order_id):
-    """
-    Copia los OrderItems de una orden histórica (completed) a la orden/carrito
-    activo (pending) del usuario, y luego redirige al carrito.
-    """
-    # 1. Obtener la orden original completada (Solo puede repetir órdenes propias).
+    
+    # 1. Validar que la orden pertenece al usuario
     try:
         original_order = Order.objects.get(id=order_id, user=request.user)
     except Order.DoesNotExist:
-        messages.error(request, "La orden solicitada no existe o no te pertenece.")
-        return redirect('store:user_orders')
-    active_cart, created = Order.objects.get_or_create(
-        user=request.user,
-        paymentStatus=ACTIVE_CART_STATUS,
-        defaults={'totalAmount': 0.00}
-    )
+        # Se asume que la vista JS espera un JsonResponse
+        return JsonResponse({'success': False, 'error': 'Order not found or access denied.'}, status=404)
 
-    active_cart.items.all().delete()
-    
-    for order_item in original_order.items.all():
-        # Crear un nuevo OrderItem para el carrito activo
-        OrderItem.objects.create(
-            order=active_cart,
-            product=order_item.product,
-            quantity=order_item.quantity,
-            price=order_item.price
+    with transaction.atomic():
+        # 2. Obtener o crear el carrito activo (activo_cart) para el usuario
+        active_cart, created = Order.objects.get_or_create(
+            user=request.user,
+            paymentStatus=ACTIVE_CART_STATUS,
+            defaults={'totalAmount': 0.00}
         )
-    
-    active_cart.totalAmount = sum(item.quantity * item.price for item in active_cart.items.all())
-    active_cart.save()
-    
-    # Opcional: Mensaje de éxito
-    messages.success(request, f"La Orden #{order_id} ha sido copiada a tu carrito. ¡Revisa tu pedido!")
 
-    # 6. Redirigir al usuario a la página del carrito.
-    # Asume que el nombre de la URL para la vista del carrito (Cart.get) es 'store:cart_view'.
-    return redirect('store:cart_view')
+        # 3. Eliminar ítems antiguos (sobrescribir el carrito)
+        active_cart.items.all().delete()
+        
+        # 4. Copiar ítems de la orden original
+        for order_item in original_order.items.all():
+            OrderItem.objects.create(
+                order=active_cart,
+                product=order_item.product,
+                quantity=order_item.quantity,
+                # Usar el precio unitario del producto actual (si no quieres usar el precio histórico)
+                price=order_item.product.price 
+            )
+        
+        # 5. Recalcular el total y guardar
+        active_cart.totalAmount = sum(item.quantity * item.price for item in active_cart.items.all())
+        active_cart.save()
+        
+        return JsonResponse({'success': True, 'order_id': active_cart.id})
 
 
 @login_required
@@ -831,6 +921,9 @@ def order_detail_api(request, order_id):
                 'product_name': item['product__name']
             })
 
+        # Use the Order model's hasPhysical property
+        has_physical_products = order.hasPhysical
+
         data = {
             'id': order.id,
             'user': order.user.username if order.user else 'Invitado',
@@ -839,6 +932,7 @@ def order_detail_api(request, order_id):
             "created_at": order.created_at.strftime("%Y-%m-%d %H:%M:%S"), 
             "updated_at": order.updated_at.strftime("%Y-%m-%d %H:%M:%S") if order.updated_at else 'Sin cambios',
             "shipping_data": order.shipping_data or 'Sin datos de envio',
+            "has_physical_products": has_physical_products, 
             "items": items_list 
         }
 
@@ -849,3 +943,283 @@ def order_detail_api(request, order_id):
     except Exception as e:
         # Manejo general de errores
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def payment_success(request):
+    order_id = request.GET.get('order_id')
+    context = {}
+    
+    if order_id:
+        try:
+            # Intentar obtener la orden. 
+            # Nota: Para mayor seguridad en producción, podrías requerir un token firmado o verificar la sesión.
+            # Aquí confiamos en el ID por simplicidad según el requerimiento, pero idealmente se validaría ownership.
+            # Si el usuario es anónimo, permitimos ver si tiene el ID.
+            order = Order.objects.get(pk=order_id)
+            
+            # Solo mostrar si el pago está completado
+            if order.paymentStatus == 'completed':
+                # Obtener los descargables asociados
+                # Accedemos a través de Order -> OrderItem -> Downloadable
+                downloadables = Downloadable.objects.filter(order_item__order=order)
+                
+                context['order'] = order
+                context['downloadables'] = downloadables
+                
+        except (Order.DoesNotExist, ValueError):
+            pass # Si no existe o error, simplemente no mostramos nada extra
+
+    return render(request, 'store/payment_success.html', context)
+
+
+def payment_cancel(request):
+    return render(request, 'store/payment_cancel.html')
+
+## Paypal Process Views
+
+def get_paypal_access_token():
+    """
+    Obtiene un token de acceso de PayPal necesario para las llamadas API.
+    """
+    auth_url = f'{settings.PAYPAL_BASE_URL}/v1/oauth2/token'
+
+    # La autenticación es con Client ID y Secret Key (Basic Auth)
+    response = requests.post(
+        auth_url,
+        headers={
+            'Accept': 'application/json',
+            'Accept-Language': 'en_US'
+        },
+        auth=(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_SECRET),
+        data={'grant_type': 'client_credentials'}
+    )
+
+    if response.status_code == 200:
+        return response.json().get('access_token')
+    else:
+        raise Exception("Error al obtener el token de acceso de PayPal")
+        return None
+
+
+def capture_paypal_payment_api(paypal_order_id):
+    """
+    Captura el pago de una orden de PayPal.
+    """
+    access_token = get_paypal_access_token()
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {access_token}',
+    }
+    
+    url = f"{settings.PAYPAL_BASE_URL}/v2/checkout/orders/{paypal_order_id}/capture"
+    response = requests.post(url, headers=headers)
+    
+    if response.status_code in [200, 201]:
+        data = response.json()
+        
+        # Extraer información relevante
+        status = data.get('status')
+        purchase_units = data.get('purchase_units', [{}])[0]
+        shipping = purchase_units.get('shipping', {})
+        
+        # Formatear datos de envío si existen
+        shipping_data = {}
+        if shipping:
+             address = shipping.get('address', {})
+             name = shipping.get('name', {})
+             shipping_data = {
+                 'name': name.get('full_name'),
+                 'address': f"{address.get('address_line_1', '')} {address.get('address_line_2', '')}".strip(),
+                 'city': address.get('admin_area_2'),
+                 'state': address.get('admin_area_1'),
+                 'zipcode': address.get('postal_code'),
+                 'country': address.get('country_code')
+             }
+        
+        # Extraer datos del pagador (Payer) - Útil para productos digitales sin envío
+        payer = data.get('payer', {})
+        payer_info = {}
+        if payer:
+            payer_name = payer.get('name', {})
+            payer_info = {
+                'name': f"{payer_name.get('given_name', '')} {payer_name.get('surname', '')}".strip(),
+                'email': payer.get('email_address'),
+                'payer_id': payer.get('payer_id')
+            }
+
+        return {
+            'status': status,
+            'shipping_data': shipping_data,
+            'payer_info': payer_info
+        }
+    else:
+        # Loguear error
+        print(f"Error capturing PayPal payment: {response.text}")
+        # Devolver estado fallido pero no romper la ejecución completa si es posible manejarlo
+        return {'status': 'FAILED', 'shipping_data': {}}
+
+
+class capture_paypal_order(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            order_id = data.get('order_id')
+            paypal_order_id = data.get('paypal_order_id')
+        except JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON body.'}, status=400)
+            
+        if not all([order_id, paypal_order_id]):
+             return JsonResponse({'error': 'Missing required identifiers (order_id or paypal_order_id).'}, status=400)
+             
+        try:
+            order = get_object_or_404(Order, pk=order_id)
+            
+            with transaction.atomic():
+                # 1. Capturar el pago en PayPal
+                paypal_capture_response = capture_paypal_payment_api(paypal_order_id)
+                payment_status_raw = paypal_capture_response.get('status', 'FAILED')
+                shipping_data = paypal_capture_response.get('shipping_data', {})
+                payer_info = paypal_capture_response.get('payer_info', {})
+                
+                # Normalizar estado para coincidir con las opciones del modelo (lowercase)
+                if payment_status_raw == 'COMPLETED' or payment_status_raw == 'PAID':
+                    payment_status = 'completed'
+                else:
+                    payment_status = payment_status_raw.lower()
+
+                # 2. Guardar el estado del pago y los datos de envío
+                order.paymentStatus = payment_status
+                order.payment_method = 'PAYPAL'
+                order.payment_id = paypal_order_id # Podrías usar el ID de transacción real si PayPal lo devuelve
+                
+                if shipping_data:
+                    order.set_shipping_data(shipping_data) 
+                elif payer_info:
+                    # Si no hay datos de envío (ej. digital), guardar datos del pagador
+                    # Usamos la misma estructura JSON para consistencia, aunque falte dirección
+                    order.set_shipping_data(payer_info)
+                
+                order.save()
+                
+                redirect_url = reverse('store:user_orders')
+
+                if payment_status == 'completed':
+                    # El pago fue exitoso.
+                    # La lógica de cumplimiento (Fulfillment) ahora se delega a ManageOrderView
+                    # que será llamada por el frontend inmediatamente después.
+                    
+                    # --- MODIFICACIÓN: Redirección diferenciada para invitados ---
+                    if request.user.is_authenticated:
+                        redirect_url = reverse('store:user_orders')
+                    else:
+                        # Para invitados, redirigir a la página de éxito pública con el ID de la orden
+                        redirect_url = f"{reverse('store:payment_success')}?order_id={order.id}"
+                    
+                else:
+                    # El pago falló o está pendiente
+                    # Podrías redireccionar a una página de error o reintento
+                    redirect_url = reverse('store:user_orders') 
+                    
+            # 4. Devolver la respuesta de redirección al cliente
+            return JsonResponse({
+                'message': f'Payment {payment_status}. Ready for fulfillment.', 
+                'order_id': order.id,
+                'status': order.paymentStatus,
+                'redirect_url': redirect_url
+            })
+            
+        except Order.DoesNotExist:
+             return JsonResponse({'error': f'Order with ID {order_id} not found.'}, status=404)
+        except Exception as e:
+            # Captura errores de la API de PayPal o de la lógica de cumplimiento
+            print(f"Internal Server Error in capture_paypal_orderView: {e}")
+            return JsonResponse({'error': f'Internal Server Error: {str(e)}'}, status=500)
+
+
+def create_paypal_order_api(order, shipping_preference, return_url_dynamic, cancel_url_dynamic):
+    """
+    Crea una orden en la API de PayPal y devuelve el ID de la orden.
+    """
+    access_token = get_paypal_access_token()
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {access_token}',
+    }
+    
+    # Construir el payload para PayPal
+    payload = {
+        "intent": "CAPTURE",
+        "purchase_units": [
+            {
+                "reference_id": str(order.id),
+                "amount": {
+                    "currency_code": "USD", # Ajusta la moneda según tu necesidad
+                    "value": str(order.totalAmount)
+                },
+                "description": f"Order #{order.id} from Adela Valverde Store"
+            }
+        ],
+        "application_context": {
+            "shipping_preference": shipping_preference,
+            "user_action": "PAY_NOW",
+            "brand_name": "Adela Valverde",
+            # URLs de retorno (aunque el flujo es SPA, PayPal las requiere)
+            "return_url": return_url_dynamic,  
+            "cancel_url": cancel_url_dynamic,
+        }
+    }
+    
+    url = f"{settings.PAYPAL_BASE_URL}/v2/checkout/orders"
+    response = requests.post(url, headers=headers, json=payload)
+    
+    if response.status_code == 201:
+        return response.json()['id']
+    else:
+        # Loguear el error para depuración
+        print(f"Error creating PayPal order: {response.text}")
+        raise Exception(f"Error creating PayPal order: {response.text}")
+
+
+class create_paypal_order(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            order_id = data.get('order_id')
+        except JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON body.'}, status=400)
+            
+        try:
+            order = get_object_or_404(Order, pk=order_id)
+            
+            # 1. Leer el valor Order.hasPhysical guardado por ManageOrderView (Propósito 1)
+            # Esto determina si PayPal debe solicitar una dirección de envío.
+            if order.hasPhysical:
+                shipping_preference = 'SET_PROVIDED_ADDRESS' # PayPal solicita la dirección
+            else:
+                shipping_preference = 'NO_SHIPPING' # PayPal no solicita la dirección
+
+            # 1. Obtener los paths relativos de las URLs de Django
+            success_path = reverse('store:payment_success') # Asumiendo que has nombrado tus URLs
+            cancel_path = reverse('store:payment_cancel')
+
+            # 2. Construir las URLs absolutas y dinámicas usando el objeto request
+            return_url_dynamic = request.build_absolute_uri(success_path)
+            cancel_url_dynamic = request.build_absolute_uri(cancel_path)
+                
+            # 2. Llamar a la API de PayPal
+            paypal_order_id = create_paypal_order_api(order, shipping_preference, return_url_dynamic, cancel_url_dynamic)
+            
+            # 3. Guardar el ID de PayPal
+            order.paypal_order_id = paypal_order_id
+            order.save()
+            
+            return JsonResponse({
+                'paypal_order_id': paypal_order_id,
+                'order_id': order.id,
+            })
+            
+        except Order.DoesNotExist:
+            return JsonResponse({'error': f'Order with ID {order_id} not found.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': f'PayPal creation failed: {str(e)}'}, status=500)
+

@@ -24,9 +24,70 @@ def Privacy(request):
     """ A View to return the Privacy page"""
     return render(request, 'privacy.html')
 
+
 def TyC(request):
     """ A View to return the Privacy page"""
     return render(request, 'tyc.html')
+
+
+def merge_guest_cart_to_user(request, user):
+    """
+    Transfer/merge a guest's cart to an authenticated user's cart.
+    Called after signup or login.
+    """
+    ACTIVE_CART_STATUS = 'pending'
+    guest_order_id = request.session.get('order_id')
+    
+    if not guest_order_id:
+        return  # No guest cart to merge
+    
+    try:
+        # Find the anonymous order (no user and pending)
+        guest_order = Order.objects.get(
+            id=guest_order_id, 
+            user__isnull=True,
+            paymentStatus=ACTIVE_CART_STATUS
+        )
+        
+        # Check if the user already has an active cart
+        user_order = Order.objects.filter(
+            user=user, 
+            paymentStatus=ACTIVE_CART_STATUS
+        ).first()
+
+        if user_order:
+            # Merge: Move items from guest cart to user cart
+            for guest_item in guest_order.items.all():
+                existing_item, created = OrderItem.objects.get_or_create(
+                    order=user_order,
+                    product=guest_item.product,
+                    defaults={'quantity': guest_item.quantity, 'price': guest_item.price}
+                )
+                if not created:
+                    # Product already exists, add quantities
+                    existing_item.quantity += guest_item.quantity
+                    existing_item.save()
+
+            # Delete the guest order after moving items
+            guest_order.delete()
+            
+            # Recalculate total for user order
+            user_order.totalAmount = sum(
+                item.quantity * item.price for item in user_order.items.all()
+            )
+            user_order.save()
+        else:
+            # Simple case: No conflict. Assign the order to the user
+            guest_order.user = user
+            guest_order.save()
+
+        # Clean up session
+        del request.session['order_id']
+        request.session.modified = True
+
+    except Order.DoesNotExist:
+        # Invalid session ID or order already completed. Ignore.
+        pass
 
 
 class LoginView(LoginView):
@@ -40,19 +101,19 @@ class LoginView(LoginView):
         return render(request, self.template_name)
 
     def post(self, request):
-        # Process the login form data
         form = self.form_class(request.POST, request.FILES)
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         if user is not None:
+            # Transfer guest cart to logged-in user
+            merge_guest_cart_to_user(request, user)
+            
             login(request, user)
-            # Return success response
             return JsonResponse({'success': True})
         else:
-            # Return error response
             errors = form.errors
-            return JsonResponse({'errors':errors}, status=400)       
+            return JsonResponse({'errors':errors}, status=400)     
 
 
 class SignupView(View):
@@ -68,68 +129,16 @@ class SignupView(View):
         if form.is_valid():
             try:
                 user = form.save()
-                #=========================================================
-                # 2. LÓGICA DE TRANSFERENCIA DE CARRITO (CRÍTICO)
-                # =========================================================
-                ACTIVE_CART_STATUS = 'pending'
-                order_id_anonimo = request.session.get('order_id')
                 
-                if order_id_anonimo:
-                    try:
-                        # Buscar la orden anónima (sin usuario y pendiente)
-                        orden_anonima = Order.objects.get(
-                            id=order_id_anonimo, 
-                            user__isnull=True,  # Debe ser una orden de invitado
-                            paymentStatus=ACTIVE_CART_STATUS
-                        )
-                        
-                        # Manejo de Conflictos: Verificar si el nuevo usuario YA tiene un carrito activo
-                        orden_autenticada = Order.objects.filter(
-                            user=user, 
-                            paymentStatus=ACTIVE_CART_STATUS
-                        ).first()
-
-                        if orden_autenticada:
-                            # Opción de Fusión (Merge): Mover los ítems del carrito anónimo al carrito autenticado
-                            for item_anonimo in orden_anonima.items.all():
-                                # Intentar encontrar el item en el carrito autenticado
-                                item_existente, created = OrderItem.objects.get_or_create(
-                                    order=orden_autenticada,
-                                    product=item_anonimo.product,
-                                    defaults={'quantity': item_anonimo.quantity, 'price': item_anonimo.price}
-                                )
-                                if not created:
-                                    # Si el producto ya existía, sumar cantidades
-                                    item_existente.quantity += item_anonimo.quantity
-                                    item_existente.save()
-
-                            # Eliminar la orden anónima después de mover los ítems
-                            orden_anonima.delete()
-                            
-                            # Recalcular el total de la orden autenticada
-                            orden_autenticada.totalAmount = sum(item.quantity * item.price for item in orden_autenticada.items.all())
-                            orden_autenticada.save()
-                            
-                            # La sesión ya tiene un carrito, no necesitamos hacer nada con order_id
-                            
-                        else:
-                            # Caso simple: No hay conflicto. Simplemente asignar la orden al nuevo usuario
-                            orden_anonima.user = user
-                            orden_anonima.save()
-
-                        # Finalmente, limpiar el order_id de la sesión, ya sea que se haya fusionado o asignado
-                        del request.session['order_id']
-                        request.session.modified = True
-
-                    except Order.DoesNotExist:
-                        # El ID en la sesión era inválido o la orden ya se completó. Ignorar.
-                        pass
+                # Transfer guest cart to new user
+                merge_guest_cart_to_user(request, user)
+                
                 login(request, user)
                 return JsonResponse({'success': True, 'redirect_url':'/'})
             except IntegrityError:
                 return JsonResponse({'errors': {'non_field_errors': ['Ese usuario ya existe.']}}, status=400)
         else:
-            errors = form.errors.as_json()  # Ensure errors are serialized properly
+            errors = form.errors.as_json()
             return JsonResponse({'errors': errors}, status=400)
         
 

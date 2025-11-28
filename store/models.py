@@ -6,11 +6,19 @@ from django.utils.crypto import get_random_string
 import uuid
 import os, json
 
+
 PAYMENT_STATUS_CHOICES = [
     ('pending', 'Pendiente'),
     ('completed', 'Completado'),
     ('failed', 'Fallido'),
 ]
+
+
+PAYMENT_METHODS = [
+        ('PAYPAL', 'PayPal'),
+        ('BANK_TRANSFER', 'Transferencia Bancaria'),
+        ('MANUAL', 'Aprobación Manual/Crédito'),
+    ]
 
 
 class Category(models.Model):
@@ -73,11 +81,28 @@ class Order(models.Model):
         blank=True
     )
     paymentStatus = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
-    payment_method = models.CharField(max_length=50, default='PayPal')
+    payment_method = models.CharField(
+        max_length=50,
+        choices=PAYMENT_METHODS,
+        default='PAYPAL', # Puedes cambiar el default según tu método principal
+        help_text="Método de pago utilizado para la orden."
+    )
+    payment_id = models.CharField(
+            max_length=100, 
+            unique=True, 
+            null=True, 
+            blank=True,
+            help_text="ID único de la transacción generado por el proveedor de pago (ej. PayPal ID)."
+        )
     totalAmount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     shipping_data = models.TextField(default='{}')
+
+    @property
+    def hasPhysical(self):
+        # Returns True if any item in the order is NOT downloadable
+        return self.items.filter(product__is_downloadable=False).exists()
 
     class Meta:
         ordering = ['-created_at']
@@ -98,7 +123,15 @@ class Order(models.Model):
         self.shipping_data = json.dumps(data)
 
     def __str__(self):
-        return f"Pedido {self.id} - {self.user.username}"
+        if self.user:
+            username = self.user.username
+        else:
+            try:
+                data = json.loads(self.shipping_data)
+                username = data.get('name', 'Invitado')
+            except:
+                username = 'Invitado'
+        return f"Pedido {self.id} - {username}"
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

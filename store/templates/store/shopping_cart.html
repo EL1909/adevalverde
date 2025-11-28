@@ -5,10 +5,12 @@
   <div class="col-12 col-md-8 p-4">
     <ul class="nav nav-tabs" id="cartTabs" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="carrito-tab" data-bs-toggle="tab" data-bs-target="#carrito" type="button" role="tab" aria-controls="carrito" aria-selected="true">Carrito</button>
+        <button class="nav-link active" id="carrito-tab" data-bs-toggle="tab" data-bs-target="#carrito" type="button"
+          role="tab" aria-controls="carrito" aria-selected="true">Carrito</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="envio-tab" data-bs-toggle="tab" data-bs-target="#envio" type="button" role="tab" aria-controls="envio" aria-selected="false">Datos de envio</button>
+        <button class="nav-link" id="envio-tab" data-bs-toggle="tab" data-bs-target="#envio" type="button" role="tab"
+          aria-controls="envio" aria-selected="false">Datos de envio</button>
       </li>
     </ul>
     <div class="tab-content" id="cartTabsContent">
@@ -17,7 +19,7 @@
           <div id="product-detail">
             <p id="home-detail" class="text-muted">Seleccione un producto para ver los detalles.</p>
             <div id="selected-item" class="d-none">
-              <div class="row toggle-content" >
+              <div class="row toggle-content">
                 <div class="col-6 card" id="selected-item-bottom">
                   <input type="hidden" id="selected-item-{{ product_id }}">
                   <a id="selected-product-link" href="#">
@@ -26,20 +28,22 @@
                 </div>
                 <div class="col-6" id="selected-item-top">
                   <h6 id="selected-product-name" class="toggle-button"></h6>
-                    <div class="d-flex justify-content-between">
-                      <form id="update-quantity-form" method="post" action="#">
-                        {% csrf_token %}
-                        <small><input id="selected-product-quantity" class="form-control" style="max-width: 40%;" type="number" name="quantity" value="1" min="1"></small>
-                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check"></i></button>
-                        <a id="remove-product-link" href="#" class="btn btn-danger btn-sm remove-item"><i class="fa-solid fa-trash"></i></a>
-                      </form>
-                      <h4 id="selected-product-price"></h4>
-                    </div>
+                  <div class="d-flex justify-content-between">
+                    <form id="update-quantity-form" method="post" action="#">
+                      {% csrf_token %}
+                      <small><input id="selected-product-quantity" class="form-control" style="max-width: 40%;"
+                          type="number" name="quantity" value="1" min="1"></small>
+                      <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check"></i></button>
+                      <a id="remove-product-link" href="#" class="btn btn-danger btn-sm remove-item"><i
+                          class="fa-solid fa-trash"></i></a>
+                    </form>
+                    <h4 id="selected-product-price"></h4>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>      
+        </div>
       </div>
       <div class="tab-pane fade" id="envio" role="tabpanel" aria-labelledby="envio-tab">
         <div class="ticket border p-3">
@@ -47,27 +51,33 @@
             {% csrf_token %}
             <div class="mb-3">
               <label for="name" class="form-label">Nombre</label>
-              <input type="text" class="form-control" id="name" name="name" value="{{ user.first_name|default:'' }} {{ user.last_name|default:'' }}" required>
+              <input type="text" class="form-control" id="name" name="name"
+                value="{{ user.first_name|default:'' }} {{ user.last_name|default:'' }}" required>
             </div>
             <div class="mb-3">
               <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email" value="{{ user.email|default:'' }}" required>
+              <input type="email" class="form-control" id="email" name="email" value="{{ user.email|default:'' }}"
+                required>
             </div>
             <div class="mb-3">
               <label for="address" class="form-label">Dirección</label>
-              <input type="text" class="form-control" id="address" name="address" value="{{ user.profile.address|default:'' }}" required>
+              <input type="text" class="form-control" id="address" name="address"
+                value="{{ user.profile.address|default:'' }}" required>
             </div>
             <div class="mb-3">
               <label for="city" class="form-label">Ciudad</label>
-              <input type="text" class="form-control" id="city" name="city" value="{{ user.profile.city|default:'' }}" required>
+              <input type="text" class="form-control" id="city" name="city" value="{{ user.profile.city|default:'' }}"
+                required>
             </div>
             <div class="mb-3">
               <label for="zipcode" class="form-label">Codigo Postal</label>
-              <input type="text" class="form-control" id="zipcode" name="zipcode" value="{{ user.profile.zipcode|default:'' }}" required>
+              <input type="text" class="form-control" id="zipcode" name="zipcode"
+                value="{{ user.profile.zipcode|default:'' }}" required>
             </div>
             <div class="mb-3">
               <label for="country" class="form-label">Pais</label>
-              <input type="text" class="form-control" id="country" name="country" value="{{ user.profile.country|default:'' }}" required>
+              <input type="text" class="form-control" id="country" name="country"
+                value="{{ user.profile.country|default:'' }}" required>
             </div>
             <!-- Add more fields as needed -->
             <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -78,33 +88,39 @@
   </div>
   <div class="col-12 col-md-4 p-4">
     <div class="ticket border p-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Resumen del Carrito</h5>
-        <a href="{% url 'store:cart_clear' %}" class="btn btn-danger btn-sm  mt-2" onclick="return confirm('Confirme para Vaciar el carrito')"><i class="fa-solid fa-trash toggle-icon"></i></a>
-      </div>
-      <span id="order_id" data-order-id="{{ order_id }}"><small><p>Order ID: {{ order_id }}</p></small></span>
-      <hr>
-      <ul id="cart-items" class="list-unstyled">
-        {% for item in order_items %}
-        <li id="item-{{ item.product.id }}" class="ticket-item py-2 d-flex justify-content-between align-items-center"
-        data-name="{{ item.product.name }}"
-        data-price="{{ item.product.price|floatformat:2 }}" 
-        data-quantity="{{ item.quantity }}"
-        data-image="{{ item.product.image.url }}" 
-        data-id="{{ item.product.id }}"
-        >
-          <span class="product-name text-truncate" style="max-width: 60%;">{{ item.product.name }}</span>
-          <span class="product-units">x{{ item.quantity }}</span>
-          <span class="product-price">${{ item.quantity|multiply:item.price|floatformat:2 }}</span>
-        </li>
-        {% empty %}
-        <li>El carrito esta vacio.</li>
-        {% endfor %}
-      </ul>
-      <hr>
-      <p id="cart-total" class="text-end fw-bold">Total: ${{ total_price|floatformat:2 }}</p>
-      <a id="proceed_to_pay" data-has-physical="{{ has_physical_products|yesno:'true,false' }}" href="#" class="btn btn-primary btn-sm w-100 mt-2">Proceder al pago</a>
-      <div id="paypal-button-container" class="p-4">
+      <div id="checkout-page-container" class="p-4 border rounded-lg shadow-sm bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Resumen del Carrito</h5>
+          <a href="{% url 'store:cart_clear' %}" class="btn btn-danger btn-sm mt-2"
+            onclick="return confirm('Confirme para Vaciar el carrito')"><i
+              class="fa-solid fa-trash toggle-icon"></i></a>
+        </div>
+        <span class="text-muted"><small>
+            <p>Order ID: {{ order_id }}</p>
+          </small></span>
+        <hr>
+        <ul id="cart-items" class="list-unstyled">
+          {% for item in order_items %}
+          <li id="item-{{ item.product.id }}" class="ticket-item py-2 d-flex justify-content-between align-items-center"
+            data-name="{{ item.product.name }}" data-price="{{ item.product.price|floatformat:2 }}"
+            data-quantity="{{ item.quantity }}" data-image="{{ item.product.image.url }}"
+            data-id="{{ item.product.id }}">
+            <span class="product-name text-truncate" style="max-width: 60%;">{{ item.product.name }}</span>
+            <span class="product-units">x{{ item.quantity }}</span>
+            <span class="product-price">${{ item.quantity|multiply:item.price|floatformat:2 }}</span>
+          </li>
+          {% empty %}
+          <li>El carrito esta vacio.</li>
+          {% endfor %}
+        </ul>
+        <hr>
+        <p id="cart-total" class="text-end fw-bold">Total: ${{ total_price|floatformat:2 }}</p>
+        <div id="paypal-button-container" data-order-id="{{ order_id }}"
+        data-total-price="{{ total_price|floatformat:2 }}"
+        data-has-physical="{{ has_physical|lower }}"
+        class="p-2 mt-3">
+          <!-- Botones de PayPal se cargan aquí por store.js -->
+        </div>
       </div>
     </div>
   </div>
@@ -113,4 +129,3 @@
   const manageOrderUrl = "{% url 'store:manage_order' %}";
 </script>
 {% endblock %}
-

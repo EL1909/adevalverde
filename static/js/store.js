@@ -3,38 +3,159 @@
 // -----------------------------------------------------------------
 const csrfTokenEl = document.querySelector('input[name="csrfmiddlewaretoken"]');
 const csrfToken = csrfTokenEl ? csrfTokenEl.value : '';
+window.csrfToken = csrfToken;
 
-function updateOrderStatus(paypalOrderId, orderId, status) {
-    fetch('/store/orders/manage_order/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            paypal_order_id: paypalOrderId,
-            order_id: orderId,
-            payment_status: status,
-            shipping_data: {} // not needed for status update
-        })
-    })
-        .then(r => r.json())
-        .then(data => {
-            console.log('Status updated:', data);
-            alert(`Order #${orderId} is now ${status.toUpperCase()}!`);
-            location.reload(); // or update UI dynamically
-        })
-        .catch(err => {
-            console.error('Update failed:', err);
-            alert('Failed to update status.');
+// -----------------------------------------------------------------
+// 1. NUEVA FUNCIÓN: Finaliza el Pago y Desencadena el Fulfillment
+//    Esta función reemplaza la lógica de updateOrderStatus (Sección 6) 
+//    y llama al orquestador capture_paypal_orderView en el backend.
+// -----------------------------------------------------------------
+async function finalUpdateOrderStatus(orderId, paypalOrderId) {
+    console.log('Finalizing order status and triggering fulfillment...');
+
+    // Endpoint de capture_paypal_orderView, el orquestador post-pago
+    const url = '/store/orders/capture_paypal_order/'; 
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Usamos window.csrfToken, asumiendo que se definió al inicio del script
+                'X-CSRFToken': window.csrfToken 
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                paypal_order_id: paypalOrderId,
+                // **IMPORTANTE:** Ya no se envía paymentStatus ni shippingData.
+                // El backend los obtiene directamente de la API de PayPal.
+            })
         });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            console.log('Payment captured successfully:', data);
+            
+            // --- NUEVO PASO: Llamar a ManageOrder para ejecutar Fulfillment ---
+            console.log('Triggering fulfillment via ManageOrder...');
+            const fulfillmentUrl = '/store/orders/manage_order/';
+            
+            try {
+                const fulfillmentResponse = await fetch(fulfillmentUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': window.csrfToken
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        execute_fulfillment: true
+                    })
+                });
+                
+                const fulfillmentData = await fulfillmentResponse.json();
+                
+                if (fulfillmentResponse.ok) {
+                    console.log('Fulfillment executed successfully:', fulfillmentData);
+                } else {
+                    console.error('Fulfillment failed:', fulfillmentData);
+                    alert('El pago fue exitoso, pero hubo un problema procesando tu pedido. Por favor contáctanos.');
+                }
+                
+            } catch (err) {
+                console.error('Error calling fulfillment:', err);
+                alert('El pago fue exitoso, pero hubo un error de conexión al procesar el pedido.');
+            }
+            // ------------------------------------------------------------------
+
+            sessionStorage.clear(); // Limpia la sesión del carrito
+
+            // Redirigir al cliente usando la URL devuelta por el backend (o user_orders)
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url;
+            } else {
+                console.error('Finalización exitosa, pero no se recibió una URL de redirección.', data);
+                window.location.href = '/store/orders/my-orders/';
+            }
+        } else {
+            console.error('Error finalizing order:', data.error || 'Mensaje de error desconocido');
+            // Redirección a fallback o página de órdenes
+            window.location.href = data.redirect_url || '/store/orders/my-orders/';
+        }
+    } catch (error) {
+        console.error('Network or processing error during finalization:', error);
+        alert('Ocurrió un error de conexión o procesamiento durante la finalización del pedido.');
+    }
 }
 
+// -----------------------------------------------------------------
+// 2. Manual Order Status Update (Admin)
+// -----------------------------------------------------------------
+async function updateOrderStatus(orderId, newStatus) {
+    console.log(`[updateOrderStatus] Starting update for order ${orderId} to status: ${newStatus}`);
+    console.log(`[updateOrderStatus] CSRF Token:`, window.csrfToken);
+    
+    const url = '/store/orders/manage_order/';
+    
+    const payload = {
+        order_id: orderId,
+        manual_status_update: true,
+        payment_status: newStatus
+    };
+    
+    console.log(`[updateOrderStatus] Payload:`, payload);
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.csrfToken
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        console.log(`[updateOrderStatus] Response status:`, response.status);
+        
+        const data = await response.json();
+        console.log(`[updateOrderStatus] Response data:`, data);
+        
+        if (response.ok) {
+            console.log('[updateOrderStatus] Success! Order status updated:', data);
+            alert(`Estado actualizado a: ${newStatus}`);
+            // Refresh the order details by clicking the order item again
+            const orderRow = document.getElementById(orderId);
+            if (orderRow) {
+                console.log(`[updateOrderStatus] Refreshing order details by clicking row with id: ${orderId}`);
+                orderRow.click();
+            } else {
+                console.warn(`[updateOrderStatus] Could not find order row with id: ${orderId}`);
+            }
+        } else {
+            console.error('[updateOrderStatus] Server returned error:', data);
+            alert('Error: ' + (data.error || 'No se pudo actualizar el estado'));
+        }
+    } catch (error) {
+        console.error('[updateOrderStatus] Network/fetch error:', error);
+        alert('Error de conexión al actualizar el estado');
+    }
+}
+
+const isShippingComplete = () => {
+    // Ejemplo: Verifica si el elemento #envio-tab tiene una clase 'is-complete'
+    const envioTab = document.getElementById('envio-tab');
+    if (envioTab && envioTab.classList.contains('is-complete')) {
+        return true;
+    }
+    // Lógica más compleja: Verificar si los campos de dirección están llenos y válidos
+    // ...
+    return false; 
+};
 
 document.addEventListener('DOMContentLoaded', () => {
 
     // === Tab Handler for inventory_mgm.html ===
-
     const tabContainer = document.getElementById('storeTabs'); // UL/Padre de los botones de pestaña
     const parentContainerToClean = document.getElementById('invmgm_2'); // Contenedor de detalles
 
@@ -164,8 +285,10 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', e => {
             e.preventDefault();
 
-            const productId = btn.dataset.productId;
-            const url = `/store/cart/cart_remove/${productId}/`;
+            const url = btn.getAttribute('href');
+            // Extract product ID from URL: /store/cart/remove/123/ -> 123
+            const productId = url.split('/').filter(Boolean).pop();
+            console.log('Removing item via URL:', url, 'ID:', productId);
 
             fetch(url, {
                 method: 'POST',
@@ -198,183 +321,91 @@ document.addEventListener('DOMContentLoaded', () => {
     // -----------------------------------------------------------------
     // 4. Checkout – Proceed to Pay (skip shipping for digital-only)
     // -----------------------------------------------------------------
-    const proceedBtn = document.getElementById('proceed_to_pay');
-    const shippingForm = document.querySelector('#envio form');
-    const orderIdEl = document.getElementById('order_id');
-    const orderId = orderIdEl?.dataset.orderId || sessionStorage.getItem('order_id');
 
-    if (orderId) sessionStorage.setItem('order_id', orderId);
-
-    proceedBtn?.addEventListener('click', e => {
-        e.preventDefault();
-
-        const hasPhysical = proceedBtn.dataset.hasPhysical === 'true';
-        console.log('Has physical:', hasPhysical, 'Order ID:', orderId);
-
-        // ---- shipping validation (only when physical items exist) ----
-        if (hasPhysical && shippingForm) {
-            const required = shippingForm.querySelectorAll('input[required]');
-            let allFilled = true;
-
-            required.forEach(f => {
-                if (!f.value.trim()) {
-                    allFilled = false;
-                    f.classList.add('is-invalid');
-                } else {
-                    f.classList.remove('is-invalid');
-                }
-            });
-
-            if (!allFilled) {
-                alert('Por favor completa los datos de envío.');
-                return;
-            }
-        }
-
-        if (!orderId) {
-            alert('El carrito está vacío.');
-            return;
-        }
-
-        const totalText = document.getElementById('cart-total')?.textContent || 'Total: $0';
-        const totalAmount = parseFloat(totalText.replace('Total: $', '').trim());
-        if (isNaN(totalAmount) || totalAmount <= 0) {
-            alert('Monto inválido.');
-            return;
-        }
-
-        const container = document.getElementById('paypal-button-container');
-        if (container) container.style.display = 'block';
-        initPayPalButtons(totalAmount);
-    });
-
-    // -----------------------------------------------------------------
-    // 5. PayPal Buttons - Acepta un containerId opcional
-    // -----------------------------------------------------------------
-    const initPayPalButtons = (totalAmount, containerId = 'paypal-button-container') => {
-        if (typeof paypal === 'undefined') {
-            console.error('PayPal SDK not loaded');
-            alert('PayPal no está disponible. Recarga la página.');
-            return;
-        }
-
-        // Usa el ID proporcionado o el ID por defecto del checkout
+    const renderPayPalButtons = (containerId = 'paypal-button-container') => {
         const container = document.getElementById(containerId);
         if (!container) return;
-        container.innerHTML = '';
 
-        // El orderId se sigue tomando de sessionStorage (que actualizaremos justo antes de llamar a esta función)
-        const orderId = sessionStorage.getItem('order_id');
-
-        // Es vital que el orderId exista antes de intentar procesar el pago
-        if (!orderId) {
-            console.error('No order ID available for PayPal transaction.');
-            alert('Error: ID de orden no encontrado.');
+        if (typeof paypal === 'undefined') {
+            console.warn('PayPal SDK not loaded yet. Retrying in 500ms...');
+            setTimeout(() => renderPayPalButtons(containerId), 500);
             return;
         }
 
+        container.innerHTML = '';
+
+        // --- MODIFICACIÓN CLAVE: Obtener orderId del atributo de datos del contenedor ---
+        const orderId = container.dataset.orderId;
+        const hasPhysical = container.dataset.hasPhysical === 'true';
+        // --------------------------------------------------------------------------------
+
+        if (!orderId || orderId === 'None') {
+            console.error(`Invalid or missing order ID ('${orderId}') in DOM attribute 'data-order-id' for container #${containerId}.`);
+            return;
+        }
+
+        // --- NUEVA LÓGICA DE VALIDACIÓN DE ENVÍO ---
+        if (hasPhysical && !isShippingComplete()) {
+            // Mostrar un mensaje de advertencia claro en el contenedor de PayPal
+            container.innerHTML = `
+                <div class="alert alert-warning" role="alert">
+                    ⚠️ **¡Información de Envío Incompleta!** Por favor, completa la información de envío
+                    en la pestaña "Envío" antes de proceder al pago.
+                </div>
+            `;
+            // Detener la renderización de PayPal
+            return;
+        }
+        // --- FIN DE LA LÓGICA DE VALIDACIÓN ---
+
         paypal.Buttons({
-            createOrder: (data, actions) => actions.order.create({
-                purchase_units: [{
-                    amount: {
-                        currency_code: 'USD',
-                        value: totalAmount.toFixed(2)
+            // 1. MODIFICACIÓN: createOrder llama al backend para crear la orden en PayPal
+            createOrder: function(data, actions) {
+                // Llama a la vista que lee Order.hasPhysical y habla con la API de PayPal
+                return fetch('/store/orders/create_paypal_order/', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': window.csrfToken
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId, // Usa el orderId leído del DOM
+                    })
+                }).then(function(response) {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.error || 'Error creating order'); });
                     }
-                }]
-            }),
-            onApprove: (data, actions) => actions.order.capture()
-                .then(details => {
-                    console.log('Pago por:', details.payer.name.given_name);
-                    // Aquí el orderId se obtiene del ámbito de la función que contiene initPayPalButtons
-                    updateOrderStatus(data.orderID, orderId, 'completed');
-                }),
-            onError: err => {
-                console.error('PayPal error:', err);
-                // Aquí el orderId se obtiene del ámbito de la función que contiene initPayPalButtons
-                updateOrderStatus(null, orderId, 'failed');
-            }
-        }).render(`#${containerId}`); // Renderiza en el contenedor específico
-    };
-
-    // -----------------------------------------------------------------
-    // 6. Update Order Status (after PayPal)
-    // -----------------------------------------------------------------
-    const updateOrderStatus = (paypalOrderId, orderId, status) => {
-        const shippingData = JSON.parse(sessionStorage.getItem('shippingData') || '{}');
-
-        fetch('/store/orders/manage_order/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
+                    return response.json();
+                }).then(function(orderData) {
+                    // El backend devuelve el paypal_order_id
+                    return orderData.paypal_order_id; 
+                }).catch(error => {
+                    console.error('Error en createOrder:', error);
+                    throw error;
+                });
             },
-            body: JSON.stringify({
-                paypal_order_id: paypalOrderId,
-                order_id: orderId,
-                payment_status: status,
-                shipping_data: shippingData
-            })
-        })
-            .then(r => r.json())
-            .then(data => {
-                console.log('Order processed response:', data);
 
-                // 1. Manejo del éxito de la llamada POST
-                if (data.status === 'completed') {
-                    alert('¡Pago completado! Redirigiendo a tus órdenes.');
-                    sessionStorage.clear(); // Limpia la sesión del carrito
+            // 2. MODIFICACIÓN: onApprove llama a la nueva función finalUpdateOrderStatus
+            onApprove: function(data, actions) {
+                const paypalOrderId = data.orderID; // ID de la orden de PayPal
+                
+                // Llama a la función global finalUpdateOrderStatus
+                return finalUpdateOrderStatus(orderId, paypalOrderId);
+            },
 
-                    // 2. REDIRECCIÓN DINÁMICA: Usa la URL del backend si está presente
-                    if (data.redirect_url) {
-                        window.location.href = data.redirect_url;
-                    } else {
-                        // Fallback: Si el backend no envió la URL (ej: por error de configuración),
-                        // usa la URL estática para no dejar al usuario varado.
-                        window.location.href = '/store/orders/my-orders/';
-                    }
+            // Manejo de errores
+            onError: function (err) {
+                console.error('Error de PayPal:', err);
+                alert('Hubo un error al cargar la pasarela de pago. Por favor recarga la página.');
+            }
 
-                } else if (data.status === 'failed') {
-                    alert('Pago fallido. Por favor, revisa tu estado de órdenes.');
-                    // Puedes optar por redirigir a la vista de órdenes para que el usuario vea el estado:
-                    window.location.href = '/store/orders/my-orders/';
-
-                } else {
-                    // Manejar otros mensajes (como 'error' de la vista ManageOrder)
-                    alert('Error en el procesamiento de la orden: ' + (data.error || 'Mensaje desconocido'));
-                }
-            })
-            .catch(error => {
-                console.error('Error al comunicarse con ManageOrder:', error);
-                alert('Error de conexión o servidor al procesar el pago.');
-            });
-    };
-
-    // -----------------------------------------------------------------
-    // 7. Shipping Form – auto-save to sessionStorage
-    // -----------------------------------------------------------------
-    if (shippingForm) {
-        const saveShipping = () => {
-            const data = {
-                name: document.getElementById('name')?.value || '',
-                email: document.getElementById('email')?.value || '',
-                address: document.getElementById('address')?.value || '',
-                city: document.getElementById('city')?.value || '',
-                zipcode: document.getElementById('zipcode')?.value || '',
-                country: document.getElementById('country')?.value || ''
-            };
-            sessionStorage.setItem('shippingData', JSON.stringify(data));
-        };
-
-        shippingForm.addEventListener('input', saveShipping);
-
-        // Load previously saved data
-        const saved = JSON.parse(sessionStorage.getItem('shippingData') || '{}');
-        Object.keys(saved).forEach(k => {
-            const el = document.getElementById(k);
-            if (el) el.value = saved[k];
-        });
+        }).render(`#${containerId}`); 
     }
 
+    // Initialize PayPal buttons if the container exists on the page
+    if (document.getElementById('paypal-button-container')) {
+        renderPayPalButtons();
+    }
     // -----------------------------------------------------------------
     // 8. Inventory – product details panel
     // -----------------------------------------------------------------
@@ -411,13 +442,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-
     // -----------------------------------------------------------------
     // 10. Orders – order’s detail panel
     // -----------------------------------------------------------------
     document.querySelectorAll('.order-item').forEach(row => {
         row.addEventListener('click', () => {
-            document.querySelectorAll('.order—item')
+            document.querySelectorAll('.order-item')
                 .forEach(r => r.classList.remove('selected'));
             row.classList.add('selected');
 
@@ -433,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(data => {
                     document.querySelector('#order-details .order-id-display').textContent = data.id;
                     document.querySelector('#order-details .total-price-display').textContent = `$${data.totalAmount}`;
-                    document.querySelector('#order-details .status-display').textContent = data.paymentstatus;
+                    document.querySelector('#order-details .status-display').textContent = data.paymentStatus;
                     document.querySelector('#order-details .user-id-display').textContent = data.user || 'Invitado';
                     document.querySelector('#order-details .created-display').textContent = data.created_at;
                     document.querySelector('#order-details .updated-display').textContent = data.updated_at;
@@ -474,9 +504,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 li.className = 'd-flex justify-content-between py-1';
                                 const itemTotal = (item.quantity * item.price).toFixed(2);
                                 li.innerHTML = `
-                                    <span>${item.product_name} x ${item.quantity}</span>
-                                    <span class="fw-bold">$${itemTotal}</span>
-                                `;
+                                        <span>${item.product_name} x ${item.quantity}</span>
+                                        <span class="fw-bold">$${itemTotal}</span>
+                                    `;
                                 itemsList.appendChild(li);
                             });
                         } else {
@@ -491,17 +521,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             e.preventDefault();
                             const newStatus = statusSelect.value;
 
-                            if (typeof updateOrderStatus === 'function' && confirm(`¿Cambiar el estado de la orden #${orderId} a "${newStatus}"?`)) {
-                                updateOrderStatus(null, orderId, newStatus);
-                            } else if (typeof updateOrderStatus !== 'function') {
-                                console.error('ERROR: La función updateOrderStatus no está definida.');
+                            if (confirm(`¿Cambiar el estado de la orden #${orderId} a "${newStatus}"?`)) {
+                                updateOrderStatus(orderId, newStatus);
                             }
                         };
                     }
                 })
                 .catch(err => {
                     console.error('Fetch Details/Items error:', err);
-                    if (nameEl) nameEl.textContent = 'Error: Fallo al cargar detalles';
                     if (itemsList) itemsList.innerHTML = '<li>Error de red o del servidor.</li>';
                 });
         });
@@ -515,31 +542,60 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', e => {
             e.preventDefault();
 
-            const orderId = button.dataset.orderId;
-            const totalAmount = parseFloat(button.dataset.orderAmount);
-            const containerId = `paypal-container-${orderId}`; // ID específico de esa orden
+            const orderIdToRepeat = button.dataset.orderId;
+            
+            // --- 1. Feedback visual mientras se procesa ---
+            button.disabled = true;
+            button.textContent = 'Cargando carrito...';
+            
+            // Ya no necesitamos la lógica de sessionStorage.setItem('order_id', orderId); 
+            // El backend maneja qué carrito debe estar activo.
+            
+            // Ya no necesitamos la lógica de ocultar/mostrar contenedores de PayPal.
 
-            // 1. **CRÍTICO:** Sobreescribir el order_id activo en sessionStorage.
-            // Esto asegura que `initPayPalButtons` y `updateOrderStatus` utilicen el ID de la orden pendiente de Django.
-            sessionStorage.setItem('order_id', orderId);
-
-            // Opcional: Ocultar el botón "Continuar con el Pago"
-            button.classList.add('d-none');
-
-            // 2. Mostrar el contenedor de PayPal para esa orden
-            const container = document.getElementById(containerId);
-            if (container) {
-                container.classList.remove('d-none');
-            }
-
-            // 3. Inicializar los botones de PayPal
-            if (totalAmount > 0) {
-                initPayPalButtons(totalAmount, containerId);
-            } else {
-                alert('Monto de la orden inválido para procesar el pago.');
-            }
+            // --- 2. Llamada AJAX a la vista de Django para COPIAR los ítems ---
+            fetch(`/store/cart/repeat_order/${orderIdToRepeat}/`, { 
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': window.csrfToken, // CSRF es esencial para POST
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(r => {
+                // Comprobación inicial de la respuesta HTTP
+                if (!r.ok) {
+                    // Lanza un error para ser capturado en el catch
+                    return r.json().then(errorData => {throw new Error(errorData.error || 'Server error.');});
+                }
+                return r.json();
+            })
+            .then(data => {
+                // --- 3. Manejo de la Respuesta de Éxito ---
+                if (data.success) {
+                    // Éxito: Los ítems han sido copiados al carrito activo.
+                    // Redirigir al usuario al carrito para que pueda revisar los ítems.
+                    alert('¡Orden cargada con éxito! Revisa tu carrito antes de pagar.');
+                    window.location.href = '/store/cart/'; // Ajusta la URL de tu carrito
+                } else {
+                    // Manejo de errores de negocio devueltos por Django (ej: orden no existe)
+                    console.error('Error al reordenar:', data.error);
+                    alert('No se pudo cargar la orden. Error: ' + data.error);
+                    // Restaurar el botón
+                    button.disabled = false;
+                    button.textContent = 'Pagar de Nuevo'; 
+                }
+            })
+            .catch(err => {
+                // --- 4. Manejo de Errores de Red o Servidor ---
+                console.error('Error de conexión:', err);
+                alert('Error al comunicarse con el servidor. Intenta de nuevo.');
+                // Restaurar el botón
+                button.disabled = false;
+                button.textContent = 'Pagar de Nuevo'; 
+            });
         });
     });
+
 
     // -----------------------------------------------------------------
     // 12. Cart – click item → show #selected-item (AJAX)
@@ -579,6 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         });
     });
+
 
     // -----------------------------------------------------------------
     // 13. Categories - 

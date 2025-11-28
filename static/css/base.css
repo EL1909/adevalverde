@@ -318,11 +318,28 @@ input {
 
 }
 
+.order-item .selected   {
+    background-color: #57579e;
+    color: #F8F8F8;
+}
+
 /* --- NEW/ADJUSTED CAROUSEL STYLES --- */
 
 .category-section {
-    padding: 1em;
-    min-height: 80vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 1em 0;
+    margin: 0 -15px;
+    min-height: 50vh;
+    width: calc(100% + 30px);
+}
+
+/* Fix Bootstrap row to vertically center columns */
+.category-section .row {
+    align-items: center;
+    width: 100%;
 }
 
 /* Product Carousel (Flex container) */
@@ -330,8 +347,10 @@ input {
     display: flex;
     gap: 20px;
     overflow-x: scroll;
+    min-width: 100%;
     /* Enables the horizontal scroll effect */
     padding: 10px 0;
+    place-items: end;
 }
 
 /* Individual Product Card */
@@ -357,7 +376,11 @@ input {
 
 /* Category Header (Adjust alignment for the new column layout) */
 .section-header {
-    /* Remove text-align: center from base.css section-header */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    text-align: left;
     margin-bottom: 0;
     /* Adjust spacing since it's now next to the carousel */
     padding: 0;
@@ -430,8 +453,9 @@ input {
     }
 
     .nav-menu ul {
+        display: flex;
         flex-direction: row;
-        gap: 5px;
+        justify-content: space-between;
         padding: 0 5px;
     }
 

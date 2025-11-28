@@ -22,12 +22,15 @@ urlpatterns = [
         path('repeat_order/<int:order_id>/', views.repeat_order, name='repeat_order'),
     ])),
     path('orders/', include([
+        path('create_paypal_order/', views.create_paypal_order.as_view(), name='create_paypal_order'),
+        path('capture_paypal_order/', views.capture_paypal_order.as_view(), name='capture_paypal_order'),
         path('manage_order/', views.ManageOrder.as_view(), name='manage_order'),
-        # path('order/<int:order_id>/items/', views.GetOrderItems.as_view(), name='get_order_items'),
         path('my-orders/', views.user_orders, name='user_orders'),
         path('download_product/<str:token>/', views.DownloadFile.as_view(), name='download_product'),
         path('verify/<uuid:token>/', views.VerifyDownloadView.as_view(), name='verify_download'),
         path('order/<int:order_id>/details/api/', views.order_detail_api, name='order_detail_api'),
+        path('payment/success/', views.payment_success, name='payment_success'),
+        path('payment/cancel/', views.payment_cancel, name='payment_cancel'),
     ])),
     path('category/', include([
         path('add/', views.CategoryView.as_view(), name='add_category'),

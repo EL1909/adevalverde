@@ -2,8 +2,6 @@
 <html lang="en">
 {% load static %}
 {% load i18n %}
-{% csrf_token %}
-
 <head>
     {% block meta %}
     <!-- Required meta tags -->
@@ -33,7 +31,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <!-- Paypal SKD -->
     <script
-        src="https://www.paypal.com/sdk/js?client-id=BAAmQKRDtf9lHg5HX5NQzBeqepZl-XRBcl94YSJs-uxFWR1CSzgHFouWtvnkt0Fh8DipUFenmwGM5VJZ_8&currency=USD&intent=capture"
+        src="https://www.sandbox.paypal.com/sdk/js?client-id=ATQDgKmYhI7gtmB8gGQ1V8fPtN0Id2QRiAYTe8imoVL4vu-IfnCtZ9uzcHcruGNwvdCs1s3TbbPOUSjH&currency=USD&intent=capture"
         data-sdk-integration-source="button-factory"></script>
     {% endblock %}
     <title>Adela Valverde {% block extra_title %}{% endblock %}</title>
@@ -136,8 +134,10 @@
         </div>
     </footer>
     {% include 'users/loginModal.html' %}
-    <!-- CookieBanner -->
     {% include 'cookie-banner.html' %}
+    <!-- CSRF Token -->
+    <script>window.csrfToken = "{{ csrf_token }}";</script>
+    <!-- CookieBanner -->
     {% block core_js%}
     <!-- Include jQuery and jQuery UI Autocomplete -->
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>

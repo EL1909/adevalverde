@@ -135,3 +135,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Paypal Credentials
+PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID')
+PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET')
+PAYPAL_BASE_URL = os.environ.get('PAYPAL_BASE_URL')

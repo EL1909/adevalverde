@@ -22,9 +22,11 @@ class CategoryAdmin(admin.ModelAdmin):
 
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'user',
         'totalAmount',
     )
+
 
 class DownloadableAdmin(admin.ModelAdmin):
     list_display = (
