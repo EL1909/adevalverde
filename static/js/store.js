@@ -516,15 +516,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const updateBtn = document.getElementById('update_order');
                     const statusSelect = document.getElementById('order-status-select');
+                    console.log('[DEBUG] Update button found:', updateBtn);
+                    console.log('[DEBUG] Status select found:', statusSelect);
+                    
                     if (updateBtn && statusSelect) {
+                        console.log('[DEBUG] Attaching click handler to update button');
                         updateBtn.onclick = (e) => {
                             e.preventDefault();
+                            e.stopPropagation(); // CRITICAL: Prevent event from bubbling to row click handler
+                            console.log('[DEBUG] Update button clicked!');
                             const newStatus = statusSelect.value;
+                            console.log('[DEBUG] Selected status:', newStatus);
 
-                            if (confirm(`¿Cambiar el estado de la orden #${orderId} a "${newStatus}"?`)) {
-                                updateOrderStatus(orderId, newStatus);
-                            }
+                            // TEMPORARILY REMOVED CONFIRMATION DIALOG FOR TESTING
+                            console.log('[DEBUG] Calling updateOrderStatus directly (no confirmation)');
+                            updateOrderStatus(orderId, newStatus);
                         };
+                    } else {
+                        console.error('[DEBUG] Update button or status select not found!');
                     }
                 })
                 .catch(err => {

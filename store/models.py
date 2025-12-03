@@ -59,7 +59,7 @@ class Product(models.Model):
     image = models.ImageField(upload_to=get_image_path, null=True, blank=True)
     is_downloadable = models.BooleanField(default=False)
     download_file = models.FileField(
-        upload_to='store/products/to_download/{name}',
+        upload_to=get_download_file,
         null=True, blank=True,  # ← allow empty
         help_text="Obligatorio solo si el producto es descargable"
     )
@@ -148,7 +148,7 @@ class OrderItem(models.Model):
     
 
 class Downloadable(models.Model):
-    order_item = models.OneToOneField('store.OrderItem', on_delete=models.CASCADE, related_name='downloadable')
+    order_item = models.OneToOneField('OrderItem', on_delete=models.CASCADE, related_name='downloadable')
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     verification_url = models.CharField(max_length=500, null=True, blank=True)
     qr_image = models.ImageField(upload_to='store/qr_codes/', null=True, blank=True)

@@ -706,8 +706,7 @@ class ManageOrder(View):
                     return JsonResponse({
                         'message': 'Fulfillment executed successfully.', 
                         'order_id': order.id,
-                        'order_id': order.id,
-                        # 'fulfillment_status': order.fulfillment_status,
+                        'fulfillment_status': order.fulfillment_status,
                     })
                     
                 else:
@@ -716,7 +715,7 @@ class ManageOrder(View):
                     if not cart_items:
                         return JsonResponse({'error': 'Missing required cart_items for Order Update.'}, status=400)
                     
-                    has_physical_products = False
+                    hasPhysical = False
                     
                     # 1. Actualizar OrderItems y calcular hasPhysical
                     Order.items.all().delete() # Eliminar ítems existentes para la reconstrucción
@@ -735,7 +734,7 @@ class ManageOrder(View):
                         
                         total_price += product.price * quantity
                         if not product.is_downloadable: # Si no es descargable, es físico
-                            has_physical_products = True
+                            hasPhysical = True
                             
                     # 2. Actualizar campos de la Order
                     order.total = total_price
@@ -769,10 +768,13 @@ class DownloadFile(View):
             raise Http404("File not PDF.")
 
         # === Embed QR on-the-fly ===
+        # CRITICAL: Open the file and reset pointer to beginning
+        product_file.open('rb')
+        product_file.seek(0)
         reader = PdfReader(product_file)
         writer = PdfWriter()
 
-        # Get QR image\ 
+        # Get QR image
         qr_image = downloadable.qr_image
         if not qr_image:
             raise Http404("QR missing.")
