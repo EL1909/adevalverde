@@ -5,7 +5,7 @@ import requests
 import uuid
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.contrib.sites.models import Site
 from django.core.files.base import ContentFile
@@ -815,6 +815,48 @@ class DownloadFile(View):
         # Use FileResponse for better file handling
         response = FileResponse(output, as_attachment=True, filename=f"{safe_filename}_with_proof.pdf")
         return response
+
+
+@require_POST
+@user_passes_test(lambda u: u.is_superuser)
+def reset_download(request, order_id):
+    """
+    Allows superusers to reset download status for all downloadable items in an order.
+    This enables buyers to re-download their purchased digital products.
+    """
+    try:
+        order = get_object_or_404(Order, pk=order_id)
+        
+        # Get all downloadable items for this order
+        downloadables = Downloadable.objects.filter(order_item__order=order)
+        
+        if not downloadables.exists():
+            return JsonResponse({
+                'success': False, 
+                'error': 'No downloadable items found for this order.'
+            }, status=404)
+        
+        # Reset downloaded_at to None for all downloadables
+        reset_count = downloadables.update(downloaded_at=None)
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Download status reset for {reset_count} item(s).',
+            'order_id': order.id,
+            'reset_count': reset_count
+        })
+        
+    except Order.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': f'Order with ID {order_id} not found.'
+        }, status=404)
+    except Exception as e:
+        print(f"Error in reset_download: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': f'Internal Server Error: {str(e)}'
+        }, status=500)
     
 
 class VerifyDownloadView(View):
@@ -837,9 +879,9 @@ class VerifyDownloadView(View):
         is_completed = order.paymentStatus == 'completed'
         is_used = downloadable.downloaded_at is not None
         
-        # 3. Generar la URL de descarga (Permitir múltiples descargas para evitar bloqueos por errores)
+        # 3. Generar la URL de descarga SOLO si no ha sido descargado aún
         download_url = None
-        if is_completed: 
+        if is_completed and not is_used:  # ← CHANGED: Only allow if NOT downloaded yet
             # Crea la URL a la vista DownloadFile, pasando el mismo token
             download_url = reverse('store:download_product', args=[token])
         
@@ -854,8 +896,8 @@ class VerifyDownloadView(View):
         }
 
         # 5. Renderizar el template
-        # (Debes crear el template 'store/verify_download.html')
         return render(request, 'store/verify_download.html', context)
+
 
 
 @login_required # <--- ESENCIAL: Solo usuarios registrados pueden repetir órdenes.
@@ -909,19 +951,35 @@ def order_detail_api(request, order_id):
     try:
         order = get_object_or_404(Order, pk=order_id)
 
-        items_queryset = OrderItem.objects.filter(order=order).values(
-            'quantity', 
-            'price', 
-            'product__name'
-        )
+        items_queryset = OrderItem.objects.filter(order=order).select_related('product')
         
         items_list = []
         for item in items_queryset:
-            items_list.append({
-                'quantity': item['quantity'],
-                'price': float(item['price']),
-                'product_name': item['product__name']
-            })
+            item_data = {
+                'quantity': item.quantity,
+                'price': float(item.price),
+                'product_name': item.product.name,
+                'is_downloadable': item.product.is_downloadable,
+            }
+            
+            # Add download status if item is downloadable
+            if item.product.is_downloadable:
+                try:
+                    downloadable = item.downloadable
+                    item_data['download_status'] = {
+                        'downloaded': downloadable.downloaded_at is not None,
+                        'downloaded_at': downloadable.downloaded_at.strftime("%Y-%m-%d %H:%M:%S") if downloadable.downloaded_at else None,
+                        'token': str(downloadable.token),
+                    }
+                except Downloadable.DoesNotExist:
+                    item_data['download_status'] = {
+                        'downloaded': False,
+                        'downloaded_at': None,
+                        'token': None,
+                        'error': 'Downloadable not generated yet'
+                    }
+            
+            items_list.append(item_data)
 
         # Use the Order model's hasPhysical property
         has_physical_products = order.hasPhysical
@@ -1138,7 +1196,7 @@ class capture_paypal_order(View):
             return JsonResponse({'error': f'Internal Server Error: {str(e)}'}, status=500)
 
 
-def create_paypal_order_api(order, shipping_preference, return_url_dynamic, cancel_url_dynamic):
+def create_paypal_order_api(order, shipping_preference, return_url_dynamic, cancel_url_dynamic, shipping_data=None):
     """
     Crea una orden en la API de PayPal y devuelve el ID de la orden.
     """
@@ -1148,19 +1206,34 @@ def create_paypal_order_api(order, shipping_preference, return_url_dynamic, canc
         'Authorization': f'Bearer {access_token}',
     }
     
+    # Construir el purchase_unit base
+    purchase_unit = {
+        "reference_id": str(order.id),
+        "amount": {
+            "currency_code": "USD", # Ajusta la moneda según tu necesidad
+            "value": str(order.totalAmount)
+        },
+        "description": f"Order #{order.id} from Adela Valverde Store"
+    }
+    
+    # Si hay shipping_data y se requiere dirección, agregarla al purchase_unit
+    if shipping_preference == 'SET_PROVIDED_ADDRESS' and shipping_data:
+        purchase_unit["shipping"] = {
+            "name": {
+                "full_name": shipping_data.get('name', '')
+            },
+            "address": {
+                "address_line_1": shipping_data.get('address', ''),
+                "admin_area_2": shipping_data.get('city', ''),  # City
+                "postal_code": shipping_data.get('zipcode', ''),
+                "country_code": shipping_data.get('country', 'US')[:2].upper()  # ISO 2-letter code
+            }
+        }
+    
     # Construir el payload para PayPal
     payload = {
         "intent": "CAPTURE",
-        "purchase_units": [
-            {
-                "reference_id": str(order.id),
-                "amount": {
-                    "currency_code": "USD", # Ajusta la moneda según tu necesidad
-                    "value": str(order.totalAmount)
-                },
-                "description": f"Order #{order.id} from Adela Valverde Store"
-            }
-        ],
+        "purchase_units": [purchase_unit],
         "application_context": {
             "shipping_preference": shipping_preference,
             "user_action": "PAY_NOW",
@@ -1187,6 +1260,7 @@ class create_paypal_order(View):
         try:
             data = json.loads(request.body)
             order_id = data.get('order_id')
+            shipping_data = data.get('shipping_data')  # Get shipping data from frontend
         except JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON body.'}, status=400)
             
@@ -1208,8 +1282,14 @@ class create_paypal_order(View):
             return_url_dynamic = request.build_absolute_uri(success_path)
             cancel_url_dynamic = request.build_absolute_uri(cancel_path)
                 
-            # 2. Llamar a la API de PayPal
-            paypal_order_id = create_paypal_order_api(order, shipping_preference, return_url_dynamic, cancel_url_dynamic)
+            # 2. Llamar a la API de PayPal (now with shipping_data)
+            paypal_order_id = create_paypal_order_api(
+                order, 
+                shipping_preference, 
+                return_url_dynamic, 
+                cancel_url_dynamic,
+                shipping_data  # Pass shipping data to API function
+            )
             
             # 3. Guardar el ID de PayPal
             order.paypal_order_id = paypal_order_id
@@ -1223,5 +1303,5 @@ class create_paypal_order(View):
         except Order.DoesNotExist:
             return JsonResponse({'error': f'Order with ID {order_id} not found.'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': f'PayPal creation failed: {str(e)}'}, status=500)
-
+            print(f"Error in create_paypal_order: {e}")
+            return JsonResponse({'error': str(e)}, status=500)

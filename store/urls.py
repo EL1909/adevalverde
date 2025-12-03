@@ -29,6 +29,7 @@ urlpatterns = [
         path('download_product/<str:token>/', views.DownloadFile.as_view(), name='download_product'),
         path('verify/<uuid:token>/', views.VerifyDownloadView.as_view(), name='verify_download'),
         path('order/<int:order_id>/details/api/', views.order_detail_api, name='order_detail_api'),
+        path('reset_download/<int:order_id>/', views.reset_download, name='reset_download'),
         path('payment/success/', views.payment_success, name='payment_success'),
         path('payment/cancel/', views.payment_cancel, name='payment_cancel'),
     ])),

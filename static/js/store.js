@@ -142,16 +142,70 @@ async function updateOrderStatus(orderId, newStatus) {
     }
 }
 
+// -----------------------------------------------------------------
+// 3. Reset Download Status (Superuser Only)
+// -----------------------------------------------------------------
+async function resetDownloadStatus(orderId) {
+    console.log(`[resetDownloadStatus] Resetting downloads for order ${orderId}`);
+    
+    const url = `/store/orders/reset_download/${orderId}/`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': window.csrfToken,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✓ ${data.message}\nLos compradores pueden volver a descargar sus productos.`);
+            console.log('[resetDownloadStatus] Success:', data);
+            
+            // Refresh the order details to show updated download status
+            const orderRow = document.getElementById(orderId);
+            if (orderRow) {
+                orderRow.click();
+            }
+        } else {
+            console.error('[resetDownloadStatus] Server error:', data);
+            alert('Error: ' + (data.error || 'No se pudo resetear las descargas'));
+        }
+    } catch (error) {
+        console.error('[resetDownloadStatus] Network error:', error);
+        alert('Error de conexión al resetear las descargas');
+    }
+}
+
+
 const isShippingComplete = () => {
-    // Ejemplo: Verifica si el elemento #envio-tab tiene una clase 'is-complete'
-    const envioTab = document.getElementById('envio-tab');
+    // Check if the #envio tab has the 'is-complete' class
+    const envioTab = document.getElementById('envio');
     if (envioTab && envioTab.classList.contains('is-complete')) {
         return true;
     }
-    // Lógica más compleja: Verificar si los campos de dirección están llenos y válidos
-    // ...
-    return false; 
+    
+    // Check sessionStorage for shipping data
+    const savedShipping = sessionStorage.getItem('shipping_data');
+    if (savedShipping) {
+        try {
+            const shippingData = JSON.parse(savedShipping);
+            // Verify all required fields are present
+            if (shippingData.name && shippingData.email && shippingData.address && 
+                shippingData.city && shippingData.zipcode && shippingData.country) {
+                return true;
+            }
+        } catch (e) {
+            console.error('Error parsing shipping data:', e);
+        }
+    }
+    
+    return false;
 };
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -350,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
             container.innerHTML = `
                 <div class="alert alert-warning" role="alert">
                     ⚠️ **¡Información de Envío Incompleta!** Por favor, completa la información de envío
-                    en la pestaña "Envío" antes de proceder al pago.
+                    en la pestaña "Datos de envio" antes de proceder al pago.
                 </div>
             `;
             // Detener la renderización de PayPal
@@ -361,6 +415,17 @@ document.addEventListener('DOMContentLoaded', () => {
         paypal.Buttons({
             // 1. MODIFICACIÓN: createOrder llama al backend para crear la orden en PayPal
             createOrder: function(data, actions) {
+                // Get shipping data from sessionStorage if available
+                let shippingData = null;
+                const savedShipping = sessionStorage.getItem('shipping_data');
+                if (savedShipping) {
+                    try {
+                        shippingData = JSON.parse(savedShipping);
+                    } catch (e) {
+                        console.error('Error parsing shipping data:', e);
+                    }
+                }
+                
                 // Llama a la vista que lee Order.hasPhysical y habla con la API de PayPal
                 return fetch('/store/orders/create_paypal_order/', { 
                     method: 'POST',
@@ -370,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify({
                         order_id: orderId, // Usa el orderId leído del DOM
+                        shipping_data: shippingData // Send shipping data to backend
                     })
                 }).then(function(response) {
                     if (!response.ok) {
@@ -401,11 +467,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
         }).render(`#${containerId}`); 
     }
+    
+    // Make renderPayPalButtons globally accessible
+    window.renderPayPalButtons = renderPayPalButtons;
 
     // Initialize PayPal buttons if the container exists on the page
     if (document.getElementById('paypal-button-container')) {
         renderPayPalButtons();
     }
+    
+    // -----------------------------------------------------------------
+    // 5. Shipping Form Handler (Shopping Cart)
+    // -----------------------------------------------------------------
+    const shippingForm = document.querySelector('#envio form');
+    const envioTab = document.getElementById('envio');
+    const envioTabButton = document.getElementById('envio-tab');
+    
+    if (shippingForm) {
+        shippingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(shippingForm);
+            const shippingData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                address: formData.get('address'),
+                city: formData.get('city'),
+                zipcode: formData.get('zipcode'),
+                country: formData.get('country')
+            };
+            
+            // Save to session storage for client-side validation
+            sessionStorage.setItem('shipping_data', JSON.stringify(shippingData));
+            
+            // Mark shipping as complete
+            envioTab.classList.add('is-complete');
+            envioTabButton.classList.add('is-complete');
+            
+            // Show success message
+            alert('✓ Datos de envío guardados correctamente.\n\nYa puedes proceder al pago.');
+            
+            // Switch to cart tab
+            document.getElementById('carrito-tab').click();
+            
+            // Re-render PayPal buttons to remove warning
+            if (typeof window.renderPayPalButtons === 'function') {
+                window.renderPayPalButtons();
+            }
+        });
+    }
+    
+    // Check if shipping data already exists in session
+    const savedShipping = sessionStorage.getItem('shipping_data');
+    if (savedShipping && envioTab && envioTabButton) {
+        envioTab.classList.add('is-complete');
+        envioTabButton.classList.add('is-complete');
+    }
+    
     // -----------------------------------------------------------------
     // 8. Inventory – product details panel
     // -----------------------------------------------------------------
@@ -503,8 +622,23 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const li = document.createElement('li');
                                 li.className = 'd-flex justify-content-between py-1';
                                 const itemTotal = (item.quantity * item.price).toFixed(2);
+                                
+                                // Build download status indicator
+                                let downloadBadge = '';
+                                if (item.is_downloadable && item.download_status) {
+                                    if (item.download_status.downloaded) {
+                                        downloadBadge = `<span class="badge bg-success ms-2" title="Descargado el ${item.download_status.downloaded_at}">
+                                            <i class="fa-solid fa-check"></i> Descargado
+                                        </span>`;
+                                    } else {
+                                        downloadBadge = `<span class="badge bg-warning ms-2">
+                                            <i class="fa-solid fa-clock"></i> Pendiente
+                                        </span>`;
+                                    }
+                                }
+                                
                                 li.innerHTML = `
-                                        <span>${item.product_name} x ${item.quantity}</span>
+                                        <span>${item.product_name} x ${item.quantity}${downloadBadge}</span>
                                         <span class="fw-bold">$${itemTotal}</span>
                                     `;
                                 itemsList.appendChild(li);
@@ -535,6 +669,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         console.error('[DEBUG] Update button or status select not found!');
                     }
+                    
+                    // Attach handler for reset download button
+                    const resetDownloadBtn = document.getElementById('reset_download');
+                    if (resetDownloadBtn) {
+                        console.log('[DEBUG] Reset download button found');
+                        
+                        // Check if order has downloadable items
+                        const hasDownloadables = data.items.some(item => item.is_downloadable);
+                        const isCompleted = data.paymentStatus === 'completed';
+                        
+                        if (hasDownloadables && isCompleted) {
+                            resetDownloadBtn.classList.remove('d-none');
+                            
+                            resetDownloadBtn.onclick = (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('[DEBUG] Reset download button clicked!');
+                                
+                                if (confirm('¿Permitir que el comprador descargue de nuevo?\n\nEsto reseteará el estado de descarga de todos los productos digitales en este pedido.')) {
+                                    resetDownloadStatus(orderId);
+                                }
+                            };
+                        } else {
+                            resetDownloadBtn.classList.add('d-none');
+                        }
+                    }
+
                 })
                 .catch(err => {
                     console.error('Fetch Details/Items error:', err);

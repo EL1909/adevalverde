@@ -280,9 +280,11 @@
                     <p>Cliente: <span class="user-id-display"></span></p>
                 </span>
                 <div class="text-end">
-                    <strong><span class="status-display">
+                    <strong>
+                        <span class="status-display">
                             <p id="order-status"></p>
-                        </span></strong>
+                        </span>
+                    </strong>
                 </div>
                 <div>
                     <label><strong>Estado del pedido:</strong></label>
@@ -293,6 +295,9 @@
                             <option value="failed">Fallido</option>
                         </select>
                         <button id="update_order" class="btn btn-primary btn-sm ms-2">Actualizar</button>
+                        <button id="reset_download" class="btn btn-warning btn-sm ms-2 d-none">
+                            <i class="fa-solid fa-rotate-right"></i> Resetear Descarga
+                        </button>
                     </div>
                 </div>
                 <hr>
