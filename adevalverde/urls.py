@@ -19,13 +19,14 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
-from users import views
+from home import views
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('users.urls')),
-    path('users/', include('users.urls')),
+    path('accounts/', include('allauth.urls')),  # Allauth URLs
+    path('', include('accounts.urls')),  # Accounts app URLs (login, signup, logout)
+    path('', include('home.urls')),
     path('store/', include('store.urls')),
     path('keymoments/', include('keymoments.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

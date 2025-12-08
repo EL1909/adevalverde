@@ -19,6 +19,8 @@ $(document).ready(function() {
 
 
     // Login Form error handling
+    // DISABLED: Allauth handles form submission directly
+    /*
     $('#loginForm').submit(function(event) {
         event.preventDefault(); // Prevent default form submission
         
@@ -46,6 +48,7 @@ $(document).ready(function() {
             }
         });
     });
+    */
 
 
     // Function to handle signup or login errors
@@ -100,6 +103,8 @@ $(document).ready(function() {
 
 
     // Signup Form error handling
+    // DISABLED: Allauth handles form submission directly
+    /*
     $('#signupForm').submit(function(event) {
         event.preventDefault(); // Prevent default form submission
         
@@ -127,6 +132,7 @@ $(document).ready(function() {
             }
         });
     });
+    */
 
    
 

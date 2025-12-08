@@ -43,7 +43,8 @@ class Product(models.Model):
     # Custom upload path for images
     def get_image_path(self, filename):
         name, ext = os.path.splitext(filename)
-        return f'store/products/{slugify(name)}-{get_random_string(length=8)}{ext}'
+        category_name = slugify(self.category.name) if self.category else 'uncategorized'
+        return f'store/products/{category_name}/{slugify(name)}-{get_random_string(length=8)}{ext}'
     
     def get_download_file(self, filename):
         name, ext = os.path.splitext(filename)

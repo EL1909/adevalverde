@@ -37,36 +37,6 @@ async function finalUpdateOrderStatus(orderId, paypalOrderId) {
         if (response.ok) {
             console.log('Payment captured successfully:', data);
             
-            // --- NUEVO PASO: Llamar a ManageOrder para ejecutar Fulfillment ---
-            console.log('Triggering fulfillment via ManageOrder...');
-            const fulfillmentUrl = '/store/orders/manage_order/';
-            
-            try {
-                const fulfillmentResponse = await fetch(fulfillmentUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': window.csrfToken
-                    },
-                    body: JSON.stringify({
-                        order_id: orderId,
-                        execute_fulfillment: true
-                    })
-                });
-                
-                const fulfillmentData = await fulfillmentResponse.json();
-                
-                if (fulfillmentResponse.ok) {
-                    console.log('Fulfillment executed successfully:', fulfillmentData);
-                } else {
-                    console.error('Fulfillment failed:', fulfillmentData);
-                    alert('El pago fue exitoso, pero hubo un problema procesando tu pedido. Por favor contáctanos.');
-                }
-                
-            } catch (err) {
-                console.error('Error calling fulfillment:', err);
-                alert('El pago fue exitoso, pero hubo un error de conexión al procesar el pedido.');
-            }
             // ------------------------------------------------------------------
 
             sessionStorage.clear(); // Limpia la sesión del carrito
@@ -582,7 +552,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(data => {
                     document.querySelector('#order-details .order-id-display').textContent = data.id;
                     document.querySelector('#order-details .total-price-display').textContent = `$${data.totalAmount}`;
-                    document.querySelector('#order-details .status-display').textContent = data.paymentStatus;
+                    document.querySelector('#order-details .status-display').textContent = data.paymentStatus_display;
+                    
+                    // Update select value
+                    const statusSelectEl = document.getElementById('order-status-select');
+                    if (statusSelectEl) {
+                        statusSelectEl.value = data.paymentStatus;
+                    }
+
                     document.querySelector('#order-details .user-id-display').textContent = data.user || 'Invitado';
                     document.querySelector('#order-details .created-display').textContent = data.created_at;
                     document.querySelector('#order-details .updated-display').textContent = data.updated_at;

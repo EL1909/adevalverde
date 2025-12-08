@@ -75,7 +75,7 @@
                             {% endif %}
                             <!-- <a href="#" class="dropdown-item">Mi Perfil</a> -->
                             <a href="{% url 'store:user_orders' %}" class="dropdown-item">Mis Compras</a>
-                            <a href="{% url 'direct_logout' %}" class="dropdown-item">Salir</a>
+                            <a href="{% url 'account_logout' %}" class="dropdown-item">Salir</a>
                         </div>
                         {% else %}
                         <a href="#" id="loginModalLink" data-bs-toggle="dropdown" aria-haspopup="true"

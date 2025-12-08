@@ -769,9 +769,9 @@ class DownloadFile(View):
 
         # === Embed QR on-the-fly ===
         # CRITICAL: Open the file and reset pointer to beginning
-        product_file.open('rb')
-        product_file.seek(0)
-        reader = PdfReader(product_file)
+        f = product_file.open('rb')
+        f.seek(0)
+        reader = PdfReader(f)
         writer = PdfWriter()
 
         # Get QR image
@@ -988,6 +988,7 @@ def order_detail_api(request, order_id):
             'id': order.id,
             'user': order.user.username if order.user else 'Invitado',
             'paymentStatus': order.paymentStatus,
+            'paymentStatus_display': order.get_paymentStatus_display(),
             "totalAmount": float(order.totalAmount),
             "created_at": order.created_at.strftime("%Y-%m-%d %H:%M:%S"), 
             "updated_at": order.updated_at.strftime("%Y-%m-%d %H:%M:%S") if order.updated_at else 'Sin cambios',
@@ -1169,6 +1170,10 @@ class capture_paypal_order(View):
                     # que será llamada por el frontend inmediatamente después.
                     
                     # --- MODIFICACIÓN: Redirección diferenciada para invitados ---
+                    
+                    # Execute fulfillment logic immediately on server side
+                    execute_fulfillment_logic(order)
+                    
                     if request.user.is_authenticated:
                         redirect_url = reverse('store:user_orders')
                     else:
