@@ -3,3 +3,7 @@ ade_env
 db.sqlite3
 settings.py
 venv/
+*.pyc
+__pycache__/
+*.png
+*.pdf
