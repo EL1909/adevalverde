@@ -839,9 +839,9 @@ class DownloadFile(View):
         overlay_buffer.seek(0)
         overlay = PdfReader(overlay_buffer)
 
-        # Merge QR on first page only
+        # Merge QR on second page only (skip cover page)
         for i, page in enumerate(reader.pages):
-            if i == 0:
+            if i == 1:  # Second page (0-indexed, so 1 = page 2)
                 page.merge_page(overlay.pages[0])
             writer.add_page(page)
 
