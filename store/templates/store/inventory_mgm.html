@@ -48,6 +48,26 @@
                         </ul>
                     </div>
                 </div>
+                <!-- Bulk Actions Toolbar -->
+                <div class="row mb-3 align-items-center bg-light p-2 rounded border">
+                    <div class="col-auto">
+                        <strong>Acciones en lote:</strong>
+                    </div>
+                    <div class="col-auto">
+                        <select id="bulk-status-select" class="form-select form-select-sm">
+                            <option value="" selected>Cambiar estado a...</option>
+                            <option value="pending">Pendiente</option>
+                            <option value="completed">Completado</option>
+                            <option value="failed">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button id="apply-bulk-action" type="button" class="btn btn-sm btn-secondary">Aplicar</button>
+                    </div>
+                    <div class="col-auto ms-auto">
+                        <small class="text-muted"><span id="selected-count">0</span> seleccionados</small>
+                    </div>
+                </div>
                 <div class="col-12 order-1">
                     <ul class="request-list active" id="openOrders-list">
                         <table class="table table-striped">
@@ -63,7 +83,8 @@
                             </thead>
                             <tbody>
                                 {% for open in openOrders %}
-                                <tr id="{{ open.id }}" class="order-item">
+                                <tr id="open-{{ open.id }}" class="order-item" data-order-id="{{ open.id }}">
+                                    <td onclick="event.stopPropagation();"><input type="checkbox" class="order-checkbox" value="{{ open.id }}"></td>
                                     <td>{{ open.id }}</td>
                                     <td>{{ open.user|default:"Invitado" }}</td>
                                     <td>
@@ -81,7 +102,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6">No hay pedidos abiertos.</td>
+                                    <td colspan="7">No hay pedidos abiertos.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -101,7 +122,8 @@
                             </thead>
                             <tbody>
                                 {% for order in successOrders %}
-                                <tr id="{{ order.id }}" class="order-item">
+                                <tr id="success-{{ order.id }}" class="order-item" data-order-id="{{ order.id }}">
+                                    <td onclick="event.stopPropagation();"><input type="checkbox" class="order-checkbox" value="{{ order.id }}"></td>
                                     <td>{{ order.id }}</td>
                                     <td>{{ order.user|default:"Invitado" }}</td>
                                     <td>
@@ -119,7 +141,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6">No hay pedidos abiertos.</td>
+                                    <td colspan="7">No hay pedidos abiertos.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -139,7 +161,8 @@
                             </thead>
                             <tbody>
                                 {% for closed in closedOrders %}
-                                <tr id="{{ closed.id }}" class="order-item">
+                                <tr id="closed-{{ closed.id }}" class="order-item" data-order-id="{{ closed.id }}">
+                                    <td onclick="event.stopPropagation();"><input type="checkbox" class="order-checkbox" value="{{ closed.id }}"></td>
                                     <td>{{ closed.id }}</td>
                                     <td>{{ closed.user|default:"Invitado" }}</td>
                                     <td>
@@ -157,7 +180,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6">No hay pedidos cerrados.</td>
+                                    <td colspan="7">No hay pedidos cerrados.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -354,15 +377,28 @@
                         {% csrf_token %}
                         <div class="row g-3">
                             <div class="form-group">
-                                {{ catform.name.label_tag }}
-                                {{ catform.name }}
+                                <label for="cat_id_name"></label>{{ catform.name.label }}</label>
+                                {% with catform.name as field %}
+                                    <input type="text" name="{{ field.name }}" 
+                                           class="form-control" 
+                                           id="cat_id_name"
+                                           maxlength="256" 
+                                           required
+                                           value="{{ field.value|default:'' }}">
+                                {% endwith %}
                                 {% if catform.name.errors %}
                                 <div class="text-danger small">{{ catform.name.errors }}</div>
                                 {% endif %}
                             </div>
                             <div class="form-group">
-                                {{ catform.description.label_tag }}
-                                {{ catform.description }}
+                                <label for="cat_id_description">{{ catform.description.label }}</label>
+                                {% with catform.description as field %}
+                                    <textarea name="{{ field.name }}" 
+                                              class="form-control" 
+                                              id="cat_id_description"
+                                              cols="40" 
+                                              rows="4">{{ field.value|default:'' }}</textarea>
+                                {% endwith %}
                                 {% if catform.description.errors %}
                                 <div class="text-danger small">{{ catform.description.errors }}</div>
                                 {% endif %}

@@ -272,6 +272,13 @@ input {
 
 /* inventory_mgm.html */
 
+#invmgm_1,
+#invmgm_2 {
+    max-height: 80vh;
+    overflow-y: scroll;
+}
+
+
 .ticket {
     background-color: #fff;
     padding: 15px;
