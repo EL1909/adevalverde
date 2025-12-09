@@ -604,9 +604,22 @@ def execute_fulfillment_logic(order):
     #     pass # Simulación: El stock se ha reducido
 
     # Lógica de Generación de Descargables
-    current_site = Site.objects.get_current() # Asumiendo que se puede obtener sin request
-    site_domain = current_site.domain
-    base_url = f"https://{site_domain}"
+    # Use the first non-localhost domain from ALLOWED_HOSTS
+    from django.conf import settings
+    
+    # Get primary domain from ALLOWED_HOSTS (skip localhost/IPs)
+    domain = None
+    for host in settings.ALLOWED_HOSTS:
+        if host not in ['localhost', '127.0.0.1'] and not host.replace('.', '').isdigit():
+            domain = host
+            break
+    
+    # Fallback to localhost if no domain found (for development)
+    if not domain:
+        domain = 'localhost:8000'
+        base_url = f"http://{domain}"
+    else:
+        base_url = f"https://{domain}"
 
     # Generar los enlaces de descarga para los ítems descargables
     for item in order.items.filter(product__is_downloadable=True):
@@ -628,10 +641,6 @@ def execute_fulfillment_logic(order):
                 qr_image=qr_file,
             )
             
-    # El cumplimiento ha sido ejecutado
-    # order.fulfillment_status = 'COMPLETED' # REMOVED
-    # order.save()
-    
     return True
 
 
@@ -643,16 +652,22 @@ class ManageOrder(View):
             return JsonResponse({'error': 'Invalid or empty JSON body received.'}, status=400)
         
         order_id = data.get('order_id')
+        order_ids = data.get('order_ids')  # For bulk updates
         cart_items = data.get('cart_items')
         execute_fulfillment = data.get('execute_fulfillment', False)
         manual_status_update = data.get('manual_status_update', False)
         new_status = data.get('payment_status')
 
-        if not order_id:
-            return JsonResponse({'error': 'Missing required order_id.'}, status=400)
+        # Allow either order_id (single) or order_ids (bulk)
+        if not order_id and not order_ids:
+            return JsonResponse({'error': 'Missing required order_id or order_ids.'}, status=400)
 
-        try:
+        # For single order operations, get the order object
+        order = None
+        if order_id:
             order = get_object_or_404(Order, pk=order_id)
+        
+        try:
             with transaction.atomic():
                 if manual_status_update:
                     # --- PROPÓSITO 3: Actualización Manual de Estado (Admin) ---
@@ -663,7 +678,36 @@ class ManageOrder(View):
                     valid_statuses = ['pending', 'completed', 'failed']
                     if new_status not in valid_statuses:
                         return JsonResponse({'error': f'Invalid status. Must be one of: {valid_statuses}'}, status=400)
+
+                    # Handle Bulk Update if order_ids list is provided
+                    if order_ids and isinstance(order_ids, list):
+                        updated_count = 0
+                        for oid in order_ids:
+                            try:
+                                order_obj = Order.objects.get(pk=oid)
+                                old_status = order_obj.paymentStatus
+                                
+                                order_obj.paymentStatus = new_status
+                                order_obj.payment_method = 'MANUAL'
+                                order_obj.save()
+
+                                if new_status == 'completed' and old_status != 'completed':
+                                    execute_fulfillment_logic(order_obj)
+                                
+                                updated_count += 1
+                            except Order.DoesNotExist:
+                                continue # Skip invalid IDs
+                        
+                        return JsonResponse({
+                            'message': f'Successfully updated {updated_count} orders to {new_status}.',
+                            'updated_count': updated_count
+                        })
+
+                    # Single order update (existing logic)
+                    if not order:
+                        return JsonResponse({'error': 'order_id required for single order update.'}, status=400)
                     
+                    # Fallback to single order update (existing logic)
                     old_status = order.paymentStatus
                     
                     # Update order status and payment method

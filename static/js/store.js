@@ -95,12 +95,12 @@ async function updateOrderStatus(orderId, newStatus) {
             console.log('[updateOrderStatus] Success! Order status updated:', data);
             alert(`Estado actualizado a: ${newStatus}`);
             // Refresh the order details by clicking the order item again
-            const orderRow = document.getElementById(orderId);
+            const orderRow = document.querySelector(`.order-item[data-order-id="${orderId}"]`);
             if (orderRow) {
-                console.log(`[updateOrderStatus] Refreshing order details by clicking row with id: ${orderId}`);
+                console.log(`[updateOrderStatus] Refreshing order details by clicking row with order-id: ${orderId}`);
                 orderRow.click();
             } else {
-                console.warn(`[updateOrderStatus] Could not find order row with id: ${orderId}`);
+                console.warn(`[updateOrderStatus] Could not find order row with order-id: ${orderId}`);
             }
         } else {
             console.error('[updateOrderStatus] Server returned error:', data);
@@ -136,7 +136,7 @@ async function resetDownloadStatus(orderId) {
             console.log('[resetDownloadStatus] Success:', data);
             
             // Refresh the order details to show updated download status
-            const orderRow = document.getElementById(orderId);
+            const orderRow = document.querySelector(`.order-item[data-order-id="${orderId}"]`);
             if (orderRow) {
                 orderRow.click();
             }
@@ -543,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const detailsPane = document.getElementById('order-details');
             if (detailsPane) detailsPane.classList.remove('d-none');
 
-            const orderId = row.id;
+            const orderId = row.dataset.orderId;
             const itemsList = document.getElementById('order-items');
             itemsList.innerHTML = '<li>Cargando...</li>';
 
@@ -806,8 +806,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const catform = addCategory.querySelector('form');
 
         // Reset form for new category
-        catform.querySelector('input[name="name"]').value = '';
-        catform.querySelector('textarea[name="description"]').value = '';
+        document.getElementById('cat_id_name').value = '';
+        document.getElementById('cat_id_description').value = '';
         catform.action = `/store/category/add/`;
 
         // Show the add-category form
@@ -879,8 +879,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(categoryName);
 
             // Populate form fields
-            form.querySelector('input[name="name"]').value = categoryName;
-            form.querySelector('textarea[name="description"]').value = categoryDescription;
+            document.getElementById('cat_id_name').value = categoryName;
+            document.getElementById('cat_id_description').value = categoryDescription;
 
             // Update form action for edit
             form.action = `/store/category/edit/${categoryId}/`;
@@ -889,5 +889,79 @@ document.addEventListener('DOMContentLoaded', () => {
             addCategory.classList.remove('d-none');
         });
     });
+    
+    // -----------------------------------------------------------------
+    // 14. Bulk Order Actions
+    // -----------------------------------------------------------------
+    const bulkStatusSelect = document.getElementById('bulk-status-select');
+    const applyBulkBtn = document.getElementById('apply-bulk-action');
+    const selectedCountSpan = document.getElementById('selected-count');
+    const orderCheckboxes = document.querySelectorAll('.order-checkbox');
+
+    const updateSelectedCount = () => {
+        const checked = document.querySelectorAll('.order-checkbox:checked');
+        if (selectedCountSpan) {
+            selectedCountSpan.textContent = checked.length;
+        }
+    };
+
+    orderCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateSelectedCount);
+        cb.addEventListener('click', e => e.stopPropagation());
+    });
+
+    async function bulkUpdateOrderStatus(orderIds, newStatus) {
+        const url = '/store/orders/manage_order/';
+        const payload = {
+            order_ids: orderIds,
+            manual_status_update: true,
+            payment_status: newStatus
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': window.csrfToken
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(`✓ ${data.message}`);
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Bulk update failed'));
+            }
+        } catch (error) {
+            console.error('Bulk update error:', error);
+            alert('Error de conexión al actualizar.');
+        }
+    }
+
+    if (applyBulkBtn) {
+        applyBulkBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const newStatus = bulkStatusSelect.value;
+            if (!newStatus) {
+                alert('Por favor selecciona un estado.');
+                return;
+            }
+
+            const checkedBoxes = document.querySelectorAll('.order-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                alert('Por favor selecciona al menos un pedido.');
+                return;
+            }
+
+            const orderIds = Array.from(checkedBoxes).map(cb => cb.value);
+            bulkUpdateOrderStatus(orderIds, newStatus);
+        });
+    }
 
 });
