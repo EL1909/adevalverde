@@ -764,6 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(data => {
                     if (nameEl) nameEl.textContent = data.name;
                     document.getElementById('selected-product-price').textContent = `$${data.price}`;
+                    document.getElementById('selected-product-description').textContent = data.product_description;
                     document.getElementById('selected-product-quantity').value =
                         item.querySelector('.product-units').textContent.replace('x', '').trim();
 

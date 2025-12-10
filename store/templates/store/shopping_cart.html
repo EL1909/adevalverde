@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 {% load store_tags %}
-<div class="d-flex">
+<div id="cart-container">
   <div class="col-12 col-md-8 p-4">
     <ul class="nav nav-tabs" id="cartTabs" role="tablist">
       <li class="nav-item" role="presentation">
@@ -38,6 +38,7 @@
                           class="fa-solid fa-trash"></i></a>
                     </form>
                     <h4 id="selected-product-price"></h4>
+                    <p id="selected-product-description"></p>
                   </div>
                 </div>
               </div>

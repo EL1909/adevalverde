@@ -30,9 +30,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <!-- Paypal SKD -->
-    <script
-        src="https://www.sandbox.paypal.com/sdk/js?client-id=ATQDgKmYhI7gtmB8gGQ1V8fPtN0Id2QRiAYTe8imoVL4vu-IfnCtZ9uzcHcruGNwvdCs1s3TbbPOUSjH&currency=USD&intent=capture"
-        data-sdk-integration-source="button-factory"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=BAAmQKRDtf9lHg5HX5NQzBeqepZl-XRBcl94YSJs-uxFWR1CSzgHFouWtvnkt0Fh8DipUFenmwGM5VJZ_8&currency=USD" data-sdk-integration-source="button-factory"></script>
     {% endblock %}
     <title>Adela Valverde {% block extra_title %}{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
@@ -45,7 +43,10 @@
                 <h1>ADELA VALVERDE</h1>
             </a>
         </div>
-        <div>
+        <button id="mobile-menu-btn" class="mobile-menu-btn">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="nav-container">
             <nav class="nav-menu">
                 <ul>
                     <li><a href="{% url 'bio' %}" target="content-frame">Sobre Adela</a></li>
