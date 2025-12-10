@@ -12,6 +12,15 @@ document.addEventListener("DOMContentLoaded", function() {
     }, 3420);
 
     
+    // Mobile Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const navContainer = document.querySelector('.nav-container');
+
+    if (mobileMenuBtn && navContainer) {
+        mobileMenuBtn.addEventListener('click', function() {
+            navContainer.classList.toggle('active');
+        });
+    }
 
     // UserOptions icon behavior
     const menuIcon = document.getElementById("menu-icon");

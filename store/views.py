@@ -1003,6 +1003,7 @@ def order_detail_api(request, order_id):
                 'quantity': item.quantity,
                 'price': float(item.price),
                 'product_name': item.product.name,
+                'product_description': item.product.description,
                 'is_downloadable': item.product.is_downloadable,
             }
             

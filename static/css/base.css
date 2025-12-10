@@ -61,6 +61,15 @@ a {
     letter-spacing: 1px;
 }
 
+.mobile-menu-btn {
+    display: none; /* Hidden on desktop */
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #333;
+}
+
 
 /* NAVIGATION MENU STYLES */
 
@@ -290,32 +299,26 @@ input {
 .tab-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    /* For smooth scrolling on touch devices */
 }
 
 .tab-container .nav-tabs {
     display: flex;
     flex-wrap: nowrap;
     white-space: nowrap;
-    /* Prevent line breaks */
 }
 
 .tab-container .nav-item {
     display: inline-block;
-    /* Make items inline to prevent wrapping */
     float: none;
-    /* Override Bootstrap's float behavior */
 }
 
 .request-list {
     display: none;
-    /* Default state: hidden */
     padding: 0;
 }
 
 .request-list.active {
     display: block;
-    /* Show the list when the 'active' class is applied */
 }
 
 /* selector temporal para ajustar el tamano de la descripcion*/
@@ -408,11 +411,6 @@ input {
 }
 
 
-
-
-
-
-
 /* product_detail.html*/
 
 .product-details-container {
@@ -425,6 +423,20 @@ input {
     border: 1px solid #1D1D1D;
     border-radius: 5px;
     padding: 1rem;
+}
+
+/* shopping_cart.html*/
+
+#cart-container {
+    display: flex;
+    flex-direction: row;
+}
+
+
+#cart-items :hover {
+    background-color: goldenrod;
+    color: #f2f1f1;
+    font-weight: bolder;
 }
 
 
@@ -459,15 +471,33 @@ input {
         margin-bottom: 15px;
     }
 
+    .mobile-menu-btn {
+        display: block; /* Show on mobile */
+        position: absolute;
+        right: 15px;
+        top: 15px;
+    }
+
+    .nav-container {
+        display: none; /* Hide menu by default */
+        width: 100%;
+    }
+
+    .nav-container.active {
+        display: block; /* Show when active */
+    }
+
     .nav-menu ul {
         display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        padding: 0 5px;
+        text-align: center;
+        flex-direction: column;
+        justify-content: center;
+        padding: 20px 0;
+        gap: 15px;
     }
 
     .nav-menu a {
-        padding: 5px 0;
+        padding: 5px;
     }
 
     .dropdown-menu {
@@ -478,6 +508,11 @@ input {
     .footer-social a {
         display: block;
         margin: 5px 0;
+    }
+
+    #cart-container {
+        display: flex;
+        flex-direction: column;
     }
 }
 
