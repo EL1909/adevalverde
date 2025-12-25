@@ -25,6 +25,7 @@ BASE_URL = 'https://adelavalverde.info'
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = False
 
 ALLOWED_HOSTS = ["adelavalverde.info","www.adelavalverde.info","localhost","127.0.0.1","34.16.25.24"]
@@ -132,6 +133,8 @@ USE_TZ = True
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_URL = 'static/'
+# STATIC_ROOT is where collectstatic will copy all files
+STATIC_ROOT = '/var/www/adevalverde/html/static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
