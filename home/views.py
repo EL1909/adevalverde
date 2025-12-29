@@ -20,3 +20,7 @@ def Privacy(request):
 def TyC(request):
     """ A View to return the Privacy page"""
     return render(request, 'tyc.html')
+
+def EscuelaSilencio(request):
+    """ A View to return the Privacy page"""
+    return render(request, 'escuela_silencio.html')

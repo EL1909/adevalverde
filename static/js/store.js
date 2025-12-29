@@ -844,6 +844,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Update text content fields
                 document.getElementById('category-id-display').textContent = data.id || 'N/A';
                 document.getElementById('category-name-display').textContent = data.name || 'N/A';
+                document.getElementById('category-display-name-display').textContent = data.display_name || 'N/A';
                 document.getElementById('category-description-display').textContent = data.description || 'N/A';
                 // Update Action Buttons
                 document.getElementById('edit-category-btn').href = editCategoryUrl;

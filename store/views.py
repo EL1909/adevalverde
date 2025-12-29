@@ -129,6 +129,7 @@ def category_detail_api(request, category_id):
     data = {
         'id': category.id,
         'name': category.name or 'N/A',
+        'display_name': category.display_name or 'N/A',
         'description': category.description or 'N/A',
     }
 
