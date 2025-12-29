@@ -35,68 +35,77 @@
     <title>Adela Valverde {% block extra_title %}{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 </head>
-
 <body>
-    <header class="topbar">
-        <div class="logo">
-            <a href="{% url 'home' %}">
-                <h1>ADELA VALVERDE</h1>
-            </a>
-        </div>
-        <button id="mobile-menu-btn" class="mobile-menu-btn">
-            <i class="fa-solid fa-bars"></i>
-        </button>
-        <div class="nav-container">
-            <nav class="nav-menu">
-                <ul>
-                    <li><a href="{% url 'bio' %}" target="content-frame">Sobre Adela</a></li>
-                    <li class="dropdown">
-                        <a class="dropdown-toggle" href="#" id="mi-obra" data-bs-toggle="dropdown" aria-haspopup="true"
-                            aria-expanded="false">
-                            Mi Obra
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="mi-obra">
-                            {% for category in categories %}
-                            <a href="{% url 'store:products' %}?category={{ category.name }}"
-                                class="dropdown-item {{ link_class }}">
-                                {{ category.name }}
+    <header class="adela-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <a href="{% url 'bio' %}" class="logo">
+                    ADELA <span class="gold-text">VALVERDE</span>
+                </a>
+            </div>
+            <div class="nav-container">
+                <nav id="nav-menu" class="nav-menu">
+                    <ul class="nav-list">
+                        <!-- <li class="nav-item">
+                            <a href="{% url 'bio' %}" target="content-frame">Mi Camino</a>
+                        </li> -->
+                        <li class="nav-item dropdown">
+                            <a class="dropdown-toggle" href="#" id="mi-obra" data-bs-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                                Herramientas
                             </a>
-                            {% endfor %}
-                        </div>
-                    </li>
-                    <!-- <li><a href="#" target="content-frame">Contacto</a></li> -->
-                    <li>
-                        {% if request.user.is_authenticated %}
-                        <a href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Hola, {{ user.username }}
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="user-options">
-                            {% if request.user.is_superuser %}
-                            <a href="{% url 'store:invmgm' %}" class="dropdown-item">Deposito</a>
-                            {% endif %}
-                            <!-- <a href="#" class="dropdown-item">Mi Perfil</a> -->
-                            <a href="{% url 'store:user_orders' %}" class="dropdown-item">Mis Compras</a>
-                            <a href="{% url 'account_logout' %}" class="dropdown-item">Salir</a>
-                        </div>
-                        {% else %}
-                        <a href="#" id="loginModalLink" data-bs-toggle="dropdown" aria-haspopup="true"
-                            aria-expanded="false">
-                            Iniciar Sesion
-                        </a>
-                        {% endif %}
-                    </li>
-                    <li>
-                        <a href="{% url 'store:cart_view' %}" class="cart-button">
-                            <i class="fa-solid fa-cart-shopping"></i>
-                            {% if cart_count > 0 %}
-                            <span class="badge rounded-pill bg-danger" id="cart-total-count">{{ cart_count }}</span>
+                            <div class="dropdown-content" aria-labelledby="mi-obra">
+                                {% for category in categories %}
+                                <a href="{% url 'store:products' %}?category={{ category.name }}"
+                                    class="dropdown-item {{ link_class }}">
+                                    {{ category.name }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'bio' %}" target="content-frame">Escuela de Silencio</a>
+                        </li>
+                        <!-- <li><a href="#" target="content-frame">Contacto</a></li> -->
+                        <li class="nav-item dropdown">
+                            {% if request.user.is_authenticated %}
+                            <a href="#" data-bs-toggle="dropdown-toggle" id="user-options" aria-haspopup="true" aria-expanded="false">
+                                Hola, {{ user.username }}
+                            </a>
+                            <div class="dropdown-content" aria-labelledby="user-options">
+                                {% if request.user.is_superuser %}
+                                <a href="{% url 'store:invmgm' %}" class="dropdown-item">Deposito</a>
+                                {% endif %}
+                                <!-- <a href="#" class="dropdown-item">Mi Perfil</a> -->
+                                <a href="{% url 'store:user_orders' %}" class="dropdown-item">Mis Compras</a>
+                                <a href="{% url 'account_logout' %}" class="dropdown-item">Salir</a>
+                            </div>
                             {% else %}
-                            <span class="badge rounded-pill bg-danger d-none" id="cart-total-count">0</span>
+                            <a href="#" id="loginModalLink" data-bs-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                                ACCESO ALUMNOS
+                            </a>
                             {% endif %}
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'store:cart_view' %}" class="cart-button">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                                {% if cart_count > 0 %}
+                                <span class="badge rounded-pill bg-danger" id="cart-total-count">{{ cart_count }}</span>
+                                {% else %}
+                                <span class="badge rounded-pill bg-danger d-none" id="cart-total-count">0</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="cta-container">
+                    <a href="#" class="btn-vip">Mentoria VIP</a>
+                </div>
+            </div>
+            <button id="mobile-menu-btn" class="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
         </div>
     </header>
     {% if messages %}
@@ -156,5 +165,4 @@
     <script src="{% static 'js/key_moments.js' %}"></script> -->
     {% endblock %}
 </body>
-
 </html>

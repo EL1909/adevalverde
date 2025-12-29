@@ -39,15 +39,6 @@
                                     {% if form.category.errors %}<div class="invalid-feedback d-block">{{ form.category.errors }}</div>{% endif %}
                                 </div>
                             </div>
-                            <!-- Provider Field (Selection List - Full Width) -->
-                            <!-- Currently not added to Form -->
-                            <div class="col-12">
-                                <div class="form-group">
-                                    {{ form.providers.label_tag }}
-                                    {{ form.providers }}
-                                    {% if form.providers.errors %}<div class="invalid-feedback d-block">{{ form.providers.errors }}</div>{% endif %}
-                                </div>
-                            </div>
                             <div class="col-12">
                                 <div class="form-group">
                                     {{ form.other_site_link.label_tag }}
@@ -65,7 +56,6 @@
                             <div class="col-12">
                                 <div class="form-group">
                                     {{ form.image.label_tag }}
-                                    
                                     <!-- Display current image and link -->
                                     {% if product.image %}
                                         <div class="mb-2">
@@ -84,7 +74,8 @@
                             </div>
                             <div class="col-12">
                                 <div>
-                                    {{ form.is_downloadable }} {{ form.is_downloadable.label }}
+                                    {{ form.is_digital }} {{ form.is_digital.label }}
+                                    {{ form.is_active }} {{ form.is_active.label }}
                                 </div>
                                 <div id="download-file-section" style="display: none; margin-top: 10px;">
                                     {{ form.download_file.label_tag }}

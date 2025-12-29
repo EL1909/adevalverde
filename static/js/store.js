@@ -250,9 +250,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // -----------------------------------------------------------------
-    // 1. Product Add Form – toggle download file
+    // 1. Product Add Form – Shows upload interface for PDF products uploading
     // -----------------------------------------------------------------
-    const downloadableCheckbox = document.getElementById('id_is_downloadable');
+    const downloadableCheckbox = document.getElementById('id_is_digital');
     const fileSection = document.getElementById('download-file-section');
 
     const toggleFileInput = () => {
@@ -260,10 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const fileInput = fileSection.querySelector('input[type="file"]');
         if (downloadableCheckbox.checked) {
             fileSection.style.display = 'block';
-            fileInput?.setAttribute('required', 'required');
         } else {
             fileSection.style.display = 'none';
-            fileInput?.removeAttribute('required');
+            // fileInput?.removeAttribute('required');
         }
     };
     downloadableCheckbox?.addEventListener('change', toggleFileInput);
@@ -602,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 
                                 // Build download status indicator
                                 let downloadBadge = '';
-                                if (item.is_downloadable && item.download_status) {
+                                if (item.is_digital && item.download_status) {
                                     if (item.download_status.downloaded) {
                                         downloadBadge = `<span class="badge bg-success ms-2" title="Descargado el ${item.download_status.downloaded_at}">
                                             <i class="fa-solid fa-check"></i> Descargado
@@ -653,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log('[DEBUG] Reset download button found');
                         
                         // Check if order has downloadable items
-                        const hasDownloadables = data.items.some(item => item.is_downloadable);
+                        const hasDownloadables = data.items.some(item => item.is_digital);
                         const isCompleted = data.paymentStatus === 'completed';
                         
                         if (hasDownloadables && isCompleted) {

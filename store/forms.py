@@ -12,7 +12,8 @@ class ProductForm(forms.ModelForm):
             'description',
             'other_site_link',
             'image',
-            'is_downloadable',
+            'is_active',
+            'is_digital',
             'download_file',
         )
 
@@ -23,9 +24,10 @@ class ProductForm(forms.ModelForm):
             'created_by': 'Creado Por', # Assuming this field exists
             'category': 'Categoría',
             'providers': 'Proveedores',
-            'other_site_link': 'Enlace a otro website',
+            'other_site_link': 'Enlace a Gamma',
             'image': 'Imagen',
-            'is_downloadable': 'Descargable',
+            'is_active': 'Publicar',
+            'is_digital': 'Descargable',
             'download_file': 'Archivo para Descargar',
         }
         
@@ -41,18 +43,8 @@ class ProductForm(forms.ModelForm):
             # 2. Selection Fields: Apply 'form-select'
             # This makes the category field a clean dropdown.
             'category': forms.Select(attrs={'class': 'form-select'}),
-            'is_downloadable': forms.CheckboxInput(),
-            'download_file': forms.ClearableFileInput(),
+            'is_digital': forms.CheckboxInput(),
         }
-
-        def clean(self):
-            cleaned_data = super().clean()
-            is_downloadable = cleaned_data.get('is_downloadable')
-            download_file = cleaned_data.get('download_file')
-
-            if is_downloadable and not download_file:
-                self.add_error('download_file', 'This field is required when product is downloadable.')
-            return cleaned_data
 
 
 class CategoryForm(forms.ModelForm):

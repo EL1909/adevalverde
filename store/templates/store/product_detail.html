@@ -42,12 +42,115 @@
                         {% endif %}
                     </div>
                     <!-- Add to Cart Button -->
-                    <form action="{% url 'store:cart_add' product_id=product.id %}" class="add-to-cart-form" method="post">
+                    <!-- Add to Cart Button -->
+                    {% if product.category.name|lower == 'sesiones' %}
+                        <div id="booking-section" class="mb-3">
+                            <h6>Fecha para la sesión:</h6>
+                            <input type="date" id="booking-date" class="form-control mb-2">
+                            <button type="button" id="check-availability-btn" class="btn btn-sm btn-info mb-2">Ver Disponibilidad</button>
+                            <div id="slots-container" class="d-none">
+                                <h6>Calendario:</h6>
+                                <div id="slots-list" class="list-group mb-2" style="max-height: 200px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <form action="{% url 'store:cart_add' product_id=product.id %}" class="add-to-cart-form" method="post" id="add-to-cart-form">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-primary" data-product-id="{{ product.id }}"><i class="fa-solid fa-cart-shopping"></i></button>
+                        <input type="hidden" name="appointment_id" id="appointment-id-input">
+                        <button type="submit" class="btn btn-primary" data-product-id="{{ product.id }}" id="add-to-cart-btn" {% if product.category.name|lower == 'sesiones' %}disabled{% endif %}><i class="fa-solid fa-cart-shopping"></i></button>
                     </form>
                 </div>
-                <div class="running-text">
+                
+                {% if product.category.name|lower == 'sesiones' %}
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const dateInput = document.getElementById('booking-date');
+                        const checkBtn = document.getElementById('check-availability-btn');
+                        const slotsContainer = document.getElementById('slots-container');
+                        const slotsList = document.getElementById('slots-list');
+                        const addToCartBtn = document.getElementById('add-to-cart-btn');
+                        const appointmentInput = document.getElementById('appointment-id-input');
+                        const productId = "{{ product.id }}";
+
+                        checkBtn.addEventListener('click', function() {
+                            const date = dateInput.value;
+                            if (!date) return alert('Please select a date');
+
+                            // Fetch availability
+                            fetch(`/calendars/check_availability/${productId}/?start=${date}&end=${date}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.error) return alert(data.error);
+                                    
+                                    slotsList.innerHTML = '';
+                                    slotsContainer.classList.remove('d-none');
+                                    
+                                    // Generate slots (e.g., 9-5 hourly) and filter out busy ones
+                                    // For simplicity, let's assume 9am to 5pm UTC
+                                    const startHour = 9;
+                                    const endHour = 17;
+                                    const busySlots = data.busy || [];
+                                    
+                                    for (let h = startHour; h < endHour; h++) {
+                                        const slotStart = new Date(date);
+                                        slotStart.setUTCHours(h, 0, 0, 0);
+                                        const slotEnd = new Date(date);
+                                        slotEnd.setUTCHours(h + 1, 0, 0, 0);
+                                        
+                                        const isBusy = busySlots.some(busy => {
+                                            const busyStart = new Date(busy.start);
+                                            const busyEnd = new Date(busy.end);
+                                            return (slotStart < busyEnd && slotEnd > busyStart);
+                                        });
+                                        
+                                        if (!isBusy) {
+                                            const btn = document.createElement('button');
+                                            btn.type = 'button';
+                                            btn.className = 'list-group-item list-group-item-action';
+                                            btn.textContent = `${h}:00 - ${h+1}:00 UTC`;
+                                            btn.onclick = () => reserveSlot(slotStart, slotEnd, btn);
+                                            slotsList.appendChild(btn);
+                                        }
+                                    }
+                                    
+                                    if (slotsList.children.length === 0) {
+                                        slotsList.innerHTML = '<div class="list-group-item">No slots available</div>';
+                                    }
+                                });
+                        });
+
+                        function reserveSlot(start, end, btn) {
+                            // Highlight selected
+                            Array.from(slotsList.children).forEach(c => c.classList.remove('active'));
+                            btn.classList.add('active');
+
+                            fetch('/calendars/reserve/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                                },
+                                body: JSON.stringify({
+                                    product_id: productId,
+                                    start: start.toISOString(),
+                                    end: end.toISOString()
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.appointment_id) {
+                                    appointmentInput.value = data.appointment_id;
+                                    addToCartBtn.disabled = false;
+                                } else {
+                                    alert('Failed to reserve slot');
+                                }
+                            });
+                        }
+                    });
+                </script>
+                {% endif %}
+                <div>
                     <p>{{ product.description }}</p>
                 </div>
             </div>

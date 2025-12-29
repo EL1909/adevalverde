@@ -29,6 +29,8 @@ from reportlab.lib.utils import ImageReader
 from reportlab.lib.pagesizes import letter
 from .models import Product, Category, Provider, Order, OrderItem, Downloadable
 from .forms import ProductForm, CategoryForm
+from calendars.models import Appointment, AdminCalendarSettings
+from calendars.services import GoogleCalendarService
 
 
 ## Categories Views
@@ -200,6 +202,8 @@ def product_detail_api(request, product_id):
 def all_products(request):
     """ A View to show all products, grouped by category, respecting search queries. """
     products = Product.objects.all()
+    if not request.user.is_superuser:
+        products = products.filter(is_active=True)
     query = None
     # --- 1. SEARCH FILTERING (Simplified) ---
     if 'q' in request.GET:
@@ -243,6 +247,8 @@ def all_products(request):
 def product_detail(request, product_id):
     """ A View to show individual product details """
     product = get_object_or_404(Product, pk=product_id)
+    if not product.is_active and not request.user.is_superuser:
+        raise Http404("Product not found")
     context = {
         'product': product,
     }
@@ -411,6 +417,17 @@ class Cart(View):
             product=product,
             defaults={'quantity': quantity, 'price': product.price}
         )
+        
+        appointment_id = request.POST.get('appointment_id')
+        if appointment_id:
+            from calendars.models import Appointment
+            try:
+                appointment = Appointment.objects.get(id=appointment_id)
+                appointment.order_item = order_item
+                appointment.save()
+            except Appointment.DoesNotExist:
+                pass
+
         if not created:
             order_item.quantity += quantity,
             order_item.save()
@@ -622,7 +639,7 @@ def execute_fulfillment_logic(order):
         base_url = f"https://{domain}"
 
     # Generar los enlaces de descarga para los ítems descargables
-    for item in order.items.filter(product__is_downloadable=True):
+    for item in order.items.filter(product__is_digital=True):
         if not hasattr(item, 'downloadable'): # Evitar regenerar
             token = uuid.uuid4()
             verify_path = reverse('store:verify_download', args=[token])
@@ -640,6 +657,28 @@ def execute_fulfillment_logic(order):
                 verification_url=verification_url_full,
                 qr_image=qr_file,
             )
+
+    # Lógica de Agendamiento en Google Calendar
+    for item in order.items.all():
+        if hasattr(item, 'appointment_record') and item.appointment_record:
+            appointment = item.appointment_record
+            if appointment.status == 'pending':
+                try:
+                    settings = appointment.admin_user.calendar_settings
+                    service = GoogleCalendarService()
+                    event_id = service.create_event(settings.google_calendar_id, appointment)
+                    
+                    if event_id:
+                        appointment.google_event_id = event_id
+                        appointment.status = 'confirmed'
+                        appointment.save()
+                        print(f"Appointment {appointment.id} confirmed and synced to Google Calendar.")
+                    else:
+                        print(f"Failed to sync Appointment {appointment.id} to Google Calendar.")
+                except AdminCalendarSettings.DoesNotExist:
+                    print(f"No calendar settings for admin {appointment.admin_user.username}")
+                except Exception as e:
+                    print(f"Error syncing appointment {appointment.id}: {e}")
             
     return True
 
@@ -777,7 +816,7 @@ class ManageOrder(View):
                         )
                         
                         total_price += product.price * quantity
-                        if not product.is_downloadable: # Si no es descargable, es físico
+                        if not product.is_digital: # Si no es descargable, es físico
                             hasPhysical = True
                             
                     # 2. Actualizar campos de la Order
@@ -943,7 +982,6 @@ class VerifyDownloadView(View):
         return render(request, 'store/verify_download.html', context)
 
 
-
 @login_required # <--- ESENCIAL: Solo usuarios registrados pueden repetir órdenes.
 @require_POST
 def repeat_order(request, order_id):
@@ -1004,11 +1042,11 @@ def order_detail_api(request, order_id):
                 'price': float(item.price),
                 'product_name': item.product.name,
                 'product_description': item.product.description,
-                'is_downloadable': item.product.is_downloadable,
+                'is_digital': item.product.is_digital,
             }
             
             # Add download status if item is downloadable
-            if item.product.is_downloadable:
+            if item.product.is_digital:
                 try:
                     downloadable = item.downloadable
                     item_data['download_status'] = {

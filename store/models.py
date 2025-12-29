@@ -58,17 +58,14 @@ class Product(models.Model):
     providers = models.ManyToManyField('Provider', related_name='articles', blank=True)
     other_site_link = models.URLField(blank=True, null=True)
     image = models.ImageField(upload_to=get_image_path, null=True, blank=True)
-    is_downloadable = models.BooleanField(default=False)
+    is_digital = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True, help_text="Uncheck to hide this product from the store")
     download_file = models.FileField(
         upload_to=get_download_file,
         null=True, blank=True,  # ← allow empty
         help_text="Obligatorio solo si el producto es descargable"
     )
 
-    def clean(self):
-        if self.is_downloadable and not self.download_file:
-            raise ValidationError("El archivo de descarga es obligatorio para productos descargables.")
-    
     def __str__(self):
         return self.name
 
@@ -103,7 +100,7 @@ class Order(models.Model):
     @property
     def hasPhysical(self):
         # Returns True if any item in the order is NOT downloadable
-        return self.items.filter(product__is_downloadable=False).exists()
+        return self.items.filter(product__is_digital=False).exists()
 
     class Meta:
         ordering = ['-created_at']
@@ -147,6 +144,12 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.quantity} of {self.product.name} for Order {self.order.id}"
     
+    @property
+    def appointment(self):
+        # Avoid circular import
+        from calendars.models import Appointment
+        return Appointment.objects.filter(order_item=self).first()
+
 
 class Downloadable(models.Model):
     order_item = models.OneToOneField('OrderItem', on_delete=models.CASCADE, related_name='downloadable')

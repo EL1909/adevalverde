@@ -40,3 +40,6 @@ typing_extensions==4.8.0
 tzdata==2024.1
 urllib3==2.1.0
 whitenoise==6.6.0
+google-api-python-client==2.111.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0

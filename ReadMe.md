@@ -18,7 +18,7 @@ A comprehensive e-commerce solution for physical and digital products.
 **Models:**
 -   **Category**: Organizes products into groups.
 -   **Provider**: Manages product suppliers.
--   **Product**: The core item model. Supports physical and digital items (via `is_downloadable` and `download_file`).
+-   **Product**: The core item model. Supports physical and digital items (via `is_digital` and `download_file`).
 -   **Order**: Manages customer orders, payment status, and shipping data.
 -   **OrderItem**: Links products to orders with specific quantities and prices.
 -   **Downloadable**: Manages secure digital downloads with UUID tokens and QR codes.

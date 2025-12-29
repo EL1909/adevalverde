@@ -1,16 +1,16 @@
 from django.contrib import admin
 from .models import Product, Category, Order, Downloadable
 
-# Register your models here.
-
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'category',
         'price',
+        'is_active',
         'image',
     )
+    list_editable = ('is_active',)
     ordering = ('id',)
 
 
