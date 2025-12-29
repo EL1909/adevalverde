@@ -257,12 +257,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const toggleFileInput = () => {
         if (!downloadableCheckbox || !fileSection) return;
-        const fileInput = fileSection.querySelector('input[type="file"]');
         if (downloadableCheckbox.checked) {
             fileSection.style.display = 'block';
         } else {
             fileSection.style.display = 'none';
-            // fileInput?.removeAttribute('required');
         }
     };
     downloadableCheckbox?.addEventListener('change', toggleFileInput);

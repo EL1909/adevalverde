@@ -391,6 +391,20 @@
                                 {% endif %}
                             </div>
                             <div class="form-group">
+                                <label for="cat_id_display_name"></label>{{ catform.display_name.label }}</label>
+                                {% with catform.display_name as field %}
+                                    <input type="text" name="{{ field.name }}" 
+                                           class="form-control" 
+                                           id="cat_id_display_name"
+                                           maxlength="256" 
+                                           required
+                                           value="{{ field.value|default:'' }}">
+                                {% endwith %}
+                                {% if catform.name.errors %}
+                                <div class="text-danger small">{{ catform.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
                                 <label for="cat_id_description">{{ catform.description.label }}</label>
                                 {% with catform.description as field %}
                                     <textarea name="{{ field.name }}" 
@@ -414,6 +428,7 @@
                     <hr>
                     <p><strong>Id:</strong> <span id="category-id-display"></span></p>
                     <p><strong>Nombre:</strong> <span id="category-name-display"></span></p>
+                    <p><strong>Nombre para mostrar:</strong> <span id="category-display-name-display"></span></p>
                     <p><strong>Descripción:</strong> <span id="category-description-display"></span></p>
                     <hr>
                     <h6>Acciones:</h6>

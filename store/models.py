@@ -23,6 +23,7 @@ PAYMENT_METHODS = [
 
 class Category(models.Model):
     name = models.CharField(max_length=256)
+    display_name = models.CharField(max_length=256, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
 
     class Meta:
