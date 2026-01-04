@@ -50,9 +50,12 @@
                             <a href="{% url 'bio' %}" target="content-frame">Mi Camino</a>
                         </li> -->
                         <li class="nav-item dropdown">
+                            <a href="#" class="nav-btn-gold">El Escaner</a>
+                        </li>
+                        <li class="nav-item dropdown">
                             <a class="dropdown-toggle" href="#" id="mi-obra" data-bs-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false">
-                                Herramientas
+                                El Umbral
                             </a>
                             <div class="dropdown-content" aria-labelledby="mi-obra">
                                 {% for category in categories %}
@@ -66,6 +69,9 @@
                         <li class="nav-item">
                             <a href="{% url 'escuela' %}" target="content-frame">Escuela de Silencio</a>
                         </li>
+                        <div class="cta-container">
+                            <a href="#" class="btn-vip">Mentoria VIP</a>
+                        </div>  
                         <!-- <li><a href="#" target="content-frame">Contacto</a></li> -->
                         <li class="nav-item dropdown">
                             {% if request.user.is_authenticated %}
@@ -75,6 +81,7 @@
                             <div class="dropdown-content" aria-labelledby="user-options">
                                 {% if request.user.is_superuser %}
                                 <a href="{% url 'store:invmgm' %}" class="dropdown-item">Deposito</a>
+                                <a href="{% url 'calendars:admin_calendar' %}" class="dropdown-item">Calendario Admin</a>
                                 {% endif %}
                                 <!-- <a href="#" class="dropdown-item">Mi Perfil</a> -->
                                 <a href="{% url 'store:user_orders' %}" class="dropdown-item">Mis Compras</a>
@@ -99,9 +106,6 @@
                         </li>
                     </ul>
                 </nav>
-                <div class="cta-container">
-                    <a href="#" class="btn-vip">Mentoria VIP</a>
-                </div>
             </div>
             <button id="mobile-menu-btn" class="mobile-menu-btn">
                 <i class="fa-solid fa-bars"></i>

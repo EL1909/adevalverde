@@ -216,6 +216,13 @@ def all_products(request):
         # Filter products based on search term
         queries = Q(name__icontains=query) | Q(description__icontains=query)
         products = products.filter(queries)
+        
+    # --- 1.5 CATEGORY PRIORITIZATION ---
+    target_category = None
+    if 'category' in request.GET:
+        target_category = request.GET['category']
+        # We do NOT filter products here anymore, just capture the intent
+
     # --- 2. PREPARE FOR GROUPING ---
     # Order the products by category name first, so they are grouped sequentially in the loop
     products = products.order_by('category__name', 'name')
@@ -232,10 +239,18 @@ def all_products(request):
             if category not in categories_with_products_dict:
                 categories_with_products_dict[category] = []
             categories_with_products_dict[category].append(product)
+
     # --- 4. CONTEXT PREPARATION ---
+    # Convert to list to allow sorting
+    categories_list = list(categories_with_products_dict.items())
+
+    if target_category:
+        # Sort: move matching category to front (False < True, so match comes first)
+        categories_list.sort(key=lambda x: x[0].name.lower() != target_category.lower())
+
     context = {
         # The key data structure for the template: iterable list of (Category object, [products]) tuples
-        'categories_with_products': categories_with_products_dict.items(), 
+        'categories_with_products': categories_list, 
         
         # Keeping search term if needed for display in the template's search box
         'search_term': query,
@@ -660,12 +675,16 @@ def execute_fulfillment_logic(order):
             )
 
     # Lógica de Agendamiento en Google Calendar
+    print(f"DEBUG: Starting calendar sync for Order {order.id}")
     for item in order.items.all():
+        print(f"DEBUG: Checking item {item.id} for appointment...")
         if hasattr(item, 'appointment_record') and item.appointment_record:
             appointment = item.appointment_record
+            print(f"DEBUG: Found appointment {appointment.id} with status {appointment.status}")
             if appointment.status == 'pending':
                 try:
                     settings = appointment.admin_user.calendar_settings
+                    print(f"DEBUG: Found calendar settings for admin {appointment.admin_user.username}: {settings.google_calendar_id}")
                     service = GoogleCalendarService()
                     event_id = service.create_event(settings.google_calendar_id, appointment)
                     
@@ -673,13 +692,18 @@ def execute_fulfillment_logic(order):
                         appointment.google_event_id = event_id
                         appointment.status = 'confirmed'
                         appointment.save()
-                        print(f"Appointment {appointment.id} confirmed and synced to Google Calendar.")
+                        print(f"Appointment {appointment.id} confirmed and synced to Google Calendar. Event ID: {event_id}")
                     else:
-                        print(f"Failed to sync Appointment {appointment.id} to Google Calendar.")
+                        print(f"Failed to sync Appointment {appointment.id} to Google Calendar. No event ID returned.")
                 except AdminCalendarSettings.DoesNotExist:
-                    print(f"No calendar settings for admin {appointment.admin_user.username}")
+                    print(f"ERROR: No calendar settings for admin {appointment.admin_user.username}")
                 except Exception as e:
-                    print(f"Error syncing appointment {appointment.id}: {e}")
+                    print(f"ERROR: Exception during calendar sync: {e}")
+            else:
+                print(f"DEBUG: Appointment {appointment.id} is not pending (status: {appointment.status})")
+        else:
+            print(f"DEBUG: Item {item.id} has no appointment record.")
+
             
     return True
 

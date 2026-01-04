@@ -277,12 +277,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const productId = submitBtn?.dataset.productId;
             const url = form.action;
 
+            const formData = new FormData(form);
+            
             fetch(url, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
-                }
+                },
+                body: formData
             })
                 .then(r => r.json())
                 .then(data => {

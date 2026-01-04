@@ -3,26 +3,25 @@
 {% block content %}
 <div class="content">
     {% for category_obj, product_list in categories_with_products %}
-    <section class="container-fluid category-section">
+    <section class="container-fluid category-section d-block">
         <div class="row mb-4">
-            <div class="col-lg-4 col-md-12">
+            <div class="col-12 text-center mb-5">
                 <header class="section-header">
                     <h2 class="section-title">{{ category_obj.display_name }}</h2> 
-                    <p class="category-intro">
+                    <div class="category-intro lead mx-auto" style="max-width: 800px;">
                         {% if category_obj.description %}
                             {{ category_obj.description }}
                         {% else %}
                             Explore our selection of {{ category_obj.name|lower }} items, curated for quality and style.
                         {% endif %}
-                    </p>
+                    </div>
                 </header>
-                <hr class="d-lg-none section-divider-small">
             </div>
-            <div class="col-lg-8 col-md-12">
-                <div class="tab-container carousel-wrapper">
-                    <div class="product-carousel">
-                        {% for product in product_list %}
-                        <div class="product-card">
+            <div class="col-12">
+                <div class="row justify-content-center">
+                    {% for product in product_list %}
+                    <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-4">
+                        <div class="product-card h-100">
                             {% if product.image %}
                             <a href="{% url 'store:product_detail' product.id %}">
                                 <img class="product-image" src="{{ product.image.url }}" alt="{{ product.name }}">
@@ -35,7 +34,7 @@
                             <div class="card-body pb-2">
                                 <h6 class="mb-2">{{ product.name }}</h6>
                             </div>
-                            <div class="card-footer bg-white pt-0 border-0 text-left">
+                            <div class="card-footer pt-0 border-0 text-left">
                                 <div class="d-flex justify-content-between align-items-center w-100">
                                     <h4 class="mb-0">${{ product.price }}</h4>
                                     <form action="{% url 'store:cart_add' product_id=product.id %}" class="add-to-cart-form d-flex gap-2" method="post">
@@ -45,8 +44,8 @@
                                 </div>
                             </div>
                         </div>
-                        {% endfor %}
                     </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>

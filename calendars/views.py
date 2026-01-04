@@ -58,6 +58,7 @@ def check_availability(request, product_id):
 
     return JsonResponse({'busy': busy_slots})
 
+
 @require_POST
 def reserve_appointment(request):
     try:
@@ -87,3 +88,43 @@ def reserve_appointment(request):
     )
 
     return JsonResponse({'appointment_id': appointment.id})
+
+
+@login_required
+def admin_calendar_view(request):
+    if not request.user.is_superuser:
+        return render(request, '403.html', status=403) # Or redirect
+    return render(request, 'calendars/admin_calendar.html')
+
+
+@login_required
+def appointments_json(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+
+    appointments = Appointment.objects.all()
+    events = []
+    for appt in appointments:
+        customer_name = appt.customer.username if appt.customer else "Guest"
+        email = appt.customer.email if appt.customer else "N/A"
+        
+        # Determine color based on status
+        color = '#3788d8' # Default blue
+        if appt.status == 'confirmed':
+            color = '#28a745' # Green
+        elif appt.status == 'cancelled':
+            color = '#dc3545' # Red
+            
+        events.append({
+            'title': f"{appt.product.name} ({customer_name})",
+            'start': appt.start_time.isoformat(),
+            'end': appt.end_time.isoformat(),
+            'color': color,
+            'extendedProps': {
+                'customer': customer_name,
+                'email': email,
+                'status': appt.status
+            }
+        })
+    
+    return JsonResponse(events, safe=False)
