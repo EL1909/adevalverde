@@ -42,7 +42,6 @@
                         {% endif %}
                     </div>
                     <!-- Add to Cart Button -->
-                    <!-- Add to Cart Button -->
                     {% if product.category.name|lower == 'sesiones' %}
                         <div id="booking-section" class="mb-3">
                             <h6>Fecha para la sesión:</h6>
@@ -54,7 +53,6 @@
                             </div>
                         </div>
                     {% endif %}
-
                     <form action="{% url 'store:cart_add' product_id=product.id %}" class="add-to-cart-form" method="post" id="add-to-cart-form">
                         {% csrf_token %}
                         <input type="hidden" name="appointment_id" id="appointment-id-input">

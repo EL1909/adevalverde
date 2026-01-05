@@ -247,6 +247,10 @@ def all_products(request):
     if target_category:
         # Sort: move matching category to front (False < True, so match comes first)
         categories_list.sort(key=lambda x: x[0].name.lower() != target_category.lower())
+        
+        # EXCLUSIVE FILTERING: If filter=true, keep ONLY the target category
+        if request.GET.get('filter') == 'true':
+            categories_list = [c for c in categories_list if c[0].name.lower() == target_category.lower()]
 
     context = {
         # The key data structure for the template: iterable list of (Category object, [products]) tuples

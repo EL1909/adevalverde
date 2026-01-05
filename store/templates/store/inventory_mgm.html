@@ -73,12 +73,13 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
+                                    <th></th>
                                     <th>Nro.</th>
                                     <th>Cliente</th>
                                     <th>Producto</th>
                                     <th>Cantidad</th>
                                     <th>Monto</th>
-                                    <th>Estatus</th>
+                                    <th>Fecha</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -98,7 +99,7 @@
                                         {% endfor %}
                                     </td>
                                     <td>{{ open.totalAmount|floatformat:2 }}</td>
-                                    <td>{{ open.paymentStatus }}</td>
+                                    <td>{{ open.created_at|date:"d-m-y" }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -112,12 +113,13 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
+                                    <th></th>
                                     <th>Nro.</th>
                                     <th>Cliente</th>
                                     <th>Producto</th>
                                     <th>Cantidad</th>
                                     <th>Monto</th>
-                                    <th>Estatus</th>
+                                    <th>Fecha</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -137,7 +139,7 @@
                                         {% endfor %}
                                     </td>
                                     <td>{{ order.totalAmount|floatformat:2 }}</td>
-                                    <td>{{ order.paymentStatus }}</td>
+                                    <td>{{ order.created_at|date:"d-m-y" }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -151,12 +153,13 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
+                                    <th></th>
                                     <th>Nro.</th>
                                     <th>Cliente</th>
                                     <th>Producto</th>
                                     <th>Cantidad</th>
                                     <th>Monto</th>
-                                    <th>Estatus</th>
+                                    <th>Fecha</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -176,7 +179,7 @@
                                         {% endfor %}
                                     </td>
                                     <td>{{ closed.totalAmount|floatformat:2 }}</td>
-                                    <td>{{ closed.paymentStatus }}</td>
+                                    <td>{{ closed.created_at|date:"d-m-y" }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>

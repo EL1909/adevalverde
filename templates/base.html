@@ -59,15 +59,28 @@
                             </a>
                             <div class="dropdown-content" aria-labelledby="mi-obra">
                                 {% for category in categories %}
+                                {% if category.name != 'Sesiones' %}
                                 <a href="{% url 'store:products' %}?category={{ category.name }}"
                                     class="dropdown-item {{ link_class }}">
                                     {{ category.display_name }}
                                 </a>
+                                {% endif %}
                                 {% endfor %}
                             </div>
                         </li>
-                        <li class="nav-item">
-                            <a href="{% url 'escuela' %}" target="content-frame">Escuela de Silencio</a>
+                        <li class="nav-item dropdown">
+                            <a class="dropdown-toggle" href="#" id="escuela-silencio" data-bs-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                                Escuela de Silencio
+                            </a>
+                            <div class="dropdown-content" aria-labelledby="escuela-silencio">
+                                <a href="{% url 'escuela' %}" class="dropdown-item" target="content-frame">Ir a Escuela de Silencio</a>
+                                {% for category in categories %}
+                                    {% if category.name == 'Sesiones' %}
+                                    <a href="{% url 'store:products' %}?category={{ category.name }}&filter=true" class="dropdown-item">{{ category.display_name }}</a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </li>
                         <div class="cta-container">
                             <a href="#" class="btn-vip">Mentoria VIP</a>

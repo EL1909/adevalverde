@@ -67,25 +67,59 @@ def reserve_appointment(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     product_id = data.get('product_id')
+    order_item_id = data.get('order_item_id') # New field
     start_str = data.get('start')
     end_str = data.get('end')
 
-    if not all([product_id, start_str, end_str]):
-        return JsonResponse({'error': 'Missing fields'}, status=400)
+    if not start_str or not end_str:
+        return JsonResponse({'error': 'Missing dates'}, status=400)
 
-    product = get_object_or_404(Product, pk=product_id)
     start_time = parse_datetime(start_str)
     end_time = parse_datetime(end_str)
 
-    # Create appointment
-    appointment = Appointment.objects.create(
-        product=product,
-        admin_user=product.created_by,
-        customer=request.user if request.user.is_authenticated else None,
-        start_time=start_time,
-        end_time=end_time,
-        status='pending'
-    )
+    appointment = None
+
+    # Logic: 
+    # 1. If order_item_id exists, try to find an existing appointment linked to it.
+    if order_item_id:
+        from store.models import OrderItem
+        item = get_object_or_404(OrderItem, pk=order_item_id)
+        
+        # Check if item has appointment via reverse relation 'appointment_record'
+        if hasattr(item, 'appointment_record') and item.appointment_record:
+            appointment = item.appointment_record
+            # Update existing
+            appointment.start_time = start_time
+            appointment.end_time = end_time
+            appointment.status = 'pending' # Reset to pending if changed? Or keep as is?
+            appointment.save()
+        else:
+            # Create new linked to item
+            product = item.product
+            appointment = Appointment.objects.create(
+                product=product,
+                order_item=item, # Link here
+                admin_user=product.created_by,
+                customer=request.user if request.user.is_authenticated else None,
+                start_time=start_time,
+                end_time=end_time,
+                status='pending'
+            )
+            
+    # 2. Fallback logic: Original behavior (create unlinked, purely product based) 
+    # Only if order_item_id wasn't provided (e.g. from product page maybe?)
+    elif product_id:
+        product = get_object_or_404(Product, pk=product_id)
+        appointment = Appointment.objects.create(
+            product=product,
+            admin_user=product.created_by,
+            customer=request.user if request.user.is_authenticated else None,
+            start_time=start_time,
+            end_time=end_time,
+            status='pending'
+        )
+    else:
+        return JsonResponse({'error': 'Missing product_id or order_item_id'}, status=400)
 
     return JsonResponse({'appointment_id': appointment.id})
 

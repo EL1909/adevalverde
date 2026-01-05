@@ -39,10 +39,11 @@ hr {
 
 #cookie-banner {
     position: fixed;
+    left: 10vh;
     bottom: 10vh;
-    background-color: hsla(0, 100%, 99%, 0.798);
+    background-color: hsla(0, 100%, 99%, 0.923);
     border: 2px solid #f2f1f1;
-    border-radius: 25px;
+    border-radius: 15px;
     color: rgb(122, 116, 116);
     padding: 5px;
     z-index: 9999;
@@ -53,8 +54,9 @@ hr {
 }
 
 .cookie-preferences {
-    padding: 5px;
-    margin: 5px 0;
+    font-family: "Quicksand", sans-serif;
+    padding: 15px;
+    margin: 15px 0;
     display: flex;
     flex-direction: column;
     width: 100%; /* Set width to 100% for proper alignment */
@@ -63,7 +65,7 @@ hr {
 .cookie-switch {
     display: flex;  /* Use flex to align checkbox and label */
     justify-content: space-between;  /* Align items with space between */
-    align-items:end; /* Center align checkbox and label */
+    align-items: center; /* Center align checkbox and label */
     margin: 5px 0;
 }
 
@@ -72,6 +74,7 @@ hr {
 }
 
 .cookie-switch label {
+    width:70%;
     font-weight: bold;
 }
 
@@ -91,10 +94,10 @@ button#accept-cookies {
     background-color: #0056b3;
     color: #f2f1f1;
     font-weight: bold;
-    border: 2px solid orange;
+    border: 2px solid #D4AF37;
     padding: 10px 20px;
     cursor: pointer;
-    border-radius: 25px;
+    border-radius: 15px;
     width: 100%; /* Center button by setting width */
     align-self: center; /* Center the button within the banner */
     margin-top: 10px; /* Add space above the button */

@@ -750,8 +750,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('#cart-items .ticket-item').forEach(item => {
         item.addEventListener('click', () => {
             const productId = item.dataset.id;
+            const orderItemId = item.dataset.orderItemId; // Get order item ID
+            const existingStart = item.dataset.appointmentStart; // Get existing appointment text
+
             const selectedPanel = document.getElementById('selected-item');
             const homeDetail = document.getElementById('home-detail');
+            const appointmentScheduler = document.getElementById('appointment-scheduler');
+            const appointmentDateInput = document.getElementById('appointment-date');
+            const saveAppointmentBtn = document.getElementById('save-appointment-btn');
 
             selectedPanel?.classList.remove('d-none');
             homeDetail?.classList.add('d-none');
@@ -759,12 +765,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const nameEl = document.getElementById('selected-product-name');
             if (nameEl) nameEl.textContent = 'Cargando...';
 
+            // Fetch product details from API
             fetch(`/store/products/product/${productId}/details/api/`)
                 .then(r => r.ok ? r.json() : Promise.reject(r.status))
                 .then(data => {
+                    // Update product details in the UI
                     if (nameEl) nameEl.textContent = data.name;
                     document.getElementById('selected-product-price').textContent = `$${data.price}`;
-                    document.getElementById('selected-product-description').textContent = data.product_description;
+                    document.getElementById('selected-product-description').textContent = data.description;
                     document.getElementById('selected-product-quantity').value =
                         item.querySelector('.product-units').textContent.replace('x', '').trim();
 
@@ -776,12 +784,165 @@ document.addEventListener('DOMContentLoaded', () => {
                         img.src = data.image;
                         img.alt = data.name;
                     }
+
+                    // --- DATE PICKER LOGIC (using API response) ---
+                    const category = data.category_name; // Get category from API response
+                    
+                    if (category && category.toLowerCase() === 'sesiones') {
+                        appointmentScheduler?.classList.remove('d-none');
+                        
+                        // Get references to booking elements
+                        const dateInput = document.getElementById('appointment-date');
+                        const checkBtn = document.getElementById('check-availability-btn');
+                        const slotsContainer = document.getElementById('slots-container');
+                        const slotsList = document.getElementById('slots-list');
+                        const appointmentStatus = document.getElementById('appointment-status');
+                        
+                        
+                        // Pre-fill if exists
+                        if (existingStart) {
+                            const existingDate = new Date(existingStart);
+                            dateInput.value = existingDate.toISOString().split('T')[0];
+                            
+                            // Format and display the existing appointment time
+                            const timeDisplay = document.getElementById('appointment-time-display');
+                            if (timeDisplay) {
+                                const options = { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric', 
+                                    hour: '2-digit', 
+                                    minute: '2-digit',
+                                    timeZone: 'UTC'
+                                };
+                                timeDisplay.textContent = existingDate.toLocaleDateString('es-ES', options) + ' UTC';
+                            }
+                            appointmentStatus.classList.remove('d-none');
+                        } else {
+                            dateInput.value = '';
+                            appointmentStatus.classList.add('d-none');
+                        }
+
+                        // Clear previous event listeners by cloning and replacing
+                        const newCheckBtn = checkBtn.cloneNode(true);
+                        checkBtn.parentNode.replaceChild(newCheckBtn, checkBtn);
+
+                        // Handle Check Availability Button
+                        newCheckBtn.addEventListener('click', function() {
+                            const date = dateInput.value;
+                            if (!date) return alert('Por favor selecciona una fecha');
+
+                            // Fetch availability
+                            fetch(`/calendars/check_availability/${productId}/?start=${date}&end=${date}`)
+                                .then(response => response.json())
+                                .then(availData => {
+                                    if (availData.error) return alert(availData.error);
+                                    
+                                    slotsList.innerHTML = '';
+                                    slotsContainer.classList.remove('d-none');
+                                    
+                                    // Generate slots (9am to 5pm UTC)
+                                    const startHour = 9;
+                                    const endHour = 17;
+                                    const busySlots = availData.busy || [];
+                                    
+                                    for (let h = startHour; h < endHour; h++) {
+                                        const slotStart = new Date(date);
+                                        slotStart.setUTCHours(h, 0, 0, 0);
+                                        const slotEnd = new Date(date);
+                                        slotEnd.setUTCHours(h + 1, 0, 0, 0);
+                                        
+                                        const isBusy = busySlots.some(busy => {
+                                            const busyStart = new Date(busy.start);
+                                            const busyEnd = new Date(busy.end);
+                                            return (slotStart < busyEnd && slotEnd > busyStart);
+                                        });
+                                        
+                                        if (!isBusy) {
+                                            const btn = document.createElement('button');
+                                            btn.type = 'button';
+                                            btn.className = 'list-group-item list-group-item-action';
+                                            btn.textContent = `${h}:00 - ${h+1}:00 UTC`;
+                                            btn.onclick = () => reserveSlot(slotStart, slotEnd, btn);
+                                            slotsList.appendChild(btn);
+                                        }
+                                    }
+                                    
+                                    if (slotsList.children.length === 0) {
+                                        slotsList.innerHTML = '<div class="list-group-item">No hay horarios disponibles</div>';
+                                    }
+                                });
+                        });
+
+                        // Reserve slot function
+                        function reserveSlot(start, end, btn) {
+                            // Highlight selected
+                            Array.from(slotsList.children).forEach(c => c.classList.remove('active'));
+                            btn.classList.add('active');
+
+                            fetch('/calendars/reserve/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': window.csrfToken
+                                },
+                                body: JSON.stringify({
+                                    product_id: productId,
+                                    order_item_id: orderItemId,
+                                    start: start.toISOString(),
+                                    end: end.toISOString()
+                                })
+                            })
+                            .then(r => r.json())
+                            .then(reserveData => {
+                                if (reserveData.appointment_id) {
+                                    // Update data attribute so it persists if clicked again without reload
+                                    item.dataset.appointmentStart = start.toISOString().slice(0, 16);
+                                    
+                                    // Format and display the selected time
+                                    const timeDisplay = document.getElementById('appointment-time-display');
+                                    if (timeDisplay) {
+                                        const options = { 
+                                            year: 'numeric', 
+                                            month: 'long', 
+                                            day: 'numeric', 
+                                            hour: '2-digit', 
+                                            minute: '2-digit',
+                                            timeZone: 'UTC'
+                                        };
+                                        timeDisplay.textContent = start.toLocaleDateString('es-ES', options) + ' UTC';
+                                    }
+                                    
+                                    // Show success status
+                                    appointmentStatus.classList.remove('d-none');
+                                    
+                                    // Hide slots after successful reservation
+                                    slotsContainer.classList.add('d-none');
+                                    
+                                    alert('Fecha reservada correctamente.');
+                                } else {
+                                    alert('Error reservando fecha: ' + (reserveData.error || 'Desconocido'));
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Error reserving date:', err);
+                                alert('Error de conexión.');
+                            });
+                        }
+
+                    } else {
+                        // Hide appointment scheduler for non-session products
+                        appointmentScheduler?.classList.add('d-none');
+                    }
                 })
                 .catch(err => {
                     console.error('Error loading product:', err);
                     if (nameEl) nameEl.textContent = 'Error al cargar';
+                    // Hide appointment scheduler on error
+                    appointmentScheduler?.classList.add('d-none');
                 });
         });
+
     });
 
 
