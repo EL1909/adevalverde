@@ -49,8 +49,8 @@
                         <!-- <li class="nav-item">
                             <a href="{% url 'bio' %}" target="content-frame">Mi Camino</a>
                         </li> -->
-                        <li class="nav-item dropdown">
-                            <a href="#" class="nav-btn-gold">El Escaner</a>
+                        <li class="cta-container dropdown">
+                            <a href="{% url 'test_coherencia' %}" class="btn-vip">El Escaner</a>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="dropdown-toggle" href="#" id="mi-obra" data-bs-toggle="dropdown" aria-haspopup="true"
@@ -85,11 +85,21 @@
                         <div class="cta-container">
                             <a href="#" class="btn-vip">Mentoria VIP</a>
                         </div>  
-                        <!-- <li><a href="#" target="content-frame">Contacto</a></li> -->
-                        <li class="nav-item dropdown">
+                        <!-- <li><a href="#" target="content-frame">Contacto</a></li> -->  
+                        <li class="nav-item">
+                            <a href="{% url 'store:cart_view' %}" class="cart-button">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                                {% if cart_count > 0 %}
+                                <span class="badge rounded-pill bg-danger" id="cart-total-count">{{ cart_count }}</span>
+                                {% else %}
+                                <span class="badge rounded-pill bg-danger d-none" id="cart-total-count">0</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="dropdown">
                             {% if request.user.is_authenticated %}
                             <a href="#" data-bs-toggle="dropdown-toggle" id="user-options" aria-haspopup="true" aria-expanded="false">
-                                Hola, {{ user.username }}
+                                <i class="fa-solid fa-bars"></i>
                             </a>
                             <div class="dropdown-content" aria-labelledby="user-options">
                                 {% if request.user.is_superuser %}
@@ -103,19 +113,9 @@
                             {% else %}
                             <a href="#" id="loginModalLink" data-bs-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false">
-                                Acceso Alumnos
+                                <i class="fa-solid fa-bars"></i>
                             </a>
                             {% endif %}
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'store:cart_view' %}" class="cart-button">
-                                <i class="fa-solid fa-cart-shopping"></i>
-                                {% if cart_count > 0 %}
-                                <span class="badge rounded-pill bg-danger" id="cart-total-count">{{ cart_count }}</span>
-                                {% else %}
-                                <span class="badge rounded-pill bg-danger d-none" id="cart-total-count">0</span>
-                                {% endif %}
-                            </a>
                         </li>
                     </ul>
                 </nav>

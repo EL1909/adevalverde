@@ -193,6 +193,10 @@ a {
     margin-right: 25px;
 }
 
+.fa-solid.fa-bars {
+    color: var(--gold-main);
+}
+
 .nav-item.cart-button:hover {
     transform: scale(1.1); 
 }
