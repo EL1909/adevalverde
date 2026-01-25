@@ -188,7 +188,7 @@ export const RESULTS: Record<ResultType, ResultDetail> = {
       "PRIORIDAD: Has perdido el acceso a tu centro. El objetivo inmediato es reclamar tu derecho a la paz antes de intentar cualquier otro proceso de autodescubrimiento."
     ],
     ctaText: "SÍ, RECLAMO MI DERECHO A LA PAZ",
-    ctaUrl: "https://adelavalverde.info/store/products/19/",
+    ctaUrl: "/store/cart/add-to-cart-via-link/19/",
     image: "/static/coherencia_app/images/prisionero.jpg"      
   },
   SITIADO: {
@@ -201,7 +201,7 @@ export const RESULTS: Record<ResultType, ResultDetail> = {
       "CIERRE DE ESPERANZA: Reconocer el muro es el primer paso para demolerlo. Tu voluntad está regresando a casa. Es momento de pasar de ser 'víctima' a ser 'estratega'."
     ],
     ctaText: "SÍ, RECLAMO EL MAPA DE MIS MUROS",
-    ctaUrl: "https://adelavalverde.info/store/products/15/",
+    ctaUrl: "/store/cart/add-to-cart-via-link/15/",
     image: "/static/coherencia_app/images/sitiado.jpg"
   },
   PURIFICACION: {
@@ -214,7 +214,7 @@ export const RESULTS: Record<ResultType, ResultDetail> = {
       "GIMNASIO DE SOBERANOS: Este estado es el puente necesario antes de habitar plenamente tu territorio. Es el espacio donde se construye la soberanía real."
     ],
     ctaText: "SÍ, RECLAMO EL MISTERIO DE LA SAL",
-    ctaUrl: "https://adelavalverde.info/store/products/6/",
+    ctaUrl: "/store/cart/add-to-cart-via-link/6/",
     image: "/static/coherencia_app/images/purificacion.jpeg"
   },
   SOBERANO: {
@@ -227,7 +227,7 @@ export const RESULTS: Record<ResultType, ResultDetail> = {
       "HOJA DE RUTA: La 'leche espiritual' básica ya no es suficiente. Necesitas herramientas de sellado y expansión para consolidar tu gobierno sobre roca firme."
     ],
     ctaText: "SÍ, RECLAMO MI MERECIMIENTO DIVINO",
-    ctaUrl: "https://adelavalverde.info/store/products/8/",
+    ctaUrl: "/store/cart/add-to-cart-via-link/8/",
     image: "/static/coherencia_app/images/soberano.jpeg"
   },
   EMPATE: {
@@ -240,7 +240,7 @@ export const RESULTS: Record<ResultType, ResultDetail> = {
       "SOLUCIÓN: El documento es directo: ya no es momento de leer libros por tu cuenta. Reclamar tu Mentoría 1:1 es el refugio para quienes han agotado sus fuerzas."
     ],
     ctaText: "RECLAMAR MI SESIÓN DE MENTORÍA",
-    ctaUrl: "https://www.adelavalverde.info/store/products/5/",
+    ctaUrl: "/store/cart/add-to-cart-via-link/5/",
     image: "https://images.unsplash.com/photo-1516062423079-7ca13cdc7f5a?q=80&w=1000&auto=format&fit=crop"
   }
 };

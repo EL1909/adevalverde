@@ -769,20 +769,38 @@ document.addEventListener('DOMContentLoaded', () => {
             fetch(`/store/products/product/${productId}/details/api/`)
                 .then(r => r.ok ? r.json() : Promise.reject(r.status))
                 .then(data => {
-                    // Update product details in the UI
-                    if (nameEl) nameEl.textContent = data.name;
-                    document.getElementById('selected-product-price').textContent = `$${data.price}`;
-                    document.getElementById('selected-product-description').textContent = data.description;
-                    document.getElementById('selected-product-quantity').value =
-                        item.querySelector('.product-units').textContent.replace('x', '').trim();
+                    const iframeContainer = document.getElementById('iframe-container');
+                    const iframe = document.getElementById('selected-product-iframe');
+                    const iframeRemoveLink = document.getElementById('iframe-remove-link');
 
-                    document.getElementById('update-quantity-form').action = `/store/cart/update/${productId}/`;
-                    document.getElementById('remove-product-link').href = `/store/cart/remove/${productId}/`;
-                    document.getElementById('selected-product-link').href = `/store/product/${productId}/`;
-                    const img = document.getElementById('selected-product-image');
-                    if (img) {
-                        img.src = data.image;
-                        img.alt = data.name;
+                    // Reset visibility while loading
+                    selectedPanel?.classList.add('d-none');
+                    iframeContainer?.classList.add('d-none');
+                    homeDetail?.classList.add('d-none');
+
+                    // --- IFRAME VS METADATA LOGIC ---
+                    if (data.external_link) {
+                        // Show Iframe
+                        if (iframe) iframe.src = data.external_link;
+                        if (iframeRemoveLink) iframeRemoveLink.href = `/store/cart/remove/${productId}/`;
+                        iframeContainer?.classList.remove('d-none');
+                    } else {
+                        // Show standard metadata
+                        if (nameEl) nameEl.textContent = data.name;
+                        document.getElementById('selected-product-price').textContent = `$${data.price}`;
+                        document.getElementById('selected-product-description').textContent = data.description;
+                        document.getElementById('selected-product-quantity').value =
+                            item.querySelector('.product-units').textContent.replace('x', '').trim();
+
+                        document.getElementById('update-quantity-form').action = `/store/cart/update/${productId}/`;
+                        document.getElementById('remove-product-link').href = `/store/cart/remove/${productId}/`;
+                        document.getElementById('selected-product-link').href = `/store/product/${productId}/`;
+                        const img = document.getElementById('selected-product-image');
+                        if (img) {
+                            img.src = data.image;
+                            img.alt = data.name;
+                        }
+                        selectedPanel?.classList.remove('d-none');
                     }
 
                     // --- DATE PICKER LOGIC (using API response) ---
@@ -1126,5 +1144,14 @@ document.addEventListener('DOMContentLoaded', () => {
             bulkUpdateOrderStatus(orderIds, newStatus);
         });
     }
+
+    // --- AUTO-SELECT FIRST CART ITEM ---
+    setTimeout(() => {
+        const firstCartItem = document.querySelector('#cart-items .ticket-item');
+        if (firstCartItem) {
+            console.log('Auto-selecting first cart item...');
+            firstCartItem.click();
+        }
+    }, 200);
 
 });
