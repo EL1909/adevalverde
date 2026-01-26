@@ -268,90 +268,96 @@ iframe {
 }
 
 #gamma-floating-cta {
-    /* Fixes the button relative to the viewport */
-    position: fixed;
-    /* Adjust these values to place it where you want (e.g., bottom right) */
-    top: 50px;
-    right: 30px;
-    /* Ensures it stays on top of all other content */
-    z-index: 1050;
+    display: none; /* Replaced by Snap-Bar */
 }
 
 /* --- 2. Button Styling (Gamma Aesthetic) --- */
-.gamma-primary-btn {
-    background-color: rgba(255, 255, 255, 0.653);
-    color: #5B5BDD;
-    border: none;
-    padding: 12px 20px;
-    font-size: 2rem;
-    font-weight: 600;
-    /* Moderate rounding */
-    border-radius: 8px;
-    /* Subtle lift/shadow effect */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    /* Ensures smooth transition on hover */
-    transition: all 0.2s ease-in-out;
-    /* Optional: Slightly increase letter spacing */
-    letter-spacing: 0.5px;
+/* --- NEW TOP-BAR GOLDEN CTA --- */
+.product-top-cta {
+    position: relative;
+    z-index: 100;
 }
 
-/* Hover Effect for interaction feedback */
-.gamma-primary-btn:hover {
-    color: white;
-    background-color: #4C4CDD;
-    /* Slightly darker on hover */
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-    /* More pronounced lift */
-    transform: translateY(-2px);
-    /* Slight vertical shift */
+.btn-vip-gamma {
+    background: #000;
+    color: var(--gold-main) !important;
+    border: 1px solid var(--gold-main);
+    padding: 10px 24px;
+    border-radius: 0;
+    font-family: "Quicksand", sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: none;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-block;
 }
 
-/* Focus/Active state (important for accessibility) */
-.gamma-primary-btn:focus,
-.gamma-primary-btn:active {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(91, 91, 221, 0.5);
-    /* Focus ring matching button color */
+.btn-vip-gamma:hover {
+    background-color: var(--gold-main);
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    transform: none;
+    filter: none;
+}
+
+.iframe-content {
+    margin-top: 10px;
 }
 
 /* Footer styles ---------------------------------------*/
 
-.footer {
+.adela-footer {
     position: relative;
-    bottom: 0;
-    width: 100vw;
-    background: rgba(10, 10, 10, 0.9); /* Semi-transparent */
-    color: #fff;
-    text-align: center;
-    padding: 2rem 1rem;
-    font-size: 0.95rem;
-    backdrop-filter: blur(10px);
+    width: 100%;
+    background-color: rgba(10, 10, 10, 0.9);
+    backdrop-filter: blur(15px);
+    border-top: 1px solid rgba(212, 175, 55, 0.2);
+    color: var(--white);
+    padding: 1rem 0 0.5rem;
+    font-family: "Quicksand", sans-serif;
 }
 
-.footer a {
-    color: #ccc;
+.adela-footer .footer-links a {
+    color: var(--white);
     text-decoration: none;
-    margin: 0 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-right: 5px;
+    transition: color 0.3s ease;
 }
 
-.footer-links,
-.footer-social {
-    margin-bottom: 15px;
+.adela-footer .footer-links a:hover {
+    color: var(--gold-main);
 }
 
-.footer-links a,
-.footer-social a {
-    color: #ccc;
+.social-icon {
+    color: var(--white);
+    font-size: 1.2rem;
+    margin-left: 15px;
+    transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+    color: var(--gold-main);
+    transform: translateY(-2px);
+}
+
+.footer-copyright p {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.footer-copyright a {
     text-decoration: none;
-    margin: 0 10px;
-    padding-bottom: 2px;
-    transition: color 0.3s ease, border-color 0.3s ease;
-}
-
-.footer-links a:hover,
-.footer-social a:hover {
-    color: #5F5B3C;
-    /* Muted Olive Green hover color */
 }
 
 /* Form's styles ---------------------------------------*/
@@ -636,6 +642,7 @@ input {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+    color: var(--white);
 }
 
 .product-image {
@@ -843,6 +850,14 @@ input {
     border: none;
 }
 
+#cart-container #iframe-container iframe {
+    width: 70% !important;
+    margin: 0 auto;
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
 #cart-container #check-availability-btn {
     background-color: var(--gold-main);
     border-color: var(--gold-main);
@@ -862,18 +877,104 @@ input {
 
 /* Users App -------------------------------------*/
 
-.modal-content   {
+.modal-content {
     margin-top: 100px;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--gold-main);
+    color: var(--white);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    padding: 0 1rem;
+}
+
+.modal-header .nav-tabs {
+    border-bottom: none;
+    margin-bottom: -1px;
+}
+
+.modal-header .nav-link {
+    color: var(--white) !important;
+    font-family: "Quicksand", sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 13px;
+    border: 1px solid transparent;
+    padding: 15px 20px;
+}
+
+.modal-header .nav-link.active {
+    background-color: transparent !important;
+    color: var(--gold-main) !important;
+    border-bottom: 3px solid var(--gold-main);
+}
+
+.modal-header .close {
+    color: var(--white);
+    text-shadow: none;
+    opacity: 0.8;
+}
+
+.modal-header .close:hover {
+    color: var(--gold-main);
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-body label {
+    color: var(--white) !important;
+    font-weight: 500;
+}
+
+.modal-body .form-control {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    padding: 12px;
+}
+
+.modal-body .form-control:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--gold-main);
+    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+    color: var(--white);
+}
+
+.modal-body .btn-primary {
+    background-color: var(--gold-main);
+    border-color: var(--gold-main);
+    color: var(--bg-black) !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 12px;
+    width: 100%;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+.modal-body .btn-primary:hover {
+    background-color: var(--white);
+    border-color: var(--white);
+    color: var(--gold-main) !important;
+    transform: translateY(-2px);
 }
 
 #modalError {
     display: none;
     max-height: 100px;
     width: 100%;
-    color: #fff;
-    padding: 5px;
-    border: 2px solid #5F5B3C;
+    color: #ff5252;
+    padding: 10px;
+    border: 1px solid rgba(255, 82, 82, 0.3);
+    background-color: rgba(255, 82, 82, 0.1);
     border-radius: 5px;
+    margin-bottom: 1rem;
 }
 
 #modalError li {

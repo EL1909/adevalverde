@@ -2,16 +2,16 @@
 {% load static %}
 {% block content %}
 {% if product.other_site_link %}
-<div class="content">
-    <iframe src="{{ product.other_site_link }}" style="width: 100%; height: 600px; border: none;"></iframe>
-</div>
-<div id="gamma-floating-cta">
+<div class="product-top-cta text-end my-3">
     <form action="{% url 'store:add_link_cart' product_id=product.id %}" method="get">
-        {% csrf_token %}
-        <button type="submit" class="gamma-primary-btn">
-            <i class="fa-solid fa-cart-shopping"></i>
+        <button type="submit" class="btn-vip-gamma">
+            {{ product.name }} - ${{ product.price }} USD
         </button>
     </form>
+</div>
+
+<div class="content iframe-content">
+    <iframe src="{{ product.other_site_link }}" style="width: 100%; height: 80vh; border: none;"></iframe>
 </div>
 {% else %}
 <div>
