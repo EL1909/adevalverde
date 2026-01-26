@@ -1054,13 +1054,13 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation(); // Stop event bubbling
             const categoryId = document.getElementById('category-id-display').textContent;
             const categoryName = document.getElementById('category-name-display').textContent;
+            const categoryDisplayName = document.getElementById('category-display-name-display').textContent || '';
             const categoryDescription = document.getElementById('category-description-display').textContent || '';
             const form = addCategory.querySelector('form');
 
-            console.log(categoryName);
-
             // Populate form fields
             document.getElementById('cat_id_name').value = categoryName;
+            document.getElementById('cat_id_display_name').value = categoryDisplayName;
             document.getElementById('cat_id_description').value = categoryDescription;
 
             // Update form action for edit

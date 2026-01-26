@@ -1,16 +1,16 @@
 {% csrf_token %}
 {% block content %}
-<form method="post" id="loginForm" action="{% url 'account_login' %}">
-    {% csrf_token %}
+            <form method="post" id="loginForm" action="{% url 'account_login' %}">
+                {% csrf_token %}
     <div class="service-form">
       <div class="form-group">
         <label for="lf-username">Usuario o Email:</label>
         <input type="text" name="login" id="lf-username" required>
-      </div>
+            </div>
       <div class="form-group">
         <label for="lf-password">Contraseña:</label>
         <input type="password" name="password" id="lf-password" required>
-      </div>
+        </div>
     </div>
     <button class="form-button" type="submit">Entrar</button>
   </form>

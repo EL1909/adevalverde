@@ -28,7 +28,7 @@
             </ul>
         </div>
         <div class="tab-content" id="storeTabsContent">
-            <div class="tab-pane fade show active p-4" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+            <div class="tab-pane fade show active" id="orders" role="tabpanel" aria-labelledby="orders-tab">
                 <div class="d-flex justify-content-between">
                     <h4>Pedidos</h4>
                     <div class="tab-container">
@@ -375,7 +375,7 @@
             </div>
             <div id="category-details" class="ticket d-none">
                 <div id="add-category" class="d-none">
-                    <form class="p-4" method="POST"
+                    <form method="POST"
                         action="{% if category %}{% url 'store:edit_category' category.id %}{% else %}{% url 'store:add_category' %}{% endif %}">
                         {% csrf_token %}
                         <div class="row g-3">
