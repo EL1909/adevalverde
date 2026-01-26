@@ -348,6 +348,70 @@ def delete_product(request, product_id):
     messages.success(request, 'Product deleted!')
     return redirect(reverse('store:invmgm'))
 
+def crystallize_order(request, payer_data=None):
+    """
+    Moves items from session cart to a database Order.
+    payer_data: dict containing PayPal payer details (name, email, shipping).
+    """
+    cart = request.session.get('cart', {})
+    if not cart:
+        return None
+        
+    total_amount = 0
+    user = request.user if request.user.is_authenticated else None
+    
+    # Check if there's already an active order for this session/user to avoid duplicates
+    order_id = request.session.get('order_id')
+    order = None
+    if order_id:
+        order = Order.objects.filter(id=order_id, paymentStatus='pending').first()
+    
+    if not order:
+        order = Order.objects.create(
+            user=user,
+            paymentStatus='pending',
+            totalAmount=0
+        )
+    else:
+        # Clear existing items to rebuild from session (consistent with current ManageOrder logic)
+        order.items.all().delete()
+
+    if payer_data:
+        order.set_shipping_data(payer_data)
+        
+    for product_id, item_data in cart.items():
+        try:
+            product = Product.objects.get(id=product_id)
+            quantity = item_data.get('quantity', 1)
+            
+            order_item = OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=quantity,
+                price=product.price
+            )
+            
+            appointment_id = item_data.get('appointment_id')
+            if appointment_id:
+                from calendars.models import Appointment
+                app = Appointment.objects.filter(id=appointment_id).first()
+                if app:
+                    app.order_item = order_item
+                    app.save()
+                    
+            total_amount += (product.price * quantity)
+        except Product.DoesNotExist:
+            continue
+            
+    order.totalAmount = total_amount
+    order.save()
+    
+    # Store order_id in session
+    request.session['order_id'] = order.id
+    request.session.modified = True
+    
+    return order
+
 
 ## Cart Views
 
@@ -369,197 +433,173 @@ class Cart(View):
         # If no valid action, call the default method (get)
         return super().dispatch(request, *args, **kwargs)
     
-    # Helper method to get the active order (cart)
-    def _get_active_order(self, request):
-        ACTIVE_CART_STATUS = 'pending'
-        order = None
+    # Helper method to get the active order (cart) from Session or DB
+    def _get_cart_data(self, request):
+        """
+        Returns a dictionary containing session items, total price, and physical check.
+        """
+        cart_session = request.session.get('cart', {})
+        items = []
+        total_price = 0
+        cart_count = 0
         
-        if request.user.is_authenticated:
-            # Get the pending order for the logged-in user
-            order = Order.objects.filter(
-                user=request.user, 
-                paymentStatus=ACTIVE_CART_STATUS
-            ).first()
-        else:
-            # Get the order ID from the session for guest users
-            order_id = request.session.get('order_id')
-            if order_id:
-                # Use .filter().first() to avoid MultipleObjectsReturned, as handled below
-                order = Order.objects.filter(
-                    id=order_id, 
-                    paymentStatus=ACTIVE_CART_STATUS,
-                    user__isnull=True
-                ).first()
-        
-        return order
+        for product_id, item_data in cart_session.items():
+            try:
+                product = Product.objects.get(id=product_id)
+                quantity = item_data.get('quantity', 1)
+                item_total = product.price * quantity
+                
+                appointment = None
+                appointment_id = item_data.get('appointment_id')
+                if appointment_id:
+                    from calendars.models import Appointment
+                    appointment = Appointment.objects.filter(id=appointment_id).first()
+
+                items.append({
+                    'product': product,
+                    'quantity': quantity,
+                    'price': product.price,
+                    'total_item_price': item_total,
+                    'appointment': appointment,
+                })
+                total_price += item_total
+                cart_count += quantity
+            except Product.DoesNotExist:
+                continue
+                
+        return {
+            'order_items': items,
+            'total_price': total_price,
+            'cart_count': cart_count,
+            'has_physical': any(not item['product'].is_digital for item in items)
+        }
 
     # View the cart
     def get(self, request):
-        order = self._get_active_order(request)
+        cart_data = self._get_cart_data(request)
         
-        if order:
-            order_items = order.items.all() 
-            total_price = order.totalAmount
-            order_id = order.id
-            has_physical = order.hasPhysical
-        else:
-            order_items = []
-            total_price = 0.00
-            order_id = None
-            has_physical = False
-
         context = {
-            'order_items': order_items,
-            'total_price': total_price,
-            'order_id': order_id,
-            'has_physical': has_physical,
+            'order_items': cart_data['order_items'],
+            'total_price': cart_data['total_price'],
+            'order_id': request.session.get('order_id'),
+            'has_physical': cart_data['has_physical'],
         }
         
         return render(request, 'store/shopping_cart.html', context)
     
-    # Add an item to the cart
+    # Add an item to the cart (Session-based)
     def add_item(self, request, product_id):
         product = get_object_or_404(Product, id=product_id)
-        quantity = 1
-        ACTIVE_CART_STATUS = 'pending'
-
-        # 1. Get Order if exists, otherwise create one
-        order = self._get_active_order(request)
-        if not order:
-            # Set user if authenticated, otherwise None for guest checkout
-            user = request.user if request.user.is_authenticated else None
-            order = Order.objects.create(user=user, paymentStatus=ACTIVE_CART_STATUS, totalAmount=0.00)
-            request.session['order_id'] = order.id
-            request.session.modified = True
-        
-        order_item, created = OrderItem.objects.get_or_create(
-            order=order,
-            product=product,
-            defaults={'quantity': quantity, 'price': product.price}
-        )
+        cart = request.session.get('cart', {})
         
         appointment_id = request.POST.get('appointment_id')
-        if appointment_id:
-            from calendars.models import Appointment
-            try:
-                appointment = Appointment.objects.get(id=appointment_id)
-                appointment.order_item = order_item
-                appointment.save()
-            except Appointment.DoesNotExist:
-                pass
-
-        if not created:
-            order_item.quantity += quantity,
-            order_item.save()
-
-        # 2. Update the total amount of the Order
-        order.totalAmount = sum(item.quantity * item.price for item in order.items.all())
-        order.save()
-
-        # 4. Handle AJAX response
+        
+        prod_id_str = str(product_id)
+        if prod_id_str in cart:
+            cart[prod_id_str]['quantity'] += 1
+            if appointment_id:
+                cart[prod_id_str]['appointment_id'] = appointment_id
+        else:
+            cart[prod_id_str] = {
+                'quantity': 1,
+                'appointment_id': appointment_id
+            }
+        
+        request.session['cart'] = cart
+        request.session.modified = True
+        
+        # Immediate synchronization for authenticated users
+        if request.user.is_authenticated:
+            crystallize_order(request)
+        
+        # Handle AJAX response
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            cart_count = sum(item.quantity for item in order.items.all())
+            cart_count = sum(item['quantity'] for item in cart.values())
             return JsonResponse({
                 'cart_count': cart_count,
-                'message': f"{product.name} added to cart!",
-                'order_id': order.id,
+                'message': f"{product.name} añadido al carrito!",
             })
 
         return redirect('store:cart_view')
         
-    # Remove an item from the cart
+    # Remove an item from the cart (Session-based)
     def remove_item(self, request, product_id):
-        order = self._get_active_order(request)
+        cart = request.session.get('cart', {})
         product = get_object_or_404(Product, id=product_id)
         
-        if order:
-            try:
-                order_item = OrderItem.objects.get(order=order, product=product)
-                order_item.delete()
-                messages.success(request, f"{product.name} removed from cart.")
-                
-                # Recalculate total and count
-                order.totalAmount = sum(item.quantity * item.price for item in order.items.all())
-                order.save()
-                
-            except OrderItem.DoesNotExist:
-                messages.error(request, f"Product {product.name} not found in cart.")
+        prod_id_str = str(product_id)
+        if prod_id_str in cart:
+            del cart[prod_id_str]
+            request.session['cart'] = cart
+            request.session.modified = True
             
-            except Exception as e:
-                messages.error(request, f"An error occurred: {e}")
-
+            # Sync to DB if logged in
+            if request.user.is_authenticated:
+                crystallize_order(request)
+                
+            messages.success(request, f"{product.name} eliminado del carrito.")
+        
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            # Get updated total and count
-            current_total = order.totalAmount if order else 0.00
-            current_count = sum(item.quantity for item in order.items.all()) if order else 0
-
+            cart_data = self._get_cart_data(request)
             return JsonResponse({
                 'success': True, 
-                'total_price': current_total, 
-                'cart_count': current_count
+                'total_price': float(cart_data['total_price']), 
+                'cart_count': cart_data['cart_count']
             })
 
-        return redirect('store:products')
+        return redirect('store:cart_view')
 
-    # Update an item’s quantity in the cart
+    # Update an item’s quantity (Session-based)
     def update_item(self, request, product_id):
-        order = self._get_active_order(request)
-        product = get_object_or_404(Product, id=product_id)
-        
+        cart = request.session.get('cart', {})
         try:
             quantity = int(request.POST.get('quantity', 1))
-            
-            if order:
-                order_item = OrderItem.objects.get(order=order, product=product)
-                
+            prod_id_str = str(product_id)
+            if prod_id_str in cart:
                 if quantity > 0:
-                    order_item.quantity = quantity
-                    order_item.save()
+                    cart[prod_id_str]['quantity'] = quantity
                 else:
-                    # Delete item if quantity is zero or less
-                    order_item.delete()
-
-                # Recalculate order total
-                order.totalAmount = sum(item.quantity * item.price for item in order.items.all())
-                order.save()
+                    del cart[prod_id_str]
                 
+                request.session['cart'] = cart
+                request.session.modified = True
+                
+                # Sync to DB if logged in
+                if request.user.is_authenticated:
+                    crystallize_order(request)
             else:
-                messages.error(request, "No active cart found to update.")
+                messages.error(request, "Producto no encontrado en el carrito.")
 
-        except OrderItem.DoesNotExist:
-            messages.error(request, f"{product.name} not found in cart.")
         except ValueError:
-            messages.error(request, "Invalid quantity provided.")
+            messages.error(request, "Cantidad inválida.")
             
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            current_total = order.totalAmount if order else 0.00
-            current_count = sum(item.quantity for item in order.items.all()) if order else 0
-
+            cart_data = self._get_cart_data(request)
             return JsonResponse({
                 'success': True, 
-                'total_price': current_total, 
-                'cart_count': current_count
+                'total_price': float(cart_data['total_price']), 
+                'cart_count': cart_data['cart_count']
             })
             
         return redirect('store:cart_view')
 
-    # Clear cart, order_id, and user-related session data
+    # Clear cart
     def clear(self, request):
-        # *** CHANGE: Delete all OrderItems from the active cart ***
-        order = self._get_active_order(request)
-        if order:
-            order.items.all().delete()
-            order.totalAmount = 0.00
-            order.save()
-
-        # Clear session data
-        session_keys_to_clear = ['order_id', 'name', 'email', 'address', 'city', 'zipcode']
-        for key in session_keys_to_clear:
+        if 'cart' in request.session:
+            del request.session['cart']
+        
+        # Sync to DB if logged in (this will delete items because session cart is now empty)
+        if request.user.is_authenticated:
+            crystallize_order(request)
+        
+        # Clear other session keys tied to the current temporary order
+        keys_to_clear = ['order_id', 'shipping_data']
+        for key in keys_to_clear:
             if key in request.session:
                 del request.session[key]
-        
+                
         request.session.modified = True
-        messages.info(request, "El carrito esta vacio.")
+        messages.info(request, "El carrito está vacio.")
         return redirect('store:cart_view')
 
 
@@ -569,54 +609,25 @@ ACTIVE_CART_STATUS = 'pending'
 @require_GET
 def add_to_cart_via_link(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    quantity = 1
+    cart = request.session.get('cart', {})
     
-    order = None
-
-    # --- 1. Obtener/Crear la orden (Carrito) ---
-    if request.user.is_authenticated:
-        # Usuario Autenticado: Buscar/Crear por usuario
-        order, created = Order.objects.get_or_create(
-            user=request.user,
-            paymentStatus=ACTIVE_CART_STATUS,
-            defaults={'totalAmount': 0.00}
-        )
+    prod_id_str = str(product_id)
+    if prod_id_str in cart:
+        cart[prod_id_str]['quantity'] += 1
     else:
-        # Usuario Anónimo: Buscar por order_id en sesión
-        order_id = request.session.get('order_id')
-        if order_id:
-            order = Order.objects.filter(
-                id=order_id,
-                user__isnull=True, # Solo carritos de invitado
-                paymentStatus=ACTIVE_CART_STATUS
-            ).first()
-
-        if not order:
-            # Si no se encuentra la orden (no hay sesión o expiró), crear una nueva
-            order = Order.objects.create(
-                user=None, # user=None ahora permitido por el cambio de modelo previo
-                paymentStatus=ACTIVE_CART_STATUS,
-                totalAmount=0.00
-            )
-            request.session['order_id'] = order.id
-            request.session.modified = True
-
-    # --- 2. Obtener/Crear el OrderItem y actualizar cantidad ---
-    order_item, created = OrderItem.objects.get_or_create(
-        order=order,
-        product=product,
-        defaults={'quantity': quantity, 'price': product.price}
-    )
-    if not created:
-        order_item.quantity += quantity
-        order_item.save()
-
-    # --- 3. Actualizar el total de la Orden (FIX: Usando sum simple) ---
-    # Se usa la suma en Python, que es más segura que la compleja agregación fallida.
-    order.totalAmount = sum(item.quantity * item.price for item in order.items.all())
-    order.save()
-
-    # --- 4. Redirigir al usuario ---
+        cart[prod_id_str] = {
+            'quantity': 1,
+            'appointment_id': None
+        }
+    
+    request.session['cart'] = cart
+    request.session.modified = True
+    
+    # Immediate synchronization for authenticated users
+    if request.user.is_authenticated:
+        crystallize_order(request)
+    
+    messages.success(request, f"{product.name} añadido al carrito!")
     return redirect('store:cart_view')
 
 
@@ -823,40 +834,17 @@ class ManageOrder(View):
                     
                 else:
                     # --- PROPÓSITO 1: Crear/Actualizar Carrito (Pre-Pago) ---
+                    # Now using server-side session crystallization to prevent DB clutter
+                    order = crystallize_order(request)
                     
-                    if not cart_items:
-                        return JsonResponse({'error': 'Missing required cart_items for Order Update.'}, status=400)
-                    
-                    hasPhysical = False
-                    
-                    # 1. Actualizar OrderItems y calcular hasPhysical
-                    Order.items.all().delete() # Eliminar ítems existentes para la reconstrucción
-                    total_price = 0
-                    for item_data in cart_items:
-                        product_id = item_data.get('product_id')
-                        quantity = item_data.get('quantity')
-                        product = Product.objects.get(pk=product_id)
-                        
-                        OrderItem.objects.create(
-                            order=order,
-                            product=product,
-                            quantity=quantity,
-                            price=product.price * quantity # O el cálculo que aplique
-                        )
-                        
-                        total_price += product.price * quantity
-                        if not product.is_digital: # Si no es descargable, es físico
-                            hasPhysical = True
-                            
-                    # 2. Actualizar campos de la Order
-                    order.total = total_price
-                    order.save()
+                    if not order:
+                        return JsonResponse({'error': 'No hay items en el carrito para procesar una orden.'}, status=400)
                     
                     return JsonResponse({
                         'message': 'Order/Cart updated successfully.', 
                         'order_id': order.id,
                         'hasPhysical': order.hasPhysical,
-                        'total': order.total,
+                        'total': float(order.totalAmount),
                     })
 
         except Order.DoesNotExist:

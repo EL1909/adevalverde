@@ -5,6 +5,19 @@ const csrfTokenEl = document.querySelector('input[name="csrfmiddlewaretoken"]');
 const csrfToken = csrfTokenEl ? csrfTokenEl.value : '';
 window.csrfToken = csrfToken;
 
+// --- DYNAMIC GAMMA CTA STATE ---
+window.addEventListener('scroll', function() {
+    const ctaContainer = document.querySelector('.product-top-cta');
+    if (ctaContainer) {
+        const scrollPos = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        if (scrollPos > 2) {
+            ctaContainer.classList.add('scrolled');
+        } else {
+            ctaContainer.classList.remove('scrolled');
+        }
+    }
+});
+
 // -----------------------------------------------------------------
 // 1. NUEVA FUNCIÓN: Finaliza el Pago y Desencadena el Fulfillment
 //    Esta función reemplaza la lógica de updateOrderStatus (Sección 6) 
