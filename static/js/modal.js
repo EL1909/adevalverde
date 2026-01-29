@@ -11,9 +11,14 @@ $(document).ready(function() {
     
         // Get the modal element by its id
         var modal = document.getElementById("loginModal");
+        
+        // Prevent opening multiple instances
+        if (modal.classList.contains('show')) {
+            return;
+        }
     
-        // Use Bootstrap's modal API to show the modal
-        var modalInstance = new bootstrap.Modal(modal);
+        // Use Bootstrap's modal API to show the modal (getOrCreateInstance avoids duplicates)
+        var modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
         modalInstance.show();
     });
 

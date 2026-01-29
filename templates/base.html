@@ -85,7 +85,7 @@
                         <div class="cta-container">
                             <a href="https://adelavalverde.info/store/products/5/" class="btn-vip">Mentoria VIP</a>
                         </div>  
-                        <li class="nav-item dropdown">
+                        <li class="nav-item dropdown nav-item-user">
                             {% if request.user.is_authenticated %}
                             <a href="#" data-bs-toggle="dropdown" id="user-options" aria-haspopup="true" aria-expanded="false">
                                 <i class="fa-solid fa-bars"></i>
@@ -102,11 +102,11 @@
                             {% else %}
                             <a href="#" id="loginModalLink" aria-haspopup="true"
                                 aria-expanded="false">
-                                <i class="fa-solid fa-bars"></i>
+                                <i class="fa-solid fa-key"></i>
                             </a>
                             {% endif %}
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item nav-item-cart">
                             <a href="{% url 'store:cart_view' %}" class="cart-button">
                                 <i class="fa-solid fa-cart-shopping"></i>
                                 {% if cart_count > 0 %}
@@ -143,8 +143,8 @@
     <footer class="adela-footer">
         <div class="footer-container container d-flex justify-content-between align-items-center flex-wrap">
             <div class="footer-links">
-                <a href="{% url 'privacy' %}" target="content-frame">Privacidad</a> | 
-                <a href="{% url 'tyc' %}" target="content-frame">Términos</a> | 
+                <a href="{% url 'privacy' %}" target="content-frame">Privacidad</a>  
+                <a href="{% url 'tyc' %}" target="content-frame">Términos</a>  
                 <a href="contact.html" target="content-frame">Contacto</a>
             </div>
             <div class="footer-social-icons">

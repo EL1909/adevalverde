@@ -22,6 +22,16 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    // Close mobile menu when Login Key is clicked
+    const loginLink = document.getElementById('loginModalLink');
+    if (loginLink && navContainer) {
+        loginLink.addEventListener('click', function() {
+            if (navContainer.classList.contains('active')) {
+                navContainer.classList.remove('active');
+            }
+        });
+    }
+
     // UserOptions icon behavior
     const menuIcon = document.getElementById("menu-icon");
     const userOptions = document.querySelector(".user-options");

@@ -138,6 +138,7 @@ a {
 
 .nav-item i {
     font-size: 1rem;
+    color: var(--gold-main);
 }
 
 .nav-item:hover {
@@ -146,6 +147,7 @@ a {
 
 /* --- DROPDOWN (DESPLEGABLE) --- */
 .dropdown {
+    /* position: relative;  Removed/Overridden in mobile via media query if needed, but here it's global. */
     position: relative;
     padding-bottom: 10px;
     margin-bottom: -10px;
@@ -340,7 +342,7 @@ iframe {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-right: 5px;
+    margin-right: 15px;
     transition: color 0.3s ease;
 }
 
@@ -1026,6 +1028,10 @@ input {
 /* RESPONSIVENESS (Mobile Adjustments) */
 
 @media (max-width: 768px) {
+    .header-container {
+        flex-wrap: wrap;
+    }
+
     .nav-menu {
         flex-direction: column;
         text-align: center;
@@ -1054,11 +1060,13 @@ input {
         box-shadow: none;
         border: none;
         padding-left: 20px;
+        display: block !important; /* Forces submenus to be expanded */
     }
 
     .nav-container {
         display: none; /* Hide menu by default */
         width: 100%;
+        /* position: relative;  Removed to allow icons to anchor to .adela-header */
     }
 
     .nav-container.active {
@@ -1067,11 +1075,47 @@ input {
 
     .nav-menu ul {
         display: flex;
-        text-align: center;
+        text-align: left; /* Align text to left */
         flex-direction: column;
         justify-content: center;
-        padding: 20px 0;
+        align-items: flex-start; /* Align items to start */
         gap: 15px;
+    }
+
+    /* Position User and Cart icons at the top right - Strengthening selector */
+    .nav-menu ul .nav-item-user,
+    .nav-menu ul .nav-item-cart {
+        position: absolute !important; 
+        top: 20px; /* Match hamburger top position */
+        z-index: 20;
+        display: block !important;
+        border: none;
+        padding: 0;
+    }
+
+    .nav-item-cart {
+        right: 60px; /* Left of hamburger */
+    }
+
+    .nav-item-user {
+        right: 100px; /* Left of cart */
+    }
+    
+    /* Ensure icons are Gold */
+    .nav-item-user a,
+    .nav-item-cart a,
+    .nav-item-user i,
+    .nav-item-cart i {
+        color: var(--gold-main) !important;
+        font-size: 1.2rem; /* Ensure visibility */
+    }
+
+    /* Remove default margins/padding that might interfere */
+    .nav-item-cart .cart-button,
+    .nav-item-user a {
+        margin-right: 0;
+        border: none !important; /* Remove borders if any */
+        padding: 0 !important;
     }
 
     .nav-menu a {
@@ -1082,10 +1126,45 @@ input {
         display: none; /* En móvil el botón VIP puede ir dentro del menú */
     }
 
-    .footer-links a,
-    .footer-social a {
-        display: block;
-        margin: 5px 0;
+
+    .adela-footer {
+        padding: 0 !important;
+    }
+
+    .adela-footer .container {
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+    }
+
+    .adela-footer .footer-container {
+        flex-direction: column-reverse !important;
+        gap: 0;
+        margin-bottom: 0;
+    }
+
+    .adela-footer .footer-links {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        font-size: 0.8em;
+        margin: 0;
+    }
+
+    .footer-social-icons {
+        margin: 0;
+        display: flex;
+    }
+    
+    .social-icon {
+        font-size: 0.9rem;
+        margin: 10px 15px; /* Horizontal spacing only */
+    }
+
+    .footer-copyright p {
+        margin: 0;
+        font-size: 8px;
+        line-height: 1.2;
     }
 
     #cart-container {
