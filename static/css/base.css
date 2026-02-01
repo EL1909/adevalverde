@@ -201,6 +201,9 @@ a {
     font-weight: 400;
 }
 
+.cta-container {
+    white-space: nowrap
+}
 /* --- BOTÓN CART --- */
 
 .nav-item .cart-button {
@@ -1123,7 +1126,9 @@ input {
     }
 
     .cta-container {
-        display: none; /* En móvil el botón VIP puede ir dentro del menú */
+        display: block;
+        width: 100%;
+        padding: 5px 0;
     }
 
 
