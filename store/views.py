@@ -1218,6 +1218,7 @@ class capture_paypal_order(View):
              return JsonResponse({'error': 'Missing paypal_order_id.'}, status=400)
              
         try:
+            order = None
             # Reintentar obtener la orden por ID o por el ID de PayPal directamente
             if order_id and order_id != 'None':
                 order = Order.objects.filter(pk=order_id).first()
