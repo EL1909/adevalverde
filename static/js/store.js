@@ -26,7 +26,6 @@ window.addEventListener('scroll', function() {
 async function finalUpdateOrderStatus(orderId, paypalOrderId) {
     console.log('Finalizing order status and triggering fulfillment...');
 
-    // Endpoint de capture_paypal_orderView, el orquestador post-pago
     const url = '/store/orders/capture_paypal_order/'; 
 
     try {
@@ -34,14 +33,11 @@ async function finalUpdateOrderStatus(orderId, paypalOrderId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // Usamos window.csrfToken, asumiendo que se definió al inicio del script
                 'X-CSRFToken': window.csrfToken 
             },
             body: JSON.stringify({
-                order_id: orderId,
+                order_id: orderId, // This might be null for guests, backend must handle it via paypal_order_id or session
                 paypal_order_id: paypalOrderId,
-                // **IMPORTANTE:** Ya no se envía paymentStatus ni shippingData.
-                // El backend los obtiene directamente de la API de PayPal.
             })
         });
 
@@ -50,20 +46,18 @@ async function finalUpdateOrderStatus(orderId, paypalOrderId) {
         if (response.ok) {
             console.log('Payment captured successfully:', data);
             
-            // ------------------------------------------------------------------
+            // If the backend created a new order, it might return the real order_id now
+            const finalOrderId = data.order_id || orderId;
+            sessionStorage.clear(); 
 
-            sessionStorage.clear(); // Limpia la sesión del carrito
-
-            // Redirigir al cliente usando la URL devuelta por el backend (o user_orders)
             if (data.redirect_url) {
+                // For guests, redirect_url will likely include the order_id already
                 window.location.href = data.redirect_url;
             } else {
-                console.error('Finalización exitosa, pero no se recibió una URL de redirección.', data);
                 window.location.href = '/store/orders/my-orders/';
             }
         } else {
             console.error('Error finalizing order:', data.error || 'Mensaje de error desconocido');
-            // Redirección a fallback o página de órdenes
             window.location.href = data.redirect_url || '/store/orders/my-orders/';
         }
     } catch (error) {
@@ -374,15 +368,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- MODIFICACIÓN CLAVE: Obtener orderId del atributo de datos del contenedor ---
         const orderId = container.dataset.orderId;
         const hasPhysical = container.dataset.hasPhysical === 'true';
+        const isGuest = container.dataset.isGuest === 'true';
         // --------------------------------------------------------------------------------
 
         if (!orderId || orderId === 'None') {
-            console.error(`Invalid or missing order ID ('${orderId}') in DOM attribute 'data-order-id' for container #${containerId}.`);
-            return;
+            // No order_id yet? No problem. The backend will create it Just-In-Time 
+            // when createOrder fetch is called. 
         }
 
         // --- NUEVA LÓGICA DE VALIDACIÓN DE ENVÍO ---
-        if (hasPhysical && !isShippingComplete()) {
+        if (hasPhysical && !isShippingComplete() && !isGuest) {
             // Mostrar un mensaje de advertencia claro en el contenedor de PayPal
             container.innerHTML = `
                 <div class="alert alert-warning" role="alert">

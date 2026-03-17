@@ -147,6 +147,7 @@
         <div id="paypal-button-container" data-order-id="{{ order_id }}"
         data-total-price="{{ total_price|floatformat:2 }}"
         data-has-physical="{{ has_physical|lower }}"
+        data-is-guest="{{ user.is_anonymous|lower }}"
         class="p-2 mt-3">
           <!-- Botones de PayPal se cargan aquí por store.js -->
         </div>

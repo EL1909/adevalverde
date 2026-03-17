@@ -414,6 +414,46 @@ def crystallize_order(request, payer_data=None):
 
 
 ## Cart Views
+def get_cart_data_helper(request):
+    """
+    Returns a dictionary containing session items, total price, and physical check.
+    """
+    cart_session = request.session.get('cart', {})
+    items = []
+    total_price = 0
+    cart_count = 0
+    
+    for product_id, item_data in cart_session.items():
+        try:
+            product = Product.objects.get(id=product_id)
+            quantity = item_data.get('quantity', 1)
+            item_total = product.price * quantity
+            
+            appointment = None
+            appointment_id = item_data.get('appointment_id')
+            if appointment_id:
+                from calendars.models import Appointment
+                appointment = Appointment.objects.filter(id=appointment_id).first()
+
+            items.append({
+                'product': product,
+                'quantity': quantity,
+                'price': product.price,
+                'total_item_price': item_total,
+                'appointment': appointment,
+            })
+            total_price += item_total
+            cart_count += quantity
+        except Product.DoesNotExist:
+            continue
+            
+    return {
+        'order_items': items,
+        'total_price': total_price,
+        'cart_count': cart_count,
+        'has_physical': any(not item['product'].is_digital for item in items)
+    }
+
 
 class Cart(View):
     # Get action from URL parameters
@@ -432,51 +472,10 @@ class Cart(View):
             return self.clear(request)
         # If no valid action, call the default method (get)
         return super().dispatch(request, *args, **kwargs)
-    
-    # Helper method to get the active order (cart) from Session or DB
-    def _get_cart_data(self, request):
-        """
-        Returns a dictionary containing session items, total price, and physical check.
-        """
-        cart_session = request.session.get('cart', {})
-        items = []
-        total_price = 0
-        cart_count = 0
-        
-        for product_id, item_data in cart_session.items():
-            try:
-                product = Product.objects.get(id=product_id)
-                quantity = item_data.get('quantity', 1)
-                item_total = product.price * quantity
-                
-                appointment = None
-                appointment_id = item_data.get('appointment_id')
-                if appointment_id:
-                    from calendars.models import Appointment
-                    appointment = Appointment.objects.filter(id=appointment_id).first()
-
-                items.append({
-                    'product': product,
-                    'quantity': quantity,
-                    'price': product.price,
-                    'total_item_price': item_total,
-                    'appointment': appointment,
-                })
-                total_price += item_total
-                cart_count += quantity
-            except Product.DoesNotExist:
-                continue
-                
-        return {
-            'order_items': items,
-            'total_price': total_price,
-            'cart_count': cart_count,
-            'has_physical': any(not item['product'].is_digital for item in items)
-        }
 
     # View the cart
     def get(self, request):
-        cart_data = self._get_cart_data(request)
+        cart_data = get_cart_data_helper(request)
         
         context = {
             'order_items': cart_data['order_items'],
@@ -508,9 +507,8 @@ class Cart(View):
         request.session['cart'] = cart
         request.session.modified = True
         
-        # Immediate synchronization for authenticated users
-        if request.user.is_authenticated:
-            crystallize_order(request)
+        # No longer synchronizing proactively to avoid 'ghost orders'
+        # crystallize_order(request)
         
         # Handle AJAX response
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -533,14 +531,13 @@ class Cart(View):
             request.session['cart'] = cart
             request.session.modified = True
             
-            # Sync to DB if logged in
-            if request.user.is_authenticated:
-                crystallize_order(request)
+            # No longer synchronizing proactively
+            # crystallize_order(request)
                 
             messages.success(request, f"{product.name} eliminado del carrito.")
         
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            cart_data = self._get_cart_data(request)
+            cart_data = get_cart_data_helper(request)
             return JsonResponse({
                 'success': True, 
                 'total_price': float(cart_data['total_price']), 
@@ -564,9 +561,8 @@ class Cart(View):
                 request.session['cart'] = cart
                 request.session.modified = True
                 
-                # Sync to DB if logged in
-                if request.user.is_authenticated:
-                    crystallize_order(request)
+                # No longer synchronizing proactively
+                # crystallize_order(request)
             else:
                 messages.error(request, "Producto no encontrado en el carrito.")
 
@@ -574,7 +570,7 @@ class Cart(View):
             messages.error(request, "Cantidad inválida.")
             
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            cart_data = self._get_cart_data(request)
+            cart_data = get_cart_data_helper(request)
             return JsonResponse({
                 'success': True, 
                 'total_price': float(cart_data['total_price']), 
@@ -588,9 +584,8 @@ class Cart(View):
         if 'cart' in request.session:
             del request.session['cart']
         
-        # Sync to DB if logged in (this will delete items because session cart is now empty)
-        if request.user.is_authenticated:
-            crystallize_order(request)
+        # No longer synchronizing proactively
+        # crystallize_order(request)
         
         # Clear other session keys tied to the current temporary order
         keys_to_clear = ['order_id', 'shipping_data']
@@ -623,9 +618,8 @@ def add_to_cart_via_link(request, product_id):
     request.session['cart'] = cart
     request.session.modified = True
     
-    # Immediate synchronization for authenticated users
-    if request.user.is_authenticated:
-        crystallize_order(request)
+    # No longer synchronizing proactively
+    # crystallize_order(request)
     
     messages.success(request, f"{product.name} añadido al carrito!")
     return redirect('store:cart_view')
@@ -833,18 +827,23 @@ class ManageOrder(View):
                     })
                     
                 else:
-                    # --- PROPÓSITO 1: Crear/Actualizar Carrito (Pre-Pago) ---
-                    # Now using server-side session crystallization to prevent DB clutter
-                    order = crystallize_order(request)
+                    # --- PROPÓSITO 1: Sincronización de Carrito (Pre-Pago) ---
+                    # Desactivado el "crystallize" proactivo para evitar órdenes fantasma. 
+                    # El JIT (Just-In-Time) ocurre en create_paypal_order.
                     
-                    if not order:
-                        return JsonResponse({'error': 'No hay items en el carrito para procesar una orden.'}, status=400)
+                    order_id = request.session.get('order_id')
+                    total = 0
+                    has_physical = False
+                    
+                    cart_data = get_cart_data_helper(request)
+                    total = cart_data['total_price']
+                    has_physical = cart_data['has_physical']
                     
                     return JsonResponse({
-                        'message': 'Order/Cart updated successfully.', 
-                        'order_id': order.id,
-                        'hasPhysical': order.hasPhysical,
-                        'total': float(order.totalAmount),
+                        'message': 'Session cart updated.', 
+                        'order_id': order_id, # Puede ser None
+                        'hasPhysical': has_physical,
+                        'total': float(total),
                     })
 
         except Order.DoesNotExist:
@@ -1010,32 +1009,18 @@ def repeat_order(request, order_id):
         # Se asume que la vista JS espera un JsonResponse
         return JsonResponse({'success': False, 'error': 'Order not found or access denied.'}, status=404)
 
-    with transaction.atomic():
-        # 2. Obtener o crear el carrito activo (activo_cart) para el usuario
-        active_cart, created = Order.objects.get_or_create(
-            user=request.user,
-            paymentStatus=ACTIVE_CART_STATUS,
-            defaults={'totalAmount': 0.00}
-        )
+    # REPEAT TO SESSION INSTEAD OF DB
+    cart = {}
+    for item in original_order.items.all():
+        cart[str(item.product.id)] = {
+            'quantity': item.quantity,
+            'appointment_id': None # Sesiones se deben volver a agendar si aplican
+        }
 
-        # 3. Eliminar ítems antiguos (sobrescribir el carrito)
-        active_cart.items.all().delete()
-        
-        # 4. Copiar ítems de la orden original
-        for order_item in original_order.items.all():
-            OrderItem.objects.create(
-                order=active_cart,
-                product=order_item.product,
-                quantity=order_item.quantity,
-                # Usar el precio unitario del producto actual (si no quieres usar el precio histórico)
-                price=order_item.product.price 
-            )
-        
-        # 5. Recalcular el total y guardar
-        active_cart.totalAmount = sum(item.quantity * item.price for item in active_cart.items.all())
-        active_cart.save()
-        
-        return JsonResponse({'success': True, 'order_id': active_cart.id})
+    request.session['cart'] = cart
+    request.session.modified = True
+    
+    return JsonResponse({'success': True, 'redirect_url': '/store/cart/'})
 
 
 @login_required
@@ -1229,11 +1214,19 @@ class capture_paypal_order(View):
         except JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON body.'}, status=400)
             
-        if not all([order_id, paypal_order_id]):
-             return JsonResponse({'error': 'Missing required identifiers (order_id or paypal_order_id).'}, status=400)
+        if not paypal_order_id:
+             return JsonResponse({'error': 'Missing paypal_order_id.'}, status=400)
              
         try:
-            order = get_object_or_404(Order, pk=order_id)
+            # Reintentar obtener la orden por ID o por el ID de PayPal directamente
+            if order_id and order_id != 'None':
+                order = Order.objects.filter(pk=order_id).first()
+            
+            if not order:
+                order = Order.objects.filter(payment_id=paypal_order_id).first()
+            
+            if not order:
+                return JsonResponse({'error': 'Order not found.'}, status=404)
             
             with transaction.atomic():
                 # 1. Capturar el pago en PayPal
@@ -1253,12 +1246,22 @@ class capture_paypal_order(View):
                 order.payment_method = 'PAYPAL'
                 order.payment_id = paypal_order_id # Podrías usar el ID de transacción real si PayPal lo devuelve
                 
+                # Consolidar datos del pagador y de envío
+                combined_data = {}
+                if payer_info:
+                    combined_data.update(payer_info)
                 if shipping_data:
-                    order.set_shipping_data(shipping_data) 
-                elif payer_info:
-                    # Si no hay datos de envío (ej. digital), guardar datos del pagador
-                    # Usamos la misma estructura JSON para consistencia, aunque falte dirección
-                    order.set_shipping_data(payer_info)
+                    combined_data.update(shipping_data)
+                
+                if combined_data:
+                    order.set_shipping_data(combined_data)
+
+                # Intentar asociar la orden con un usuario si es invitado y el email coincide
+                if not order.user and payer_info.get('email'):
+                    User = get_user_model()
+                    user = User.objects.filter(email=payer_info['email']).first()
+                    if user:
+                        order.user = user
                 
                 order.save()
                 
@@ -1370,12 +1373,21 @@ class create_paypal_order(View):
             return JsonResponse({'error': 'Invalid JSON body.'}, status=400)
             
         try:
-            order = get_object_or_404(Order, pk=order_id)
+            # JUST-IN-TIME ORDER CREATION
+            # If the database order doesn't exist yet (guest) or needs update, do it now.
+            order = crystallize_order(request)
             
-            # 1. Leer el valor Order.hasPhysical guardado por ManageOrderView (Propósito 1)
-            # Esto determina si PayPal debe solicitar una dirección de envío.
+            if not order:
+                return JsonResponse({'error': 'No hay items en el carrito.'}, status=400)
+            
+            # 1. Leer el valor Order.hasPhysical guardado
             if order.hasPhysical:
-                shipping_preference = 'SET_PROVIDED_ADDRESS' # PayPal solicita la dirección
+                # Si tenemos datos de envío (del formulario interno), los usamos.
+                # De lo contrario (para invitados que se saltan el formulario), dejamos que PayPal pida la dirección.
+                if shipping_data:
+                    shipping_preference = 'SET_PROVIDED_ADDRESS'
+                else:
+                    shipping_preference = 'GET_FROM_FILE'
             else:
                 shipping_preference = 'NO_SHIPPING' # PayPal no solicita la dirección
 
@@ -1397,7 +1409,7 @@ class create_paypal_order(View):
             )
             
             # 3. Guardar el ID de PayPal
-            order.paypal_order_id = paypal_order_id
+            order.payment_id = paypal_order_id
             order.save()
             
             return JsonResponse({
@@ -1405,8 +1417,6 @@ class create_paypal_order(View):
                 'order_id': order.id,
             })
             
-        except Order.DoesNotExist:
-            return JsonResponse({'error': f'Order with ID {order_id} not found.'}, status=404)
         except Exception as e:
             print(f"Error in create_paypal_order: {e}")
             return JsonResponse({'error': str(e)}, status=500)
